@@ -1,0 +1,280 @@
+package manageTrainingDate
+
+import (
+	"fmt"
+	"seanAIgent/components/button"
+	"seanAIgent/components/card"
+	"seanAIgent/components/csrf"
+	"seanAIgent/components/datepicker"
+	"seanAIgent/components/form"
+	"seanAIgent/components/icon"
+	"seanAIgent/components/input"
+	"seanAIgent/components/timepicker"
+	"time"
+	"strings"
+)
+
+// TrainingDate represents a single training time slot for the view model.
+type TrainingDate struct {
+	ID            string
+	Date          string
+	Start         string
+	End           string
+	Location      string
+	Capacity      int
+	BookedCount   int
+	// FormattedDate would be like "10/09 (週四)"
+	FormattedDate string
+}
+
+type InputDeleteTrainingDate struct {
+	ID string `form:"id"`
+}
+
+// InputTrainingDate holds the default values for the input fields.
+type InputTrainingDate struct {
+	Date     string `form:"date"`
+	Start    string `form:"start"`
+	End      string `form:"end"`
+	Location string `form:"location"`
+	Capacity int    `form:"capacity"`
+	Timezone string `form:"timezone"`
+}
+
+type dateTimeRange struct {
+	Start time.Time
+	End   time.Time
+}
+
+func (t *InputTrainingDate) Dates() ([]*dateTimeRange, error) {
+	dateSlice := strings.Split(t.Date, ",")
+	if len(dateSlice) == 0 {
+		return nil, fmt.Errorf("no date provided")
+	}
+	dates := make([]*dateTimeRange, len(dateSlice))
+	for i, d := range dateSlice {
+		start, err := toTime(d, t.Start, t.Timezone)
+		if err != nil {
+			return nil, err
+		}
+		end, err := toTime(d, t.End, t.Timezone)
+		if err != nil {
+			return nil, err
+		}
+		dates[i] = &dateTimeRange{Start: start, End: end}
+	}
+	return dates, nil
+}
+
+
+func toTime(date, timeStr, timezone string) (time.Time, error) {
+	loc, err := time.LoadLocation(timezone)
+	if err != nil {
+		// Fallback to UTC or local if timezone is invalid
+		loc = time.UTC
+	}
+	return time.ParseInLocation("2006-01-02 15:04", fmt.Sprintf("%s %s", date, timeStr), loc)
+}
+
+type MultiTrainingDateFormModel struct {
+	Dates       []*TrainingDate
+	DefaultDate *InputTrainingDate
+	IsAdmin     bool
+	LiffId      string
+	EnableCSRF  bool
+}
+
+// MultiTrainingDateForm renders a form to add multiple training time slots.
+// It's designed to be used with a library like HTMX to handle dynamic row adding/deleting.
+templ MultiTrainingDateForm(model *MultiTrainingDateFormModel) {
+	{{
+		defaultDate := model.DefaultDate
+		var defaultDateT time.Time
+		if defaultDate.Date != "" {
+			defaultDateT, _ = time.Parse("2006-01-02", defaultDate.Date)
+		}
+
+		var defaultStartT time.Time
+		if defaultDate.Start != "" {
+			defaultStartT, _ = time.Parse("15:04", defaultDate.Start)
+		}
+
+		var defaultEndT time.Time
+		if defaultDate.End != "" {
+			defaultEndT, _ = time.Parse("15:04", defaultDate.End)
+		}
+		isAdmin := model.IsAdmin
+		dates := model.Dates
+	}}
+	@card.Card(card.Props{
+		Class: "w-full h-full flex flex-col", // Fill screen and use flex layout
+	}) {
+		@card.Header() {
+			@card.Title() {
+				新增訓練時段
+			}
+			@card.Description() {
+				if isAdmin {
+					請選擇日期與時間，並將其新增至下方清單。
+				} else {
+					您沒有權限操作此頁面。
+				}
+			}
+		}
+		@card.Content(card.ContentProps{ Class: "flex-grow overflow-y-auto" }) {
+			<!-- Input section for a new training date. -->
+			<form
+				class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 items-end gap-4 mb-6 p-4 border rounded-lg"
+				id="add-training-form"
+				hx-post="/training-date/add"
+				hx-target="#training-date-list"
+				hx-swap="innerHTML"
+			>
+				if model.EnableCSRF {
+					@csrf.CSRF()
+				}
+				@form.Item(form.ItemProps{
+					Class: "flex-grow",
+				}) {
+					@form.Label(form.LabelProps{ For: "training-date" }) {
+						日期
+					}
+					@datepicker.DatePicker(datepicker.Props{
+						ID:       "training-date",
+						Name:     "date",
+						Required: true,
+						Value:    []*time.Time{&defaultDateT},
+						Disabled: !isAdmin,
+						Multiple: true,
+					})
+				}
+				@form.Item(form.ItemProps{ Class: "flex-grow" }) {
+					@form.Label(form.LabelProps{ For: "start-time" }) {
+						開始時間
+					}
+					@timepicker.TimePicker(timepicker.Props{
+						ID:       "start-time",
+						Name:     "start",
+						Step:     15,
+						Required: true,
+						Value:    defaultStartT,
+						Disabled: !isAdmin,
+					})
+				}
+				@form.Item(form.ItemProps{ Class: "flex-grow" }) {
+					@form.Label(form.LabelProps{ For: "end-time" }) {
+						結束時間
+					}
+					@timepicker.TimePicker(timepicker.Props{
+						ID:       "end-time",
+						Name:     "end",
+						Step:     15,
+						Required: true,
+						Value:    defaultEndT,
+						Disabled: !isAdmin,
+					})
+				}
+				@form.Item(form.ItemProps{ Class: "flex-grow" }) {
+					@form.Label(form.LabelProps{ For: "location" }) {
+						地點
+					}
+					@input.Input(input.Props{
+						ID:       "location",
+						Name:     "location",
+						Required: true,
+						Disabled: !isAdmin,
+						Value:    defaultDate.Location,
+					})
+				}
+				@form.Item(form.ItemProps{ Class: "flex-grow" }) {
+					@form.Label(form.LabelProps{ For: "capacity" }) {
+						人數限制
+					}
+					@input.Input(input.Props{
+						ID:       "capacity",
+						Name:     "capacity",
+						Type:     input.TypeNumber,
+						Required: true,
+						Disabled: !isAdmin,
+						Value:    fmt.Sprintf("%d", defaultDate.Capacity),
+					})
+				}
+				<input type="hidden" name="timezone" id="user-timezone" value=""/>
+				<div class="lg:col-start-6">
+					@button.Button(button.Props{ ID: "add-training-btn", Type: "submit", Disabled: !isAdmin }) {
+						@icon.Plus(icon.Props{ Size: 16 })
+						if isAdmin {
+							<span class="ml-2 hidden sm:inline">新增</span>
+						} else {
+							<span class="ml-2 hidden sm:inline">無權限</span>
+						}
+					}
+				</div>
+			</form>
+
+			<script>
+				document.addEventListener('DOMContentLoaded', () => {
+					const userTimezoneInput = document.getElementById('user-timezone');
+					if (userTimezoneInput) {
+						userTimezoneInput.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+					}
+				});
+			</script>
+
+			<!-- List of added training dates -->
+			<div id="training-date-list" class="space-y-2">
+				@AllTrainingDateRow(dates, isAdmin, model.EnableCSRF)
+			</div>
+		}
+	}
+}
+
+templ AllTrainingDateRow(dates []*TrainingDate, isAdmin bool, enableCSRF bool) {
+	if len(dates) > 0 {
+		for _, d := range dates {
+			@TrainingDateRow(d, isAdmin, enableCSRF)
+		}
+	} else {
+		<div class="text-center text-muted-foreground py-4">
+			尚未新增任何時段
+		</div>
+	}
+}
+
+// TrainingDateRow renders a single row in the list of added training dates.
+templ TrainingDateRow(date *TrainingDate, isAdmin bool, enableCSRF bool) {
+	<div id={ fmt.Sprintf("date-%s", date.ID) } class="flex items-center justify-between p-3 bg-muted/50 rounded-lg transition-all">
+		<div class="flex-grow font-mono text-sm sm:text-base space-x-4">
+			<span>{ date.FormattedDate }</span>
+			<span>{ date.Start }–{ date.End }</span>
+			<span>地點: { date.Location }</span>
+			<span>人數: { fmt.Sprintf("%d / %d", date.BookedCount, date.Capacity) }</span>
+		</div>
+		<!-- Hidden inputs to be included in the final "Save All" submission. -->
+		<form
+				class="delete-training-form"
+				hx-post="/training-date/delete"
+				hx-target={ fmt.Sprintf("#date-%s", date.ID) }
+				hx-swap="outerHTML"
+				hx-include="[name='id']"
+				if date.BookedCount > 0 {
+					hx-confirm={ fmt.Sprintf("此時段已有 %d 人預約，您確定要刪除嗎？", date.BookedCount) }
+				} else {
+					hx-confirm="您確定要刪除此時段嗎？"
+				}
+		>
+		if enableCSRF {
+			@csrf.CSRF()
+		}
+			<input type="hidden" name="id" value={ date.ID }/>
+			@button.Button(button.Props{
+				Variant:  button.VariantDestructive,
+				Size:     button.SizeIcon,
+				Type:     "submit",
+				Disabled: !isAdmin,
+			}) {
+				@icon.Trash(icon.Props{ Size: 16 })
+			}
+		</form>
+	</div>
+}

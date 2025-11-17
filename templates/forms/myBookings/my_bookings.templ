@@ -1,0 +1,134 @@
+package myBookings
+
+import (
+	"seanAIgent/components/button"
+	"seanAIgent/components/card"
+	"seanAIgent/components/csrf"
+	"seanAIgent/components/navigation"
+)
+
+// --- View Models ---
+
+type MyBookingsPageModel struct {
+	Bookings   []*BookingGroup
+	EnableCSRF bool
+}
+
+// BookingGroup groups bookings by date.
+
+type BookingGroup struct {
+	DateDisplay string
+	Bookings    []*BookingItem
+}
+
+// BookingItem represents a single booking to be displayed on the 'My Bookings' page.
+type BookingItem struct {
+	BookingID     string
+	ChildName     string
+	StartTime     string
+	EndTime       string
+	Location      string
+	IsCancellable bool
+	IsOnLeave     bool
+	OnLeaveReason string
+}
+
+// --- Components ---
+
+templ MyBookingsPage(model *MyBookingsPageModel) {
+	@card.Card(card.Props{
+		Class: "w-full h-full flex flex-col",
+	}) {
+		@card.Header() {
+			<div class="mb-4">
+				@navigation.NavTabs(navigation.Props{
+					Tabs: []navigation.Tab{
+						{Text: "預約時段", URL: "/training/booking"},
+						{Text: "我的預約", URL: "/my-bookings"},
+					},
+					ActiveURL: "/my-bookings",
+				})
+			</div>
+			@card.Title() {
+				我的預約
+			}
+			@card.Description() {
+				這裡會顯示您所有未來的預約記錄。
+			}
+		}
+		@card.Content(card.ContentProps{ Class: "flex-grow overflow-y-auto" }) {
+			<div class="space-y-6">
+				for _, group := range model.Bookings {
+					@bookingGroup(group, model.EnableCSRF)
+				}
+				if len(model.Bookings) == 0 {
+					<p class="text-muted-foreground text-center p-8">您目前沒有任何預約。</p>
+				}
+			</div>
+		}
+	}
+}
+
+templ bookingGroup(group *BookingGroup, enableCSRF bool) {
+	<div>
+		<h4 class="text-lg font-semibold mb-2">{ group.DateDisplay }</h4>
+		<div class="space-y-2">
+			for _, booking := range group.Bookings {
+				@bookingItem(booking, enableCSRF)
+			}
+		</div>
+	</div>
+}
+
+templ bookingItem(booking *BookingItem, enableCSRF bool) {
+	<div id={ "my-booking-" + booking.BookingID } class="p-3 bg-muted/50 rounded-lg flex items-center justify-between gap-2">
+		<div class="flex-grow">
+			<div class="font-semibold">{ booking.ChildName }</div>
+			<div class="text-xs text-muted-foreground">{ booking.StartTime } - { booking.EndTime } { "@" } { booking.Location }</div>
+			if booking.IsOnLeave && booking.OnLeaveReason != "" {
+				<div class="text-xs text-muted-foreground mt-1">請假原因: { booking.OnLeaveReason }</div>
+			}
+		</div>
+		<div class="w-28 text-right">
+			if booking.IsCancellable {
+				<form
+					hx-post="/booking/delete"
+					hx-target={ "#my-booking-" + booking.BookingID }
+					hx-swap="outerHTML"
+					hx-confirm="您確定要取消此筆預約嗎？"
+				>
+					if enableCSRF {
+						@csrf.CSRF()
+					}
+					<input type="hidden" name="bookingId" value={ booking.BookingID }/>
+					@button.Button(button.Props{
+						Type:    "submit",
+						Variant: button.VariantDestructive,
+					}) {
+						取消預約
+					}
+				</form>
+			} else if booking.IsOnLeave {
+				@button.Button(button.Props{
+					Disabled: true,
+					Variant:  button.VariantOutline,
+					Attributes: templ.Attributes{"title": "您已為此預約申請請假"},
+				}) {
+					已請假
+				}
+			} else {
+				@button.Button(button.Props{
+					Variant:  button.VariantOutline,
+					Attributes: templ.Attributes{
+						"hx-get":    "/booking/leave-request-form/" + booking.BookingID,
+						"hx-target": "body",
+						"hx-swap":   "beforeend",
+						"title":     "預約已超過24小時，如需請假請直接聯繫教練",
+					},
+				}) {
+					我要請假
+				}
+			}
+		</div>
+	</div>
+}

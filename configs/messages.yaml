@@ -1,0 +1,8 @@
+start_booking:
+  keywords: ["開始預約", "預約", "sign up"]
+
+start_checkin:
+  keywords: ["開始簽到"]
+
+appointment_statistic:
+  keywords: ["預約統計", "appointment state", "統計約課", "查看約課與統計"]

@@ -1,0 +1,116 @@
+package myBookings
+
+import (
+	"seanAIgent/components/button"
+	"seanAIgent/components/card"
+	"seanAIgent/components/csrf"
+	"seanAIgent/components/input"
+	"seanAIgent/components/label"
+)
+
+templ LeaveRequestModal(bookingID string, enableCSRF bool, liffId string) {
+	<div id="leave-request-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+		@card.Card(card.Props{
+			Class: "w-full max-w-md",
+		}) {
+			@card.Header() {
+				@card.Title() { 請假申請 }
+				@card.Description() { 請填寫您的請假原因，提交後將通知教練進行審核。 }
+			}
+			@card.Content() {
+				<form hx-post={ "/booking/" + bookingID + "/leave" } hx-target="#leave-request-modal" hx-swap="outerHTML">
+					if enableCSRF {
+						@csrf.CSRF()
+					}
+					<input type="hidden" name="bookingId" value={ bookingID }/>
+					<div class="mb-4">
+						@label.Label(label.Props{ For: "leaveReason" }) { 請假原因 (選填) }
+						@input.Input(input.Props{
+							ID:          "leaveReason",
+							Name:        "reason",
+							Type:        "textarea",
+							Placeholder: "請輸入請假原因...",
+							Class:       "mt-1 block w-full h-24",
+						})
+					</div>
+					<div class="flex justify-end space-x-2">
+						@button.Button(button.Props{
+							Type:    "button",
+							Variant: button.VariantOutline,
+							Attributes: templ.Attributes{
+								"hx-on:click": "document.getElementById('leave-request-modal').remove()",
+							},
+						}) {
+							取消
+						}
+						@button.Button(button.Props{
+							Type:    "submit",
+							Variant: button.VariantDefault,
+							Attributes: templ.Attributes{
+								"hx-indicator": "#leave-request-modal .htmx-indicator",
+							},
+						}) {
+							提交請假申請
+						}
+					</div>
+				</form>
+			}
+		}
+		<div class="htmx-indicator fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50" style="display:none;">
+			<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+		</div>
+		<script>
+			(async () => {
+				// Use the liffId passed into the component
+				const liffId = {{ liffId }};
+				
+				if (!liffId) {
+					console.error("LIFF ID is missing. Cannot initialize LIFF.");
+					return;
+				}
+
+				try {
+					await liff.init({ liffId: liffId });
+				} catch (err) {
+					console.error('liff.init failed', err);
+					return; // Stop if init fails
+				}
+
+				const modal = document.getElementById('leave-request-modal');
+				if (modal) {
+					modal.addEventListener('htmx:beforeSwap', async function handleLeaveResponse(event) {
+						if (event.detail.xhr.status >= 200 && event.detail.xhr.status < 300) {
+							try {
+								const data = JSON.parse(event.detail.xhr.responseText);
+								if (data.liffMessage) {
+									event.detail.shouldSwap = false;
+									const modal = document.getElementById('leave-request-modal');
+									const message = data.liffMessage;
+
+									if (liff.isInClient()) {
+										try {
+											await liff.sendMessages([{
+												'type': 'text',
+												'text': message
+											}]);
+											liff.closeWindow();
+										} catch (err) {
+											console.error('Error sending LIFF message:', err);
+										}
+									} else {
+										if (modal) modal.remove();
+										console.log("Leave request successful.");
+									}
+								}
+							} catch (e) {
+								console.error("Error processing response:", e);
+							}
+						}
+					});
+				} else {
+					console.error('Error: Could not find modal element to attach listener.');
+				}
+			})();
+		</script>
+	</div>
+}

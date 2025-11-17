@@ -1,0 +1,26 @@
+services:
+  mcp:
+    container_name: mcp
+    image: 94peter/seanaigent:latest
+    volumes:
+      - ~/.Secret/seanAigent/config.yaml:/app/.seanAIgent.yaml
+    command: --config /app/.seanAIgent.yaml serve mcp
+
+  console:
+    container_name: console
+    depends_on:
+      - mcp
+    image: 94peter/seanaigent:latest
+    volumes:
+      - ~/.Secret/seanAigent/config.yaml:/app/.seanAIgent.yaml
+    command: --config /app/.seanAIgent.yaml serve console
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.seanaigent-console.rule=Host(`seanaigent.94peter.dev`)"
+      - "traefik.http.routers.seanaigent-console.entrypoints=web"
+      - "traefik.http.services.seanaigent-console.loadbalancer.server.port=8082"
+
+networks:
+  default:
+    external:
+      name: dev_proxy

@@ -1,0 +1,82 @@
+welcome:
+  altText: "Train Smart · Play Hard"
+  template: |
+    {
+      "type": "bubble",
+      "hero": {
+        "type": "image",
+        "url": "https://storage.94peter.dev/cdn-cgi/image/width=1000,quality=80,format=auto/https://storage.94peter.dev/images/flex_cover.jpg",
+        "size": "full",
+        "aspectRatio": "20:13",
+        "aspectMode": "cover",
+        "action": {
+          "type": "uri",
+          "uri": "https://liff.line.me/2008253569-ERDR2wvq"
+        }
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "🔥 Ultra Athletic Club",
+            "weight": "bold",
+            "size": "lg"
+          },
+          {
+            "type": "text",
+            "text": "Train Smart · Play Hard",
+            "size": "sm",
+            "color": "#b34438",
+            "margin": "sm"
+          },
+          {
+            "type": "separator",
+            "margin": "md"
+          },
+          {
+            "type": "text",
+            "text": "嗨！我是你的 AI 助手 🤖 幫你輕鬆安排課程、簽到打卡、查看約課統計！讓訓練更有效率、成就感爆棚 💪 一起流汗、一起進步、一起玩出強大吧！🔥",
+            "wrap": true,
+            "margin": "md"
+          }
+        ],
+        "spacing": "md",
+        "paddingAll": "20px"
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "button",
+            "action": {
+              "type": "uri",
+              "label": "🏋️ 開始安排課程",
+              "uri": "https://liff.line.me/2008253569-ERDR2wvq"
+            },
+            "style": "primary",
+            "color": "#b34438"
+          },
+          {
+            "type": "button",
+            "action": {
+              "type": "message",
+              "label": "📊 查看約課與統計",
+              "text": "查看約課與統計"
+            },
+            "color": "#b34438"
+          },
+          {
+            "type": "button",
+            "action": {
+              "type": "uri",
+              "label": "✅ 簽到打卡",
+              "uri": "https://liff.line.me/2008253569-y2o46v1g"
+            },
+            "color": "#b34438"
+          }
+        ]
+      }
+    }

@@ -1,0 +1,18 @@
+leave_msg: |
+  {{.ChildName}} 請假一堂課 🙏
+  🗓 日期：{{.Date}}
+  💬 原因：{{.Reason}}
+
+  ───────────────
+  📌 【課程現況更新】  
+  ✅ 剩餘名額：{{.RemainQuota}} 位  
+  👥 已報名學員：  
+  {{range $i, $name := .BookedList}}{{printf "%d. %s" (add $i 1) $name}}
+  {{end}}
+
+  想補位的同學可直接預約 👇  
+  {{.BookingURL}}
+  ───────────────
+
+  教練與大家請多包涵，下次一起加油 💪
+

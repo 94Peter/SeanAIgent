@@ -1,0 +1,6 @@
+zh-tw:
+  layout:
+    title: "seanAIgent"
+  class:
+    title: "班级"
+    create: "建立班级"

@@ -1,0 +1,343 @@
+package bookTraining
+
+import (
+	"fmt"
+
+	"seanAIgent/components/button"
+	"seanAIgent/components/card"
+	"seanAIgent/components/csrf"
+	"seanAIgent/components/navigation"
+)
+
+type InputCancelBookingForm struct {
+	BookingId string `form:"bookingId"`
+}
+
+type InputBookingTrainingForm struct {
+	SlotId    string `form:"slotId"`
+	ChildName string `form:"childName"`
+}
+
+// --- View Models ---
+
+// BookableDay represents a single day with its available slots.
+type BookableDay struct {
+	DateDisplay string         // e.g., "10月26日 (週日)"
+	Slots       []*BookableSlot
+}
+
+type UserBooking struct {
+	BookingID     string
+	ChildName     string
+	IsOnLeave bool
+}
+
+// BookableSlot represents a single time slot a user can book.
+type BookableSlot struct {
+	ID          string
+	StartTime   string // e.g., "09:00"
+	EndTime     string // e.g., "10:30"
+	Location    string // e.g., "@ 中和運動中心"
+	Capacity    int
+	BookedCount int
+	IsBookedByCurrentUser bool // This will be true if CurrentUserBookings is not empty
+	CurrentUserBookings []*UserBooking
+}
+
+// --- Components ---
+
+// BookTrainingPage is the main component for the booking page.
+templ BookTrainingPage(liffId string, displayName string, days []*BookableDay, enableCSRF bool) {
+	@card.Card(card.Props{
+		Class: "w-full h-full flex flex-col",
+	}) {
+		@card.Header() {
+			<div class="mb-4">
+				@navigation.NavTabs(navigation.Props{
+					Tabs: []navigation.Tab{
+						{Text: "預約時段", URL: "/training/booking"},
+						{Text: "我的預約", URL: "/my-bookings"},
+					},
+					ActiveURL: "/training/booking",
+				})
+			</div>
+			@card.Title() {
+				預約訓練時段
+			}
+			@card.Description() {
+				<span id="liff-status-message">
+					if displayName != "" {
+						Hi { displayName }，請選擇您要預約的時段。
+					} else {
+						請選擇您要預約的時段。
+					}
+				</span>
+			}
+		}
+		<div id="booking-interface" class="transition-opacity duration-300 opacity-50 pointer-events-none">
+			@card.Content(card.ContentProps{ Class: "flex-grow overflow-y-auto" }) {
+				// userId is now handled by the backend session
+				<div id="booking-list" class="space-y-6">
+					@DaySections(days, enableCSRF)
+				</div>
+			}
+			@card.Footer() {
+				<div id="share-button-container"></div>
+			}
+		</div>
+		<div id="liff-error-container" class="hidden text-center p-8">
+			<p class="text-destructive">請在 LINE App 中開啟此頁面以進行預約。</p>
+		</div>
+	}
+	@Script(liffId)
+}
+
+templ DaySections(days []*BookableDay, enableCSRF bool) {
+	for _, day := range days {
+		@daySection(day, enableCSRF)
+	}
+}
+
+// DaySection renders all the slots for a single day.
+templ daySection(day *BookableDay, enableCSRF bool) {
+	<div>
+		<h4 class="text-lg font-semibold mb-2">{ day.DateDisplay }</h4>
+		<div class="space-y-2">
+			for _, slot := range day.Slots {
+				@SlotCard(slot, enableCSRF)
+			}
+		</div>
+	</div>
+}
+
+templ SlotCard(slot *BookableSlot, enableCSRF bool) {
+	<div id={ "slot-" + slot.ID } class="p-4 bg-muted/50 rounded-lg flex flex-col gap-3">
+		<div class="flex items-center justify-between gap-2">
+			<div class="flex-grow">
+				<div class="font-mono text-sm sm:text-base">{ slot.StartTime } - { slot.EndTime }</div>
+				<div class="text-xs text-muted-foreground">{ slot.Location }</div>
+			</div>
+			@BookedCountOOB(slot)
+		</div>
+
+		@UserBookingsList(slot.CurrentUserBookings, slot.ID, enableCSRF)
+
+		// Show booking controls if there is capacity
+		if slot.BookedCount < slot.Capacity {
+			<div class="pt-2 border-t border-dashed">
+				<form class="booking-form" data-slot-id={ slot.ID }>
+					if enableCSRF {
+						@csrf.CSRF()
+					}
+					<input type="hidden" name="slotId" value={ slot.ID }/>
+					<div class="flex items-center gap-2">
+						<input type="text" name="childName" class="bg-input border border-border rounded-md px-3 py-2 text-sm w-full" placeholder="輸入姓名（例如：Sean Sofie）" required/>
+						@button.Button(button.Props{
+							Type:    "submit",
+							Class:   "action-button",
+							Variant: button.VariantDefault,
+						}) {
+							新增預約
+						}
+					</div>
+				</form>
+			</div>
+		} else {
+			@button.Button(button.Props{
+				Disabled: true,
+				Variant:  button.VariantOutline,
+				Class: "w-full mt-2",
+			}) {
+				已額滿
+			}
+		}
+	</div>
+}
+
+// UserBookingsList renders the list of bookings for the current user within a slot.
+templ UserBookingsList(bookings []*UserBooking, slotID string, enableCSRF bool) {
+	<div id={ "user-bookings-list-" + slotID } class="flex flex-row flex-wrap gap-1">
+		for _, booking := range bookings {
+			if booking.IsOnLeave {
+				<div class="flex items-center justify-center bg-destructive/50 px-2 py-1 rounded-full text-xs">
+					<span class="font-medium">{ booking.ChildName }(請假)</span>
+				</div>
+			} else {
+				<div class="flex items-center justify-center bg-background/50 px-2 py-1 rounded-full text-xs">
+					<span class="font-medium">{ booking.ChildName }</span>
+				</div>
+			}
+		}
+	</div>
+}
+
+// BookedCountOOB renders the booking count and is designed for OOB swaps.
+templ BookedCountOOB(slot *BookableSlot) {
+	<span id={ "booked-count-" + slot.ID } hx-swap-oob="true" class="text-sm text-muted-foreground">
+		{ fmt.Sprintf("%d/%d 人", slot.BookedCount, slot.Capacity) }
+	</span>
+}
+
+// ShareButton is a component for the share button, to be swapped in after booking.
+templ ShareButton() {
+	@button.Button(button.Props{
+		ID: "share-booking-btn",
+	}) {
+		分享預約狀況
+	}
+}
+
+// --- Script ---
+
+templ Script(liffId string) {
+	<script>
+		document.addEventListener('DOMContentLoaded', (event) => {
+			const bookingInterface = document.getElementById('booking-interface');
+			const liffErrorContainer = document.getElementById('liff-error-container');
+			const shareButtonContainer = document.getElementById('share-button-container');
+
+			const showLiffError = () => {
+				if (bookingInterface) bookingInterface.classList.add('hidden');
+				if (liffErrorContainer) liffErrorContainer.classList.remove('hidden');
+			}
+
+			const setupBookingForms = () => {
+				const forms = document.querySelectorAll('.booking-form');
+				forms.forEach(form => {
+					// Prevent multiple listeners
+					if (form.dataset.listenerAttached) return;
+
+					form.addEventListener('submit', (e) => {
+						e.preventDefault();
+						const slotId = form.dataset.slotId;
+						const childNameInput = form.querySelector('[name="childName"]');
+						const childName = childNameInput ? childNameInput.value : '';
+						const csrfInput = form.querySelector('[name="_csrf"]');
+						const csrfToken = csrfInput ? csrfInput.value : '';
+
+						if (!childName) {
+							showToast({ title: '請輸入姓名', description: '孩子的姓名為必填項。' , variant: 'warning' });
+							return;
+						}
+
+						// Keep track of the form that was submitted
+						document.body.setAttribute('data-last-submitted-form', form.closest('.booking-form').getAttribute('data-slot-id'));
+
+						htmx.ajax('POST', '/booking/create', {
+							target: `#user-bookings-list-${slotId}`,
+							swap: 'outerHTML',
+							values: { slotId, childName, _csrf: csrfToken }
+						});
+					});
+					form.dataset.listenerAttached = 'true';
+				});
+			}
+
+			liff.init({ liffId: '{{ liffId }}' }).then(() => {
+				if (liff.isInClient()) {
+					if (bookingInterface) {
+						bookingInterface.classList.remove('opacity-50', 'pointer-events-none');
+					}
+					showShareButton();
+					setupBookingForms(); // Initial setup
+				} else {
+					showLiffError();
+				}
+			}).catch((err) => {
+				console.error("LIFF init failed:", err);
+				showLiffError();
+				showToast({
+					title: 'LIFF 初始化失敗',
+					description: '無法載入預約系統，請確認您在 LINE App 中開啟且網路連線正常。',
+					variant: 'error',
+					duration: 0,
+				});
+			});
+
+			function showShareButton() {
+				if (!document.getElementById('share-booking-btn')) {
+					const buttonClasses = "w-full inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-base font-semibold transition-all bg-primary text-primary-foreground shadow-md hover:bg-primary/90 h-11 px-6 py-3 has-[>svg]:px-4";
+					const buttonHTML = `<button id="share-booking-btn" class="${buttonClasses}">分享預約狀況</button>`;
+					shareButtonContainer.innerHTML = buttonHTML;
+					document.getElementById('share-booking-btn').addEventListener('click', handleShare);
+				}
+			}
+
+			async function handleShare() {
+				const shareButton = document.getElementById('share-booking-btn');
+				try {
+					shareButton.disabled = true;
+					shareButton.textContent = '正在準備訊息...';
+
+					const response = await fetch('/booking/summary/line-liff');
+					if (!response.ok) {
+						throw new Error('Failed to get share message from backend');
+					}
+					const data = await response.json();
+
+					if (!data.message) {
+						throw new Error('Backend did not return a message.');
+					}
+
+					if (liff.isInClient()) {
+						await liff.sendMessages([{
+							type: 'text',
+							text: data.message,
+						}]);
+						liff.closeWindow();
+					} else {
+						showToast({
+							title: '無法分享',
+							description: '請在 LINE App 中開啟此頁面以分享訊息。',
+							variant: 'warning',
+						});
+						shareButton.disabled = false;
+						shareButton.textContent = '分享預約狀況';
+					}
+
+				} catch (err) {
+					console.error('Share failed:', err);
+					showToast({
+						title: '分享失敗',
+						description: '無法分享您的預約狀況，請稍後再試。',
+						variant: 'error',
+					});
+					shareButton.disabled = false;
+					shareButton.textContent = '分享預約狀況';
+				}
+			}
+
+			document.body.addEventListener('htmx:afterSwap', function(evt) {
+				// Re-initialize form listeners on new content
+				setupBookingForms();
+
+				// Clear the input of the form that was just submitted
+				const lastFormSlotId = document.body.getAttribute('data-last-submitted-form');
+				if (lastFormSlotId) {
+					const submittedForm = document.querySelector(`.booking-form[data-slot-id="${lastFormSlotId}"]`);
+					if (submittedForm) {
+						const input = submittedForm.querySelector('[name="childName"]');
+						if (input) {
+							input.value = '';
+						}
+					}
+					document.body.removeAttribute('data-last-submitted-form');
+				}
+			});
+
+			document.body.addEventListener('htmx:responseError', function(evt) {
+				console.error("HTMX Response Error:", evt.detail.xhr);
+				const isToastError = evt.detail.requestConfig.path.startsWith('/components/toast');
+				if (!isToastError) {
+					showToast({
+						title: '操作失敗',
+						description: '您的請求無法完成，請稍後再試。',
+						variant: 'error',
+					});
+				} else {
+					console.error("Toast system failed to load a toast.");
+				}
+			});
+		});
+	</script>
+}

@@ -1,0 +1,6 @@
+[submodule "pkg/vulpes"]
+	path = pkg/vulpes
+	url = https://github.com/94peter/vulpes.git
+[submodule "pkg/botreplyer"]
+	path = pkg/botreplyer
+	url = https://github.com/94Peter/botreplyer.git

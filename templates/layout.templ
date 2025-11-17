@@ -1,0 +1,162 @@
+package templates
+
+import (
+    "github.com/invopop/ctxi18n/i18n"
+    "seanAIgent/components/calendar"
+    "seanAIgent/components/popover"
+    "seanAIgent/components/datepicker"
+    "seanAIgent/components/timepicker"
+    "seanAIgent/components/tabs"
+    "seanAIgent/components/toast"
+)
+
+type OgMeta struct {
+    Title string
+    Description string
+    Image string
+}
+
+templ Layout(content templ.Component, liffId string, ogMeta *OgMeta) {
+    <!DOCTYPE html>
+    <html class="dark">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- 基本 Open Graph 資訊 -->
+        <meta property="og:title" content={ ogMeta.Title } />
+        <meta property="og:description" content={ ogMeta.Description } />
+        <meta property="og:image" content={ ogMeta.Image } />
+        <meta property="og:type" content="website" />
+
+        <title>{ i18n.T(ctx, "layout.title") }</title>
+        <script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.7/dist/htmx.min.js"></script>
+        <link rel="stylesheet" href="/assets/css/output.css">
+        @datepicker.Script()
+        @calendar.Script()
+        @popover.Script()
+        @timepicker.Script()
+        @toast.Script()
+        @tabs.Script()
+    </head>
+    <body class="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-50">
+        if i18n.GetLocale(ctx) != nil {
+            <main class="flex-grow">
+                @content
+            </main>
+        } else {
+            <script>
+                window.addEventListener('DOMContentLoaded', async () => {
+                try {
+                    // Initialize LIFF
+                    await liff.init({ liffId: "{{ liffId }}" });
+
+                    // Get current URL parameters
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const currentUserToken = urlParams.get('user_token');
+
+                    // Get user's LINE language
+                    const liffLang = liff.getLanguage(); // e.g., 'zh-TW', 'en', 'ja'
+
+                    // Get current path
+                    const originPath = window.location.pathname;
+                    const pathParts = originPath.split('/');
+                    const currentLang = pathParts[1];
+
+                    let liffUserToken = null;
+                    if (liff.isLoggedIn()) {
+                        liffUserToken = liff.getAccessToken();
+                    } else {
+                        // Not logged in, no need to add user_token, but still need to handle language
+                    }
+
+                    // Redirect if language is incorrect, or if user_token is missing but we have it from LIFF
+                    if (currentLang !== liffLang || (!currentUserToken && liffUserToken)) {
+                        const newPath = `/${liffLang}${originPath.endsWith('/') && originPath.length > 1 ? originPath.slice(0, -1) : originPath}`;
+                        const newUrl = new URL(newPath, window.location.origin);
+
+                        // Copy existing query params, but exclude user_token as we'll use the new one
+                        urlParams.forEach((value, key) => {
+                            if (key !== 'user_token') {
+                                newUrl.searchParams.append(key, value);
+                            }
+                        });
+
+                        // Append the new user_token if available
+                        if (liffUserToken) {
+                            newUrl.searchParams.append('user_token', liffUserToken);
+                        }
+
+                        window.location.replace(newUrl.toString());
+                        return; // Stop script execution after redirect
+                    }
+                    
+                    // If language and user_token are correct, proceed with page initialization
+                    console.log("LIFF init successful. Language:", liffLang, "UserToken:", liffUserToken || "Not Logged In");
+
+                } catch (err) {
+                    console.error("LIFF init failed:", err);
+                    // Optionally display an error message to the user
+                }
+                });
+            </script>
+        }
+		<div id="toast-trigger" hx-trigger="click" hx-swap="beforeend" hx-target="body" style="display: none;"></div>
+		        <script>
+					function showToast({ title, description, variant = 'default', duration = 5000 }) {
+						console.log("showToast function received:", { title, description, variant, duration });
+						const trigger = document.getElementById('toast-trigger');
+						if (!trigger) {
+							console.error('Global toast trigger element (#toast-trigger) not found!');
+							return;
+						}
+						const params = new URLSearchParams({
+							title: title || '',
+							description: description || '',
+							variant: variant,
+							duration: duration,
+						});
+						const url = `/components/toast?${params.toString()}`;
+						console.log("Requesting toast HTML from URL:", url);
+						trigger.setAttribute('hx-get', url);
+						htmx.process(trigger);
+						trigger.click();
+					}
+		
+					document.body.addEventListener('showToast', function(evt) {
+						console.log("showToast event received from HX-Trigger:", evt.detail);
+						if (evt.detail) {
+                            console.log(evt.detail.description)
+                            console.log(decodeBase64Utf8(evt.detail.description))
+							showToast({
+                                title: decodeBase64Utf8(evt.detail.title), 
+                                description: decodeBase64Utf8(evt.detail.description), 
+                                variant: evt.detail.variant,
+                            });
+						}
+					});
+
+                    function decodeBase64Utf8(base64String) {
+                        try {
+                            // 1. 用 atob() 解碼成 "二進位字串"
+                            const binaryString = atob(base64String);
+
+                            // 2. 建立一個 Uint8Array (位元組陣列) 來存放真正的 bytes
+                            const bytes = new Uint8Array(binaryString.length);
+                            for (let i = 0; i < binaryString.length; i++) {
+                            bytes[i] = binaryString.charCodeAt(i);
+                            }
+
+                            // 3. 使用 TextDecoder 將 UTF-8 位元組解碼回正確的 JavaScript 字串
+                            const decoder = new TextDecoder('utf-8');
+                            return decoder.decode(bytes);
+
+                        } catch (e) {
+                            console.error("Base64 解碼或 UTF-8 解析失敗:", e);
+                            // 處理錯誤，例如回傳 null 或原始字串
+                            return null; 
+                        }
+                    }
+				</script>    </body>
+    </html>
+}
