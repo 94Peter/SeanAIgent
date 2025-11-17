@@ -116,6 +116,7 @@ to quickly create a Cobra application.`,
 			checkinReplyer = linemsg.NewStartCheckinReply(stores.TrainingDateStore)
 			appointmentState = linemsg.NewAppointmentStateReply(stores.AppointmentStore, r2storage)
 		})
+		handler.InitHealthApi()
 		handler.InitComponentApi()
 
 		conversationMgr, llmCancel, err := newConversationMgr(context.Background())
