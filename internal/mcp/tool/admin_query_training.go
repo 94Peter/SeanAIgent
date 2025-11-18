@@ -44,7 +44,7 @@ func init() {
 }
 
 func queryTrainingCoursesByRangeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	fmt.Println("queryTrainingCoursesByRangeHandler")
+	log.Info("queryTrainingCoursesByRangeHandler")
 	if trainingDateService == nil {
 		log.Error("trainingDateService is not initialized")
 		return nil, fmt.Errorf("trainingDateService is not initialized")
@@ -57,13 +57,14 @@ func queryTrainingCoursesByRangeHandler(ctx context.Context, request mcp.CallToo
 	}
 	endDate, err := request.RequireString("end_date")
 	if err != nil {
+		log.Err(err)
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 	timeZone, err := request.RequireString("time_zone")
 	if err != nil {
+		log.Err(err)
 		return mcp.NewToolResultError(err.Error()), nil
 	}
-
 	timeZoneLocation, err := time.LoadLocation(timeZone)
 	if err != nil {
 		log.Err(err)
