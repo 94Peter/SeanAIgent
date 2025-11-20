@@ -2,37 +2,62 @@ package lineliff
 
 import "fmt"
 
-var lineLiffIdMap = map[string]string{
-	"booking":       "2008253569-vD39MBzW",
-	"checkin":       "2008253569-y2o46v1g",
-	"training_data": "2008253569-ERDR2wvq",
+func InitLineLiff(data map[string]string) {
+	// default
+	if len(data) == 0 {
+		data = map[string]string{
+			"training_data": "2008253569-ERDR2wvq",
+			"booking":       "2008253569-vD39MBzW",
+			"checkin":       "2008253569-y2o46v1g",
+		}
+	}
+	// init line liff
+	lineLiffIdMap = make(map[string]*LineLiff)
+	for key, value := range data {
+		lineLiffIdMap[key] = &LineLiff{
+			LiffId:  value,
+			LiffUrl: fmt.Sprintf("https://liff.line.me/%s", value),
+		}
+	}
 }
-var lineLiffUrlMap = map[string]string{
-	"booking":       fmt.Sprintf("https://liff.line.me/%s", lineLiffIdMap["booking"]),
-	"checkin":       fmt.Sprintf("https://liff.line.me/%s", lineLiffIdMap["checkin"]),
-	"training_data": fmt.Sprintf("https://liff.line.me/%s", lineLiffIdMap["training_data"]),
+
+var lineLiffIdMap map[string]*LineLiff
+
+type LineLiff struct {
+	LiffId  string
+	LiffUrl string
+}
+
+var emptyLineLiff = &LineLiff{}
+
+func getLineLiff(key string) *LineLiff {
+	v, ok := lineLiffIdMap[key]
+	if !ok {
+		return emptyLineLiff
+	}
+	return v
 }
 
 func GetTrainingDataLiffId() string {
-	return lineLiffIdMap["training_data"]
+	return getLineLiff("training_data").LiffId
 }
 
 func GetTrainingDataLiffUrl() string {
-	return lineLiffUrlMap["training_data"]
+	return getLineLiff("training_data").LiffUrl
 }
 
 func GetBookingLiffId() string {
-	return lineLiffIdMap["booking"]
+	return getLineLiff("booking").LiffId
 }
 
 func GetBookingLiffUrl() string {
-	return lineLiffUrlMap["booking"]
+	return getLineLiff("booking").LiffUrl
 }
 
 func GetCheckinLiffId() string {
-	return lineLiffIdMap["checkin"]
+	return getLineLiff("checkin").LiffId
 }
 
 func GetCheckinLiffUrl() string {
-	return lineLiffUrlMap["checkin"]
+	return getLineLiff("checkin").LiffUrl
 }

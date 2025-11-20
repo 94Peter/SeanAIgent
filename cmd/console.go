@@ -30,9 +30,10 @@ import (
 
 	"seanAIgent/internal/db/factory"
 	"seanAIgent/internal/handler"
-
 	"seanAIgent/internal/service"
+	"seanAIgent/internal/service/lineliff"
 	"seanAIgent/internal/service/linemsg"
+	"seanAIgent/internal/service/linemsg/replyfunc"
 	"seanAIgent/locales"
 )
 
@@ -125,6 +126,8 @@ to quickly create a Cobra application.`,
 		}
 		cancelSlice = append(cancelSlice, llmCancel)
 
+		lineliff.InitLineLiff(viper.GetStringMapString("liffids"))
+
 		// init botreplyer
 		botctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 
@@ -141,6 +144,7 @@ to quickly create a Cobra application.`,
 				),
 				line.WithAdminUserId(viper.GetString("linebot.admin_user_id")),
 			),
+			botreplyer.WithJoinGroupReplyFunc(replyfunc.MyJoinGroupReply),
 		)
 		cancel()
 		if err != nil {

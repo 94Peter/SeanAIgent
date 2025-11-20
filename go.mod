@@ -2,7 +2,7 @@ module seanAIgent
 
 go 1.24.6
 
-replace github.com/94peter/botreplyer => /Users/peter/Codes/94peter/botreplyer
+replace github.com/94peter/botreplyer => ./pkg/botreplyer
 
 replace github.com/94peter/vulpes => ./pkg/vulpes
 

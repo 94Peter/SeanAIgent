@@ -62,12 +62,15 @@ templ Layout(content templ.Component, liffId string, ogMeta *OgMeta) {
                     const originPath = window.location.pathname;
                     const pathParts = originPath.split('/');
                     const currentLang = pathParts[1];
-
                     let liffUserToken = null;
                     if (liff.isLoggedIn()) {
                         liffUserToken = liff.getAccessToken();
                     } else {
                         // Not logged in, no need to add user_token, but still need to handle language
+                        liff.login({
+                            redirectUri: window.location.href
+                        });
+                        return;
                     }
 
                     // Redirect if language is incorrect, or if user_token is missing but we have it from LIFF
