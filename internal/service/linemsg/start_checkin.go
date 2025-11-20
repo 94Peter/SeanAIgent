@@ -33,17 +33,17 @@ func NewStartCheckinReply(training db.TrainingDateStore) textreply.LineKeywordRe
 	}
 
 	return &startCheckinReply{
-		cfg:      &cfg,
-		training: training,
+		cfg:             &cfg,
+		training:        training,
+		msgStartCheckin: fmt.Sprintf("大家好!!教練要簽到啦!!\n教練請點擊下方的按鈕開始簽到吧!!\n%s", lineliff.GetCheckinLiffUrl()),
 	}
 }
 
 type startCheckinReply struct {
-	cfg      *startBookingCfg
-	training db.TrainingDateStore
+	cfg             *startBookingCfg
+	training        db.TrainingDateStore
+	msgStartCheckin string
 }
-
-var msgStartCheckin = fmt.Sprintf("大家好!!教練要簽到啦!!\n教練請點擊下方的按鈕開始簽到吧!!\n%s", lineliff.GetCheckinLiffUrl())
 
 func (r *startCheckinReply) MessageTextReply(ctx context.Context, typ linebot.EventSourceType, groupID, userID, msg string, mysession sessions.Session) ([]linebot.SendingMessage, textreply.DelayedMessage, error) {
 	if slices.Contains(r.cfg.Keywords, msg) {
@@ -74,7 +74,7 @@ func (r *startCheckinReply) MessageTextReply(ctx context.Context, typ linebot.Ev
 		}
 
 		sendingMsgs = []linebot.SendingMessage{
-			linebot.NewTextMessage(msgStartCheckin),
+			linebot.NewTextMessage(r.msgStartCheckin),
 		}
 		return sendingMsgs, nil, err
 	}

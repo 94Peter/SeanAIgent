@@ -49,7 +49,7 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("teacher called")
-
+		lineliff.InitLineLiff(viper.GetStringMapString("liffids"))
 		// load locales
 		if err := ctxi18n.Load(locales.Content); err != nil {
 			log.Fatalf("error loading locales: %v", err)
@@ -125,8 +125,6 @@ to quickly create a Cobra application.`,
 			log.Fatal(err.Error())
 		}
 		cancelSlice = append(cancelSlice, llmCancel)
-
-		lineliff.InitLineLiff(viper.GetStringMapString("liffids"))
 
 		// init botreplyer
 		botctx, cancel := context.WithTimeout(context.Background(), time.Minute)

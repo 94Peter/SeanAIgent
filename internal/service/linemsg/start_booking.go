@@ -27,15 +27,15 @@ func NewStartBookingReply() textreply.LineKeywordReply {
 	}
 
 	return &startBookingReply{
-		cfg: &cfg,
+		cfg:             &cfg,
+		msgStartBooking: fmt.Sprintf("大家好!!我是SeanAIgent!!由我來為大家提供約課的服務喔!!\n請點擊下方的按鈕開始約課吧!!\n%s", lineliff.GetBookingLiffUrl()),
 	}
 }
 
 type startBookingReply struct {
-	cfg *startBookingCfg
+	cfg             *startBookingCfg
+	msgStartBooking string
 }
-
-var msgStartBooking = fmt.Sprintf("大家好!!我是SeanAIgent!!由我來為大家提供約課的服務喔!!\n請點擊下方的按鈕開始約課吧!!\n%s", lineliff.GetBookingLiffUrl())
 
 func (r *startBookingReply) MessageTextReply(ctx context.Context, typ linebot.EventSourceType, groupID, userID, msg string, session sessions.Session) ([]linebot.SendingMessage, textreply.DelayedMessage, error) {
 	if slices.Contains(r.cfg.Keywords, msg) {
@@ -43,7 +43,7 @@ func (r *startBookingReply) MessageTextReply(ctx context.Context, typ linebot.Ev
 		var sendingMsgs []linebot.SendingMessage
 
 		sendingMsgs = []linebot.SendingMessage{
-			linebot.NewTextMessage(msgStartBooking),
+			linebot.NewTextMessage(r.msgStartBooking),
 		}
 		return sendingMsgs, nil, err
 	}
