@@ -48,9 +48,7 @@ type appointmentStateReply struct {
 
 func (r *appointmentStateReply) MessageTextReply(ctx context.Context, typ linebot.EventSourceType, groupID, userID, msg string, mysession sessions.Session) ([]linebot.SendingMessage, textreply.DelayedMessage, error) {
 	if !session.IsAdmin(mysession) {
-		return []linebot.SendingMessage{
-			linebot.NewTextMessage("您沒有權限查看"),
-		}, nil, nil
+		return nil, nil, nil
 	}
 	if typ != linebot.EventSourceTypeUser {
 		return nil, nil, nil
