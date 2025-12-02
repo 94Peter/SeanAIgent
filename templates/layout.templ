@@ -56,7 +56,14 @@ templ Layout(content templ.Component, liffId string, ogMeta *OgMeta) {
                     const currentUserToken = urlParams.get('user_token');
 
                     // Get user's LINE language
-                    const liffLang = liff.getLanguage(); // e.g., 'zh-TW', 'en', 'ja'
+                    var liffLang = liff.getLanguage(); // e.g., 'zh-TW', 'en', 'ja'
+                    var supportedLangs = ['en', 'zh-TW'];
+                    if (!supportedLangs.includes(liffLang)) {
+                        console.log("Unsupported language detected. Defaulting to zh-TW.");
+                          liffLang = 'zh-TW'; // Default to zh-TW if not supported
+                    }
+
+                    
 
                     // Get current path
                     const originPath = window.location.pathname;
@@ -99,7 +106,17 @@ templ Layout(content templ.Component, liffId string, ogMeta *OgMeta) {
 
                 } catch (err) {
                     console.error("LIFF init failed:", err);
-                    // Optionally display an error message to the user
+                    // Display error on screen for debugging
+                    document.body.innerHTML = `
+                        <div style="background-color: #1E293B; color: #F87171; padding: 20px; font-family: monospace; white-space: pre-wrap; height: 100vh; overflow: auto;">
+                            <h2 style="font-size: 1.5rem; font-weight: bold; color: white;">LIFF Init Failed</h2>
+                            <p style="color: #FBBF24; margin-top: 1rem; margin-bottom: 1rem;">Please screenshot this page and send it to the developer.</p>
+                            <hr style="border-color: #475569;">
+                            <p style="margin-top: 1rem;"><strong>Error:</strong><br>${err.message}</p>
+                            <p style="margin-top: 1rem;"><strong>Stack:</strong><br>${err.stack}</p>
+                            <p style="margin-top: 1rem;"><strong>User Agent:</strong><br>${navigator.userAgent}</p>
+                        </div>
+                    `;
                 }
                 });
             </script>
