@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"seanAIgent/internal/service/lineliff"
 	"slices"
+	"strings"
 
 	"github.com/94peter/botreplyer/provider/line/reply/textreply"
 	"github.com/gin-contrib/sessions"
@@ -38,7 +39,7 @@ type startBookingReply struct {
 }
 
 func (r *startBookingReply) MessageTextReply(ctx context.Context, typ linebot.EventSourceType, groupID, userID, msg string, session sessions.Session) ([]linebot.SendingMessage, textreply.DelayedMessage, error) {
-	if slices.Contains(r.cfg.Keywords, msg) {
+	if slices.Contains(r.cfg.Keywords, strings.ToLower(msg)) {
 		var err error
 		var sendingMsgs []linebot.SendingMessage
 

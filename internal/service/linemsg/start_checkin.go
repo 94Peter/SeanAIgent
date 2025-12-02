@@ -7,6 +7,7 @@ import (
 	"seanAIgent/internal/db"
 	"seanAIgent/internal/service/lineliff"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/94peter/botreplyer/provider/line/reply/textreply"
@@ -46,7 +47,7 @@ type startCheckinReply struct {
 }
 
 func (r *startCheckinReply) MessageTextReply(ctx context.Context, typ linebot.EventSourceType, groupID, userID, msg string, mysession sessions.Session) ([]linebot.SendingMessage, textreply.DelayedMessage, error) {
-	if slices.Contains(r.cfg.Keywords, msg) {
+	if slices.Contains(r.cfg.Keywords, strings.ToLower(msg)) {
 		if !session.IsAdmin(mysession) {
 			return nil, nil, nil
 		}
