@@ -77,7 +77,7 @@ func (api *checkinAPI) getCheckinPage(c *gin.Context) {
 		&templates.OgMeta{
 			Title:       "簽到管理",
 			Description: "管理訓練時段簽到",
-			Image:       "https://images.pexels.com/photos/2558605/pexels-photo-2558605.jpeg",
+			Image:       "https://storage.94peter.dev/cdn-cgi/image/width=1200,height=630,quality=80,format=auto/https://storage.94peter.dev/images/UAC.png",
 		},
 	)
 	r := newTemplRenderer(c.Request.Context(), http.StatusOK, com)
