@@ -75,7 +75,7 @@ func (api *bookingAPI) getMyBookingsPage(c *gin.Context) {
 		&templates.OgMeta{
 			Title:       "我的預約",
 			Description: "管理您的預約記錄",
-			Image:       "https://images.pexels.com/photos/2558605/pexels-photo-2558605.jpeg",
+			Image:       "https://storage.94peter.dev/cdn-cgi/image/width=1200,height=630,quality=80,format=auto/https://storage.94peter.dev/images/UAC.png",
 		},
 	)
 	r := newTemplRenderer(c.Request.Context(), http.StatusOK, com)
@@ -101,7 +101,7 @@ func (api *bookingAPI) getBookingForm(c *gin.Context) {
 		&templates.OgMeta{
 			Title:       "Sean AIgent",
 			Description: "Sean 的預課服務",
-			Image:       "https://images.pexels.com/photos/2558605/pexels-photo-2558605.jpeg",
+			Image:       "https://storage.94peter.dev/cdn-cgi/image/width=1200,height=630,quality=80,format=auto/https://storage.94peter.dev/images/UAC.png",
 		},
 	)
 	r := newTemplRenderer(c.Request.Context(), http.StatusOK, com)
@@ -133,10 +133,14 @@ func (api *bookingAPI) bookingSummary(c *gin.Context) {
 	}
 
 	var message buffer.Buffer
+	message.WriteString("✨ 點擊下方連結開始預約，加入我們一起進步！\n\n")
+	message.WriteString(fmt.Sprintf("👉 %s\n\n", lineliff.GetBookingLiffUrl()))
+	message.WriteString("📋 課程預約與出席名單\n")
+	message.WriteString("-------------------\n")
 	for _, td := range viewTrainingDate {
-		message.WriteString(fmt.Sprintf("%s\n", td.DateDisplay))
+		message.WriteString(fmt.Sprintf("📅 %s\n", td.DateDisplay))
 		for _, s := range td.Slots {
-			message.WriteString(fmt.Sprintf("%s-%s @%s (%d/%d)\n", s.StartTime, s.EndTime, s.Location, s.BookedCount, s.Capacity))
+			message.WriteString(fmt.Sprintf("%s-%s 📍%s (%d/%d)\n", s.StartTime, s.EndTime, s.Location, s.BookedCount, s.Capacity))
 			userNames := slotUsersName[s.ID]
 			for i, n := range userNames {
 				message.WriteString(fmt.Sprintf("%d. %s\n", i+1, n))
@@ -145,6 +149,8 @@ func (api *bookingAPI) bookingSummary(c *gin.Context) {
 		}
 		message.WriteString("-------------------\n")
 	}
+
+	message.WriteString("")
 	c.JSON(http.StatusOK, map[string]interface{}{
 		"message": message.String(),
 	})
@@ -175,6 +181,12 @@ func (api *bookingAPI) submitLeaveRequest(c *gin.Context) {
 	}
 	if err := c.ShouldBind(&input); err != nil {
 		addToastTrigger(c, "提交失敗", fmt.Sprintf("參數錯誤: %v", err), "error")
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	if input.Reason == "" {
+		addToastTrigger(c, "提交失敗", "請假原因不能為空。", "error")
 		c.Status(http.StatusBadRequest)
 		return
 	}
@@ -326,8 +338,8 @@ func (api *bookingAPI) bookTraining(c *gin.Context) {
 	}
 
 	// Parse child names
-
-	rawNames := strings.Split(input.ChildName, " ")
+	input.ChildName = strings.ReplaceAll(input.ChildName, "，", ",")
+	rawNames := strings.Split(input.ChildName, ",")
 
 	var childNames []string
 	titleCaser := cases.Title(language.English)
