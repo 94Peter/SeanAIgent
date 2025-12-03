@@ -187,7 +187,7 @@ func LeaveRequestModal(bookingID string, enableCSRF bool, liffId string) templ.C
 						}()
 					}
 					ctx = templ.InitializeContext(ctx)
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "請假原因 (選填) ")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "請假原因 ")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -203,6 +203,7 @@ func LeaveRequestModal(bookingID string, enableCSRF bool, liffId string) templ.C
 					Type:        "textarea",
 					Placeholder: "請輸入請假原因...",
 					Class:       "mt-1 block w-full h-24",
+					Required:    true,
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -291,7 +292,7 @@ func LeaveRequestModal(bookingID string, enableCSRF bool, liffId string) templ.C
 		}
 		templ_7745c5c3_Var12, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(liffId)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/myBookings/leave_request_modal.templ`, Line: 65, Col: 28}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/myBookings/leave_request_modal.templ`, Line: 66, Col: 28}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 		if templ_7745c5c3_Err != nil {

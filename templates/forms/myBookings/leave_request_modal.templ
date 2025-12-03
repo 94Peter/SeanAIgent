@@ -24,13 +24,14 @@ templ LeaveRequestModal(bookingID string, enableCSRF bool, liffId string) {
 					}
 					<input type="hidden" name="bookingId" value={ bookingID }/>
 					<div class="mb-4">
-						@label.Label(label.Props{ For: "leaveReason" }) { 請假原因 (選填) }
+						@label.Label(label.Props{ For: "leaveReason" }) { 請假原因 }
 						@input.Input(input.Props{
 							ID:          "leaveReason",
 							Name:        "reason",
 							Type:        "textarea",
 							Placeholder: "請輸入請假原因...",
 							Class:       "mt-1 block w-full h-24",
+							Required: true,
 						})
 					</div>
 					<div class="flex justify-end space-x-2">
