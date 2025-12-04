@@ -125,6 +125,27 @@ func (s *appointmentStore) GetLeave(ctx context.Context, id string) (*model.Aggr
 	return leave, err
 }
 
+func (s *appointmentStore) QueryLeaveByDate(ctx context.Context, q bson.M) ([]*model.AggrTrainingHasAppointOnLeave, error) {
+	aggr := model.NewAggrTrainingHasAppointOnLeave()
+	results, err := mgo.PipeFind(ctx, aggr, q)
+	return results, err
+}
+
+func (s *appointmentStore) CancelLeave(ctx context.Context, leaveID string) (*model.Leave, error) {
+	oid, err := bson.ObjectIDFromHex(leaveID)
+	if err != nil {
+		return nil, err
+	}
+	leave := model.NewLeave()
+	leave.ID = oid
+	err = mgo.FindById(ctx, leave)
+	if err != nil {
+		return nil, err
+	}
+	_, err = mgo.DeleteById(ctx, leave)
+	return leave, err
+}
+
 func (s *appointmentStore) AppointmentState(ctx context.Context, q bson.M) ([]*model.AggrAppointmentState, error) {
 	appointment := model.NewAggrAppointmentState()
 	results, err := mgo.PipeFind(ctx, appointment, q)

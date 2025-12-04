@@ -31,5 +31,7 @@ type AppointmentStore interface {
 	UpdateIsOnLeave(ctx context.Context, bookingID bson.ObjectID, isOnLeave bool) error // Updated method
 	CreateLeave(ctx context.Context, leave *model.Leave) (*model.Leave, error)
 	GetLeave(ctx context.Context, leaveID string) (*model.AggrLeaveHasAppointmentHasTraining, error)
+	QueryLeaveByDate(ctx context.Context, q bson.M) ([]*model.AggrTrainingHasAppointOnLeave, error)
+	CancelLeave(ctx context.Context, leaveID string) (*model.Leave, error)
 	AppointmentState(ctx context.Context, q bson.M) ([]*model.AggrAppointmentState, error)
 }

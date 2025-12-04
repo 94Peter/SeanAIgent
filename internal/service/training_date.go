@@ -37,6 +37,8 @@ type TrainingDateService interface {
 	UpdateCheckinStatus(ctx context.Context, slotID string, checkedInBookingIDs []string) error
 	CreateLeave(ctx context.Context, bookingId string, userID string, leaveReason string) (*model.Leave, error)
 	GetLeave(ctx context.Context, leaveID string) (*model.AggrLeaveHasAppointmentHasTraining, error)
+	QueryLeaveByTrainingDate(ctx context.Context, date time.Time) ([]*model.AggrTrainingHasAppointOnLeave, error)
+	CancelLeave(ctx context.Context, leaveID string) error
 	TrainingDateRangeFormat(start, end time.Time, timezone string) string
 	AppointmentState(ctx context.Context, month int, year int) ([]*model.AggrAppointmentState, error)
 }
@@ -44,6 +46,33 @@ type TrainingDateService interface {
 type trainingDateService struct {
 	trainingDateStore db.TrainingDateStore
 	appointmentStore  db.AppointmentStore
+}
+
+func (s *trainingDateService) QueryLeaveByTrainingDate(ctx context.Context, date time.Time) ([]*model.AggrTrainingHasAppointOnLeave, error) {
+	queryStart := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, date.Location())
+	queryEnd := queryStart.Add(24 * time.Hour)
+	data, err := s.appointmentStore.QueryLeaveByDate(ctx, bson.M{"start_date": bson.M{"$gte": queryStart, "$lt": queryEnd}})
+	if err != nil {
+		return nil, fmt.Errorf("query leave failed: %w", err)
+	}
+	for i := range data {
+		data[i].StartDate = model.ToTime(data[i].StartDate, "Asia/Taipei")
+		data[i].EndDate = model.ToTime(data[i].EndDate, "Asia/Taipei")
+		fmt.Println(data[i])
+	}
+	return data, nil
+}
+
+func (s *trainingDateService) CancelLeave(ctx context.Context, leaveID string) error {
+	leave, err := s.appointmentStore.CancelLeave(ctx, leaveID)
+	if err != nil {
+		return fmt.Errorf("cancel leave failed: %w", err)
+	}
+	err = s.appointmentStore.UpdateIsOnLeave(ctx, leave.BookingID, false)
+	if err != nil {
+		return fmt.Errorf("update is_on_leave failed: %w", err)
+	}
+	return nil
 }
 
 func (s *trainingDateService) FutureTrainingDate(ctx context.Context) ([]*model.AggrTrainingDateHasAppoint, error) {
