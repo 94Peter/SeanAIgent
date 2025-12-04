@@ -52,7 +52,6 @@ func (aggr *AggrAppointmentState) GetPipeline(q bson.M) mongo.Pipeline {
 			{"as", "appointments"},
 		}}},
 		{{"$unwind", "$appointments"}},
-		{{"$sort", bson.D{{"start_date", 1}}}},
 		{{"$group", bson.D{
 			{"_id", "$appointments.child_name"},
 			{"user_id", bson.D{{"$first", "$appointments.user_id"}}},
@@ -87,6 +86,7 @@ func (aggr *AggrAppointmentState) GetPipeline(q bson.M) mongo.Pipeline {
 				{"is_on_leave", "$appointments.is_on_leave"},
 			}}}},
 		}}},
+		{{"$sort", bson.D{{"user_id", -1}, {"_id", 1}}}},
 		{{"$group", bson.D{
 			{"_id", "$user_id"},
 			{"user_name", bson.D{{"$first", "$user_name"}}},
@@ -109,6 +109,7 @@ func (aggr *AggrAppointmentState) GetPipeline(q bson.M) mongo.Pipeline {
 			{"total_appointment", "$total_appointment"},
 			{"child_state", "$child_state"},
 		}}},
+		{{"$sort", bson.D{{"user_name", -1}}}},
 	}
 	return pipe
 }
