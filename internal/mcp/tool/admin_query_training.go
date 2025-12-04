@@ -83,6 +83,9 @@ func queryTrainingCoursesByRangeHandler(ctx context.Context, request mcp.CallToo
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
+	if endDateTime.Equal(startDateTime) {
+		endDateTime = startDateTime.Add(24*time.Hour - time.Second)
+	}
 	data, err := trainingDateService.QueryDateTimeRangeTrainingDate(ctx, startDateTime, endDateTime)
 
 	if err != nil {
