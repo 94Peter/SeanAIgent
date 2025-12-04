@@ -412,7 +412,7 @@ func (api *bookingAPI) postErrorHandler(c *gin.Context, err error, slotId, userI
 	api.returnSlotContent(c, slotId, userId)
 }
 
-const cancellableDuration = 1 * time.Hour
+const cancellableDuration = 24 * time.Hour
 
 func modelToMyBookingsViewModel(dbBookings []*model.AggrUserAppointment) *myBookings.MyBookingsPageModel {
 	bookingsByDate := make(map[string][]*myBookings.BookingItem)
