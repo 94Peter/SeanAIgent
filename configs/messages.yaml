@@ -6,3 +6,6 @@ start_checkin:
 
 appointment_statistic:
   keywords: ["預約統計", "appointment state", "統計約課", "查看約課與統計"]
+
+catch_up_check_in:
+  keywords: ["補簽到"]

@@ -105,6 +105,7 @@ to quickly create a Cobra application.`,
 		}
 		var checkinReplyer textreply.LineKeywordReply
 		var appointmentState textreply.LineKeywordReply
+		var catchUpCheckIn textreply.LineKeywordReply
 		factory.InjectStore(func(stores *factory.Stores) {
 			svc := service.InitService(
 				service.WithTrainingStore(stores.TrainingDateStore),
@@ -116,6 +117,7 @@ to quickly create a Cobra application.`,
 
 			checkinReplyer = linemsg.NewStartCheckinReply(stores.TrainingDateStore)
 			appointmentState = linemsg.NewAppointmentStateReply(stores.AppointmentStore, r2storage)
+			catchUpCheckIn = linemsg.NewCatchUpCheckInReply(stores.TrainingDateStore)
 		})
 		handler.InitHealthApi()
 		handler.InitComponentApi()
@@ -138,6 +140,7 @@ to quickly create a Cobra application.`,
 					appointmentState,
 					linemsg.NewStartBookingReply(),
 					checkinReplyer,
+					catchUpCheckIn,
 					linemsg.NewLLMReply(conversationMgr),
 				),
 				line.WithAdminUserId(viper.GetString("linebot.admin_user_id")),

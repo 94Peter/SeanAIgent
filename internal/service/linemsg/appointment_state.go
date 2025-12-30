@@ -127,7 +127,7 @@ type csvMarshaler struct {
 }
 
 func (m *csvMarshaler) MarshalCSV() (headers []string, rows [][]string, err error) {
-	headers = []string{"Index", "Parent", "Child", "Total Appointment"}
+	headers = []string{"Index", "Parent", "Child", "Total Appointment", "Number of leave requests"}
 	var index int
 	for _, v := range m.data {
 		for _, vv := range v.ChildState {
@@ -135,9 +135,15 @@ func (m *csvMarshaler) MarshalCSV() (headers []string, rows [][]string, err erro
 			row := make([]string, 0, 4+len(vv.Appointments))
 			row = append(row, strconv.Itoa(index),
 				v.UserName, vv.ChildName,
-				strconv.Itoa(len(vv.Appointments)))
+				strconv.Itoa(len(vv.Appointments)),
+				strconv.Itoa(vv.OnLeaveCount),
+			)
 			for _, vvv := range vv.Appointments {
-				row = append(row, vvv.StartDate.Format("01/02"))
+				if vvv.IsOnLeave {
+					row = append(row, fmt.Sprintf("%s(請假)", vvv.StartDate.Format("01/02")))
+				} else {
+					row = append(row, vvv.StartDate.Format("01/02"))
+				}
 			}
 			rows = append(rows, row)
 		}
