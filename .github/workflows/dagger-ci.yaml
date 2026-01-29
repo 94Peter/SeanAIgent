@@ -1,7 +1,21 @@
-- name: Run Dagger Module
-  uses: dagger/dagger-for-github@v8.2.0
-  with:
-    verb: call
-    args: build-and-push --src=. --username=${{ secrets.DOCKERHUB_USER }} --repo-name=seanaigent --tag=${{ github.sha }} --docker-hub-token=env:DOCKERHUB_TOKEN
-  env:
-    DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+name: Dagger CI             # 第一行必須是 Key，不能是 "-" 開頭的清單
+
+on:
+  push:
+    branches: [ main ]      # 或是你的主分支名稱
+
+jobs:
+  dagger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Dagger Call
+        uses: dagger/dagger-for-github@v8.2.0
+        with:
+          verb: call
+          # 注意這裡的縮進，args 應該在 with 底下
+          args: build-with-dockerfile --src=. --username=${{ secrets.DOCKERHUB_USER }} --repo-name=aigent --tag=${{ github.sha }} --docker-hub-token=env:DOCKERHUB_TOKEN
+        env:
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
