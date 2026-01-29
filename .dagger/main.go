@@ -53,7 +53,6 @@ func (m *Aigent) BuildWithDockerfile(
 		"linux/amd64",
 		"linux/arm64",
 	}
-
 	// 2. 建立存放各平台 Container 的切片
 	var platformVariants []*dagger.Container
 
@@ -76,6 +75,7 @@ func (m *Aigent) BuildWithDockerfile(
 	fmt.Printf("🚀 正在推送多平台映像檔到 %s...\n", address)
 
 	imageDigest, err := dag.Container().
+		WithRegistryAuth("docker.io", username, dockerHubToken).
 		Publish(ctx, address, dagger.ContainerPublishOpts{
 			PlatformVariants: platformVariants,
 		})

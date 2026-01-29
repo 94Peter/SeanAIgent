@@ -18,15 +18,6 @@ jobs:
         with:
           verb: call
           # 注意這裡的縮進，args 應該在 with 底下
-          args: >
-            build-with-dockerfile 
-            --src=. 
-            --username=${{ secrets.DOCKERHUB_USER }} 
-            --repo-name="seanaigent" 
-            --tag=${{ github.sha }} 
-            --docker-hub-token=env:DOCKERHUB_TOKEN
+          args: build-with-dockerfile --src=. --username=${{ secrets.DOCKERHUB_USER }} --repo-name=seanaigent --tag=${{ github.sha }} --docker-hub-token=env:DOCKERHUB_TOKEN
         env:
-          # 這裡必須確保名稱與上面 args 裡的 env: 標記完全一致
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-          # 雖然 username 不是 secret，但有時帶入環境變數傳遞會更穩定
-          DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }} 
