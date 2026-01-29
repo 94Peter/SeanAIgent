@@ -18,6 +18,6 @@ jobs:
         with:
           verb: call
           # 注意這裡的縮進，args 應該在 with 底下
-          args: build-with-dockerfile --src=. --username=${{ secrets.DOCKERHUB_USER }} --repo-name=aigent --tag=${{ github.sha }} --docker-hub-token=env:DOCKERHUB_TOKEN
+          args: build-with-dockerfile --src=. --username=${{ secrets.DOCKERHUB_USER }} --repo-name=seanaigent --tag=${{ github.sha }} --docker-hub-token=env:DOCKERHUB_TOKEN
         env:
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
