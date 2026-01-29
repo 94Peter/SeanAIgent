@@ -4,12 +4,18 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/94peter/vulpes/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 )
 
 var cfgFile string
@@ -82,4 +88,32 @@ func initConfig() {
 		log.WithServiceName("seanAIgent"),
 		log.WithEnv(viper.GetString("log.env")),
 	)
+}
+
+func initTracer(service string) (*sdktrace.TracerProvider, error) {
+	// 這裡使用 Stdout exporter，實際生產環境通常會換成 Jaeger 或 OTLP exporter
+	// exporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
+	// if err != nil {
+	// 	return nil, err
+	// }
+	endpoint := viper.GetString("tracing.endpoint")
+	fmt.Println("tracing endpoint: ", endpoint)
+	exporter, err := otlptracehttp.New(context.Background(),
+		otlptracehttp.WithEndpoint(endpoint), // OTLP HTTP 預設埠
+		otlptracehttp.WithInsecure(),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithSampler(sdktrace.AlwaysSample()), // 採樣所有請求
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithResource(resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceNameKey.String(service), // 服務名稱
+		)),
+	)
+	otel.SetTracerProvider(tp)
+	return tp, nil
 }

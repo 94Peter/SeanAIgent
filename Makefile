@@ -38,3 +38,10 @@ multi-build:
 		--platform linux/amd64,linux/arm64 \
 		-t 94peter/$(IMAGE_NAME):latest \
 		--push .
+
+wrk-test:
+	wrk -t8 -c8 -d30s --latency http://localhost:8080/training/booking
+
+
+wire:
+	go generate ./...

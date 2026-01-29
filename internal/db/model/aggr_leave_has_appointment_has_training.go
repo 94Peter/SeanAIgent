@@ -15,26 +15,26 @@ func NewAggrLeaveHasAppointmentHasTraining() *AggrLeaveHasAppointmentHasTraining
 }
 
 type AggrLeaveHasAppointmentHasTraining struct {
+	CreatedAt   time.Time `bson:"created_at"`
+	UpdatedAt   time.Time `bson:"updated_at"`
 	mgo.Index   `bson:"-"`
-	ID          bson.ObjectID `bson:"_id,omitempty"`
-	UserID      string        `bson:"user_id"`   // User who requested the leave
-	ChildName   string        `bson:"childName"` // Name of the child (optional)
-	Reason      string        `bson:"reason"`    // Reason for the leave (optional)
-	Status      LeaveStatus   `bson:"status"`    // Status of the leave request (e.g., Pending, Approved, Rejected)
-	CreatedAt   time.Time     `bson:"created_at"`
-	UpdatedAt   time.Time     `bson:"updated_at"`
 	BookingInfo *struct {
-		ID        bson.ObjectID `bson:"_id,omitempty"`
 		CreatedAt time.Time     `bson:"created_at"`
+		ID        bson.ObjectID `bson:"_id,omitempty"`
 	} `bson:"booking_info"`
 	TrainingInfo *struct {
-		ID        bson.ObjectID `bson:"_id,omitempty"`
-		Location  string        `bson:"location"`
-		Capacity  int           `bson:"capacity"`
 		StartDate time.Time     `bson:"start_date"`
 		EndDate   time.Time     `bson:"end_date"`
+		Location  string        `bson:"location"`
 		Timezone  string        `bson:"timezone"`
+		Capacity  int           `bson:"capacity"`
+		ID        bson.ObjectID `bson:"_id,omitempty"`
 	} `bson:"training_info"`
+	UserID    string        `bson:"user_id"`
+	ChildName string        `bson:"childName"`
+	Reason    string        `bson:"reason"`
+	Status    LeaveStatus   `bson:"status"`
+	ID        bson.ObjectID `bson:"_id,omitempty"`
 }
 
 func (aggr *AggrLeaveHasAppointmentHasTraining) GetPipeline(q bson.M) mongo.Pipeline {

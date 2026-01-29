@@ -24,21 +24,18 @@ type trainingAPI struct {
 
 var initTrainingApiOnce sync.Once
 
-func InitTrainingApi(service service.Service, enableCSRF bool) {
+func initTrainingApi(r ezapi.Router, service service.Service, enableCSRF bool) {
 	initTrainingApiOnce.Do(func() {
 		api := &trainingAPI{
 			svc:        service,
 			enableCSRF: enableCSRF,
 		}
 
-		ezapi.RegisterGinApi(func(r ezapi.Router) {
-			// 建立活動表單
-			r.GET("/training", api.getForm)
-			r.GET("/:lang/training", api.getForm)
+		r.GET("/training", api.getForm)
+		r.GET("/:lang/training", api.getForm)
 
-			r.POST("/training-date/add", api.addTrainingDate)
-			r.POST("/training-date/delete", api.deleteTrainingDate)
-		})
+		r.POST("/training-date/add", api.addTrainingDate)
+		r.POST("/training-date/delete", api.deleteTrainingDate)
 	})
 }
 

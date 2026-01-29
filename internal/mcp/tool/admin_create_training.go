@@ -62,8 +62,8 @@ type createTrainingCoursesArgs struct {
 	UserId   string      `json:"line_user_id"`
 	Location string      `json:"location"`
 	TimeZone string      `json:"time_zone"`
-	Capacity int         `json:"capacity"`
 	Schedule []*schedule `json:"schedule"`
+	Capacity int         `json:"capacity"`
 }
 
 type schedule struct {
@@ -98,7 +98,6 @@ func createTrainingCoursesHandler(ctx context.Context, request mcp.CallToolReque
 	var startTime, endTime time.Time
 	var err error
 	for i, schedule := range args.Schedule {
-
 		startTime, err = schedule.GetStartTime(args.TimeZone)
 		if err != nil {
 			return nil, err

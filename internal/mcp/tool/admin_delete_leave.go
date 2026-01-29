@@ -10,7 +10,6 @@ import (
 )
 
 func init() {
-
 	mymcp.AddTool(
 		mcp.NewTool("delete_absence_records_by_id",
 			// Description: Crucial for the LLM Agent's reasoning process

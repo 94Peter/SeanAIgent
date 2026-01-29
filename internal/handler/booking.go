@@ -31,29 +31,25 @@ type bookingAPI struct {
 
 var initBookingApiOnce sync.Once
 
-func InitBookingApi(service service.Service, enableCSRF bool) {
+func initBookingApi(r ezapi.Router, service service.Service, enableCSRF bool) {
 	initBookingApiOnce.Do(func() {
 		api := &bookingAPI{
 			svc:        service,
 			enableCSRF: enableCSRF,
 		}
 
-		ezapi.RegisterGinApi(func(r ezapi.Router) {
-			// 建立活動表單
-
-			r.GET("/training/booking", api.getBookingForm)
-			r.GET("/:lang/training/booking", api.getBookingForm)
-			r.GET("/my-bookings", api.getMyBookingsPage)
-			r.GET("/:lang/my-bookings", api.getMyBookingsPage)
-			r.POST("/booking/create", api.bookTraining)
-			// 取消預約
-			r.POST("/booking/delete", api.bookingCancel)
-			r.GET("/booking/summary/:type", api.bookingSummary)
-			r.GET("/booking/leave-request-form/:bookingId", api.getLeaveRequestForm) // New route for leave request modal
-			// 請假
-			r.POST("/booking/:bookingId/leave", api.submitLeaveRequest) // New route for submitting leave request
-		})
-
+		// 建立活動表單
+		r.GET("/training/booking", api.getBookingForm)
+		r.GET("/:lang/training/booking", api.getBookingForm)
+		r.GET("/my-bookings", api.getMyBookingsPage)
+		r.GET("/:lang/my-bookings", api.getMyBookingsPage)
+		r.POST("/booking/create", api.bookTraining)
+		// 取消預約
+		r.POST("/booking/delete", api.bookingCancel)
+		r.GET("/booking/summary/:type", api.bookingSummary)
+		r.GET("/booking/leave-request-form/:bookingId", api.getLeaveRequestForm) // New route for leave request modal
+		// 請假
+		r.POST("/booking/:bookingId/leave", api.submitLeaveRequest) // New route for submitting leave request
 	})
 }
 
@@ -116,7 +112,7 @@ func (api *bookingAPI) bookingSummary(c *gin.Context) {
 		})
 		return
 	}
-	dbTrainingDate, err := api.svc.QueryFutureTrainingDateAppointmentState(c, userId)
+	dbTrainingDate, err := api.svc.QueryFutureTrainingDateAppointmentState(c.Request.Context(), userId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -238,7 +234,6 @@ func (api *bookingAPI) submitLeaveRequest(c *gin.Context) {
 			log.Err(err)
 		}
 	} else {
-		fmt.Println("no error", lineliff.GetBookingLiffUrl(), "ddddd")
 		msg, err = service.RenderTemplate("leave_msg", map[string]any{
 			"ChildName": detail.ChildName,
 			"Date": api.svc.TrainingDateRangeFormat(
@@ -397,13 +392,11 @@ func (api *bookingAPI) bookTraining(c *gin.Context) {
 	}
 
 	// Success: trigger toast and return updated content
-
 	bookedNamesStr := strings.Join(childNames, ", ")
 	description := fmt.Sprintf("%s 已成功加入預約。", bookedNamesStr)
 	addToastTrigger(c, "預約成功", description, "success")
 
 	api.returnSlotContent(c, input.SlotId, userId)
-
 }
 
 func (api *bookingAPI) postErrorHandler(c *gin.Context, err error, slotId, userId string) {

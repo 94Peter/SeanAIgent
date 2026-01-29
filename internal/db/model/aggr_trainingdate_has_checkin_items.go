@@ -16,22 +16,22 @@ func NewAggrTrainingdateHasCheckinItems() *AggrTrainingdateHasCheckinItems {
 
 // AggrTrainingdateHasCheckinItems represents a single TrainingDate document
 type AggrTrainingdateHasCheckinItems struct {
+	StartDate    time.Time `bson:"start_date"`
+	EndDate      time.Time `bson:"end_date"`
 	mgo.Index    `bson:"-"`
-	ID           bson.ObjectID      `bson:"_id"` // This is the TrainingDate ID
 	Date         string             `bson:"date"`
 	Location     string             `bson:"location"`
-	StartDate    time.Time          `bson:"start_date"`
-	EndDate      time.Time          `bson:"end_date"`
 	TimeZone     string             `bson:"timezone"`
-	CheckinItems []*aggrCheckinItem `bson:"checkin_items"` // Slice of simplified AggrCheckinItem
+	CheckinItems []*aggrCheckinItem `bson:"checkin_items"`
 	OnLeaveItems []*aggrCheckinItem `bson:"on_leave_items"`
+	ID           bson.ObjectID      `bson:"_id"`
 }
 
 type aggrCheckinItem struct {
-	ID          bson.ObjectID `bson:"_id"` // This is the Appointment ID
 	UserID      string        `bson:"user_id"`
 	UserName    string        `bson:"user_name"`
 	ChildName   string        `bson:"child_name,omitempty"`
+	ID          bson.ObjectID `bson:"_id"`
 	IsCheckedIn bool          `bson:"is_checked_in"`
 	IsOnLeave   bool          `bson:"is_on_leave"`
 }

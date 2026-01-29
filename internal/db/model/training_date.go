@@ -1,6 +1,7 @@
 package model
 
 import (
+	"sync"
 	"time"
 
 	"github.com/94peter/vulpes/db/mgo"
@@ -32,15 +33,15 @@ func NewTrainingDate() *TrainingDate {
 }
 
 type TrainingDate struct {
+	StartDate time.Time `bson:"start_date"`
+	EndDate   time.Time `bson:"end_date"`
 	mgo.Index `bson:"-"`
-	ID        bson.ObjectID `bson:"_id"`
 	UserID    string        `bson:"user_id"`
 	Date      string        `bson:"date"`
 	Location  string        `bson:"location"`
-	Capacity  int           `bson:"capacity"`
-	StartDate time.Time     `bson:"start_date"`
-	EndDate   time.Time     `bson:"end_date"`
 	Timezone  string        `bson:"timezone"`
+	Capacity  int           `bson:"capacity"`
+	ID        bson.ObjectID `bson:"_id"`
 }
 
 func (s *TrainingDate) GetId() any {
@@ -62,10 +63,20 @@ func (p *TrainingDate) Validate() error {
 	return nil
 }
 
+var locationCache sync.Map
+
 func ToTime(t time.Time, timezone string) time.Time {
+	if loc, ok := locationCache.Load(timezone); ok {
+		return t.In(loc.(*time.Location))
+	}
+
+	// 快取沒中，才載入並存入快取
 	loc, err := time.LoadLocation(timezone)
 	if err != nil {
-		panic(err)
+		// 建議不要 panic，在生產環境改為記錄日誌並回傳 UTC
+		return t.UTC()
 	}
+
+	locationCache.Store(timezone, loc)
 	return t.In(loc)
 }

@@ -15,24 +15,26 @@ func NewAggrTrainingHasAppointOnLeave() *AggrTrainingHasAppointOnLeave {
 }
 
 type AggrTrainingHasAppointOnLeave struct {
-	mgo.Index         `bson:"-"`
-	ID                bson.ObjectID `bson:"_id"`
-	Date              string        `bson:"date"`
-	Location          string        `bson:"location"`
-	Capacity          int           `bson:"capacity"`
-	StartDate         time.Time     `bson:"start_date"`
-	EndDate           time.Time     `bson:"end_date"`
-	Timezone          string        `bson:"timezone"`
-	TotalAppointments int           `bson:"total_appointments"`
-	OnLeaveApplies    []*struct {
-		ID        bson.ObjectID `bson:"_id,omitempty"`
-		UserID    string        `bson:"user_id"`   // User who requested the leave
-		ChildName string        `bson:"childName"` // Name of the child (optional)
-		Reason    string        `bson:"reason"`    // Reason for the leave (optional)
-		Status    LeaveStatus   `bson:"status"`    // Status of the leave request (e.g., Pending, Approved, Rejected)
+	StartDate      time.Time `bson:"start_date"`
+	EndDate        time.Time `bson:"end_date"`
+	mgo.Index      `bson:"-"`
+	UserID         string `bson:"user_id"`
+	Date           string `bson:"date"`
+	Location       string `bson:"location"`
+	Timezone       string `bson:"timezone"`
+	OnLeaveApplies []*struct {
 		CreatedAt time.Time     `bson:"created_at"`
 		UpdatedAt time.Time     `bson:"updated_at"`
+		UserID    string        `bson:"user_id"`
+		ChildName string        `bson:"childName"`
+		Reason    string        `bson:"reason"`
+		Status    LeaveStatus   `bson:"status"`
+		ID        bson.ObjectID `bson:"_id,omitempty"`
 	} `bson:"on_leave_applies"`
+	Capacity          int           `bson:"capacity"`
+	TotalAppointments int           `bson:"total_appointments"`
+	ID                bson.ObjectID `bson:"_id"` // User who requested the leave
+	// Status of the leave request (e.g., Pending, Approved, Rejected)
 }
 
 func (aggr *AggrTrainingHasAppointOnLeave) GetPipeline(q bson.M) mongo.Pipeline {
@@ -76,6 +78,7 @@ func (aggr *AggrTrainingHasAppointOnLeave) GetPipeline(q bson.M) mongo.Pipeline 
 
 		// 5. $project: 投影需要的欄位並重命名
 		{{"$project", bson.D{
+			{"user_id", "$user_id"},
 			{"date", "$date"},
 			{"location", "$location"},
 			{"capacity", "$capacity"},

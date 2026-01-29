@@ -15,19 +15,18 @@ func NewAggrTrainingDateHasAppoint() *AggrTrainingDateHasAppoint {
 }
 
 type AggrTrainingDateHasAppoint struct {
+	StartDate            time.Time `bson:"start_date"`
+	EndDate              time.Time `bson:"end_date"`
 	mgo.Index            `bson:"-"`
-	ID                   bson.ObjectID `bson:"_id"`
 	Date                 string        `bson:"date"`
 	Location             string        `bson:"location"`
-	Capacity             int           `bson:"capacity"`
-	StartDate            time.Time     `bson:"start_date"`
-	EndDate              time.Time     `bson:"end_date"`
 	Timezone             string        `bson:"timezone"`
-	TotalAppointments    int           `bson:"total_appointments"`
+	targetUserID         string        `bson:"-"`
 	AppointmentUserNames []string      `bson:"appointment_user_names"`
 	OnLeaveUserNames     []string      `bson:"on_leave_user_names"`
-
-	targetUserID string `bson:"-"`
+	Capacity             int           `bson:"capacity"`
+	TotalAppointments    int           `bson:"total_appointments"`
+	ID                   bson.ObjectID `bson:"_id"`
 }
 
 func (aggr *AggrTrainingDateHasAppoint) GetPipeline(q bson.M) mongo.Pipeline {

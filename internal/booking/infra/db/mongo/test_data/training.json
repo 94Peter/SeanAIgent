@@ -1,0 +1,384 @@
+[{
+  "_id": {
+    "$oid": "6900a5df0b590aa2f77ba50b"
+  },
+  "user_id": "Uf555da4eda6258deb6292ada727e4c91",
+  "date": "2025-12-28",
+  "location": "TKU",
+  "capacity": 20,
+  "start_date": {
+    "$date": "2025-12-28T10:55:00.000Z"
+  },
+  "end_date": {
+    "$date": "2025-12-28T11:55:00.000Z"
+  },
+  "timezone": "Asia/Taipei"
+},
+{
+  "_id": {
+    "$oid": "6900a5df0b590aa2f77ba50c"
+  },
+  "user_id": "Uf555da4eda6258deb6292ada727e4c91",
+  "date": "2025-10-30",
+  "location": "TKU",
+  "capacity": 20,
+  "start_date": {
+    "$date": "2025-10-30T10:55:00.000Z"
+  },
+  "end_date": {
+    "$date": "2025-10-30T11:55:00.000Z"
+  },
+  "timezone": "Asia/Taipei"
+},
+{
+  "_id": {
+    "$oid": "6900a6140b590aa2f77ba50e"
+  },
+  "user_id": "Uf555da4eda6258deb6292ada727e4c91",
+  "date": "2025-11-07",
+  "location": "TKU",
+  "capacity": 20,
+  "start_date": {
+    "$date": "2025-11-07T10:55:00.000Z"
+  },
+  "end_date": {
+    "$date": "2025-11-07T11:55:00.000Z"
+  },
+  "timezone": "Asia/Taipei"
+},
+{
+  "_id": {
+    "$oid": "6900a6140b590aa2f77ba50f"
+  },
+  "user_id": "Uf555da4eda6258deb6292ada727e4c91",
+  "date": "2025-11-14",
+  "location": "TKU",
+  "capacity": 20,
+  "start_date": {
+    "$date": "2025-11-14T10:55:00.000Z"
+  },
+  "end_date": {
+    "$date": "2025-11-14T11:55:00.000Z"
+  },
+  "timezone": "Asia/Taipei"
+},
+{
+  "_id": {
+    "$oid": "6900a6140b590aa2f77ba510"
+  },
+  "user_id": "Uf555da4eda6258deb6292ada727e4c91",
+  "date": "2025-11-21",
+  "location": "TKU",
+  "capacity": 20,
+  "start_date": {
+    "$date": "2025-11-21T10:55:00.000Z"
+  },
+  "end_date": {
+    "$date": "2025-11-21T11:55:00.000Z"
+  },
+  "timezone": "Asia/Taipei"
+},
+{
+  "_id": {
+    "$oid": "6900a6140b590aa2f77ba511"
+  },
+  "user_id": "Uf555da4eda6258deb6292ada727e4c91",
+  "date": "2025-11-28",
+  "location": "TKU",
+  "capacity": 20,
+  "start_date": {
+    "$date": "2025-11-28T10:55:00.000Z"
+  },
+  "end_date": {
+    "$date": "2025-11-28T11:55:00.000Z"
+  },
+  "timezone": "Asia/Taipei"
+},
+{
+  "_id": {
+    "$oid": "690631f30147eb3dfb01c444"
+  },
+  "user_id": "Uf555da4eda6258deb6292ada727e4c91",
+  "date": "2025-11-04",
+  "location": "TKU",
+  "capacity": 20,
+  "start_date": {
+    "$date": "2025-11-04T06:00:00.000Z"
+  },
+  "end_date": {
+    "$date": "2025-11-04T08:00:00.000Z"
+  },
+  "timezone": "Asia/Taipei"
+},
+{
+  "_id": {
+    "$oid": "690631f30147eb3dfb01c445"
+  },
+  "user_id": "Uf555da4eda6258deb6292ada727e4c91",
+  "date": "2025-11-06",
+  "location": "TKU",
+  "capacity": 20,
+  "start_date": {
+    "$date": "2025-11-06T06:00:00.000Z"
+  },
+  "end_date": {
+    "$date": "2025-11-06T08:00:00.000Z"
+  },
+  "timezone": "Asia/Taipei"
+},
+{
+  "_id": {
+    "$oid": "690adaa67405c5d5dc01607b"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "date": "2025-12-02",
+  "location": "北安",
+  "capacity": 20,
+  "start_date": {
+    "$date": "2025-12-02T16:30:00.000Z"
+  },
+  "end_date": {
+    "$date": "2025-12-02T18:00:00.000Z"
+  },
+  "timezone": ""
+},
+{
+  "_id": {
+    "$oid": "690adaa67405c5d5dc01607c"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "date": "2025-12-03",
+  "location": "北安",
+  "capacity": 20,
+  "start_date": {
+    "$date": "2025-12-03T08:30:00.000Z"
+  },
+  "end_date": {
+    "$date": "2025-12-03T10:00:00.000Z"
+  },
+  "timezone": "Asia/Taipei"
+},
+{
+  "_id": {
+    "$oid": "690adaa67405c5d5dc01607d"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "date": "2025-12-04",
+  "location": "北安",
+  "capacity": 20,
+  "start_date": {
+    "$date": "2025-12-04T08:30:00.000Z"
+  },
+  "end_date": {
+    "$date": "2025-12-04T10:00:00.000Z"
+  },
+  "timezone": "Asia/Taipei"
+},
+{
+  "_id": {
+    "$oid": "690adaa67405c5d5dc01607e"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "date": "2025-12-05",
+  "location": "北安",
+  "capacity": 20,
+  "start_date": {
+    "$date": "2025-12-05T16:30:00.000Z"
+  },
+  "end_date": {
+    "$date": "2025-12-05T18:00:00.000Z"
+  },
+  "timezone": ""
+},
+{
+  "_id": {
+    "$oid": "690adaa67405c5d5dc01607f"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "date": "2025-12-09",
+  "location": "北安",
+  "capacity": 20,
+  "start_date": {
+    "$date": "2025-12-09T16:30:00.000Z"
+  },
+  "end_date": {
+    "$date": "2025-12-09T18:00:00.000Z"
+  },
+  "timezone": ""
+},
+{
+  "_id": {
+    "$oid": "690adaa67405c5d5dc016080"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "date": "2025-12-10",
+  "location": "北安",
+  "capacity": 20,
+  "start_date": {
+    "$date": "2025-12-10T16:30:00.000Z"
+  },
+  "end_date": {
+    "$date": "2025-12-10T18:00:00.000Z"
+  },
+  "timezone": ""
+},
+{
+  "_id": {
+    "$oid": "690adaa67405c5d5dc016081"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "date": "2025-12-11",
+  "location": "北安",
+  "capacity": 20,
+  "start_date": {
+    "$date": "2025-12-11T16:30:00.000Z"
+  },
+  "end_date": {
+    "$date": "2025-12-11T18:00:00.000Z"
+  },
+  "timezone": ""
+},
+{
+  "_id": {
+    "$oid": "690adaa67405c5d5dc016082"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "date": "2025-12-12",
+  "location": "北安",
+  "capacity": 20,
+  "start_date": {
+    "$date": "2025-12-12T16:30:00.000Z"
+  },
+  "end_date": {
+    "$date": "2025-12-12T18:00:00.000Z"
+  },
+  "timezone": ""
+},
+{
+  "_id": {
+    "$oid": "690adaa67405c5d5dc016083"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "date": "2025-12-16",
+  "location": "北安",
+  "capacity": 20,
+  "start_date": {
+    "$date": "2025-12-16T16:30:00.000Z"
+  },
+  "end_date": {
+    "$date": "2025-12-16T18:00:00.000Z"
+  },
+  "timezone": ""
+},
+{
+  "_id": {
+    "$oid": "690adaa67405c5d5dc016084"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "date": "2025-12-17",
+  "location": "北安",
+  "capacity": 20,
+  "start_date": {
+    "$date": "2025-12-17T16:30:00.000Z"
+  },
+  "end_date": {
+    "$date": "2025-12-17T18:00:00.000Z"
+  },
+  "timezone": ""
+},
+{
+  "_id": {
+    "$oid": "690adaa67405c5d5dc016085"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "date": "2025-12-18",
+  "location": "北安",
+  "capacity": 20,
+  "start_date": {
+    "$date": "2025-12-18T16:30:00.000Z"
+  },
+  "end_date": {
+    "$date": "2025-12-18T18:00:00.000Z"
+  },
+  "timezone": ""
+},
+{
+  "_id": {
+    "$oid": "690adaa67405c5d5dc016086"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "date": "2025-12-19",
+  "location": "北安",
+  "capacity": 20,
+  "start_date": {
+    "$date": "2025-12-19T16:30:00.000Z"
+  },
+  "end_date": {
+    "$date": "2025-12-19T18:00:00.000Z"
+  },
+  "timezone": ""
+},
+{
+  "_id": {
+    "$oid": "690ae34e00d8ff7726e8c790"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "date": "2025-11-05",
+  "location": "北安",
+  "capacity": 20,
+  "start_date": {
+    "$date": "2025-11-05T06:00:00.000Z"
+  },
+  "end_date": {
+    "$date": "2025-11-05T06:40:00.000Z"
+  },
+  "timezone": "Asia/Taipei"
+},
+{
+  "_id": {
+    "$oid": "691558dc3674be78ec24da25"
+  },
+  "user_id": "Uf555da4eda6258deb6292ada727e4c91",
+  "date": "2025-11-18",
+  "location": "台大",
+  "capacity": 10,
+  "start_date": {
+    "$date": "2025-11-18T01:00:00.000Z"
+  },
+  "end_date": {
+    "$date": "2025-11-18T02:00:00.000Z"
+  },
+  "timezone": "Asia/Taipei"
+},
+{
+  "_id": {
+    "$oid": "695de359314d8176adaf0ad3"
+  },
+  "user_id": "Ub2d9967db41cef71c04d0f17fc3b22bf",
+  "date": "2026-01-06",
+  "location": "TKU",
+  "capacity": 20,
+  "start_date": {
+    "$date": "2026-01-06T06:00:00.000Z"
+  },
+  "end_date": {
+    "$date": "2026-01-06T08:00:00.000Z"
+  },
+  "timezone": "Asia/Taipei"
+},
+{
+  "_id": {
+    "$oid": "6962088f314d8176adaf0ad4"
+  },
+  "user_id": "Ub2d9967db41cef71c04d0f17fc3b22bf",
+  "date": "2026-01-11",
+  "location": "TKU",
+  "capacity": 20,
+  "start_date": {
+    "$date": "2026-01-11T06:00:00.000Z"
+  },
+  "end_date": {
+    "$date": "2026-01-11T08:00:00.000Z"
+  },
+  "timezone": "Asia/Taipei"
+}]

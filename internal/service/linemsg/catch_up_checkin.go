@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/url"
 	"seanAIgent/internal/db"
 	"seanAIgent/internal/db/model"
 	"seanAIgent/internal/service/lineliff"
@@ -70,7 +71,6 @@ func (r *catchUpCheckInReply) MessageTextReply(
 		if err != nil {
 			return nil, nil, err
 		}
-
 		if len(trainings) == 0 {
 			sendingMsgs = []linebot.SendingMessage{
 				linebot.NewTextMessage("過去72小時沒有相關的課程可以補簽到"),
@@ -82,7 +82,6 @@ func (r *catchUpCheckInReply) MessageTextReply(
 		quickReplyButtons := make([]*linebot.QuickReplyButton, 0, len(trainings))
 		for _, training := range trainings {
 			selectTime := model.ToTime(training.StartDate, training.Timezone)
-			fmt.Println("=====", selectTime)
 			quickReplyButtons = append(quickReplyButtons, linebot.NewQuickReplyButton("",
 				linebot.NewMessageAction(selectTime.Format("2006-01-02 15:04"), selectTime.Format(time.RFC3339)),
 			))
@@ -106,7 +105,7 @@ func (r *catchUpCheckInReply) MessageTextReply(
 	var strBuf bytes.Buffer
 	strBuf.WriteString(lineliff.GetCheckinLiffUrl())
 	strBuf.WriteString("?time=")
-	strBuf.WriteString(msg)
+	strBuf.WriteString(url.QueryEscape(msg))
 
 	sendingMsgs := []linebot.SendingMessage{
 		linebot.NewTextMessage("請點選下列連結進行補簽：\n" + strBuf.String()),

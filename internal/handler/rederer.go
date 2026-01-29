@@ -40,8 +40,8 @@ func newTemplRenderer(ctx context.Context, status int, component templ.Component
 
 type Renderer struct {
 	Ctx       context.Context
-	Status    int
 	Component templ.Component
+	Status    int
 }
 
 func (t Renderer) Render(w http.ResponseWriter) error {

@@ -13,15 +13,11 @@ type healthAPI struct{}
 
 var initHealthApiOnce sync.Once
 
-func InitHealthApi() {
+func initHealthApi(r ezapi.Router) {
 	initHealthApiOnce.Do(func() {
 		api := &healthAPI{}
 
-		ezapi.RegisterGinApi(func(r ezapi.Router) {
-			// 建立活動表單
-			r.GET("/health", api.getHealth)
-		})
-
+		r.GET("/health", api.getHealth)
 	})
 }
 

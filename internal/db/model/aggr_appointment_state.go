@@ -18,26 +18,26 @@ type AggrAppointmentState struct {
 	mgo.Index        `bson:"-"`
 	UserId           string       `bson:"user_id"`
 	UserName         string       `bson:"user_name"`
+	ChildState       []childState `bson:"child_state"`
 	CheckedInCount   int          `bson:"checked_in_count"`
 	OnLeaveCount     int          `bson:"on_leave_count"`
 	TotalAppointment int          `bson:"total_appointment"`
-	ChildState       []childState `bson:"child_state"`
 }
 
 type childState struct {
 	ChildName      string            `bson:"child_name"`
+	Appointments   []AppointmentInfo `bson:"appointments"`
 	CheckedInCount int               `bson:"checked_in_count"`
 	OnLeaveCount   int               `bson:"on_leave_count"`
-	Appointments   []AppointmentInfo `bson:"appointments"`
 }
 
 type AppointmentInfo struct {
 	AppointmentDate time.Time `bson:"appointment_date"`
-	Location        string    `bson:"location"`
-	Capacity        int       `bson:"capacity"`
 	StartDate       time.Time `bson:"start_date"`
 	EndDate         time.Time `bson:"end_date"`
+	Location        string    `bson:"location"`
 	Timezone        string    `bson:"timezone"`
+	Capacity        int       `bson:"capacity"`
 	IsCheckedIn     bool      `bson:"is_checked_in"`
 	IsOnLeave       bool      `bson:"is_on_leave"`
 }

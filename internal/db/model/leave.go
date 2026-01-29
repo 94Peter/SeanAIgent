@@ -33,15 +33,15 @@ func NewLeave() *Leave {
 
 // Leave represents a leave request for a booking.
 type Leave struct {
+	CreatedAt time.Time `bson:"created_at"`
+	UpdatedAt time.Time `bson:"updated_at"`
 	mgo.Index `bson:"-"`
+	UserID    string        `bson:"user_id"`
+	ChildName string        `bson:"childName"`
+	Reason    string        `bson:"reason"`
+	Status    LeaveStatus   `bson:"status"`
 	ID        bson.ObjectID `bson:"_id,omitempty"`
-	BookingID bson.ObjectID `bson:"booking_id"` // Reference to the Appointment (booking)
-	UserID    string        `bson:"user_id"`    // User who requested the leave
-	ChildName string        `bson:"childName"`  // Name of the child (optional)
-	Reason    string        `bson:"reason"`     // Reason for the leave (optional)
-	Status    LeaveStatus   `bson:"status"`     // Status of the leave request (e.g., Pending, Approved, Rejected)
-	CreatedAt time.Time     `bson:"created_at"`
-	UpdatedAt time.Time     `bson:"updated_at"`
+	BookingID bson.ObjectID `bson:"booking_id"`
 }
 
 func (s *Leave) GetId() any {

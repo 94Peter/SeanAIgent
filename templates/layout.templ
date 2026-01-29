@@ -100,7 +100,7 @@ templ Layout(content templ.Component, liffId string, ogMeta *OgMeta) {
                         window.location.replace(newUrl.toString());
                         return; // Stop script execution after redirect
                     }
-                    
+                    alert("currentLang: " + currentLang + ", liffLang: " + liffLang + ", currentUserToken: " + currentUserToken + ", liffUserToken: " + liffUserToken);
                     // If language and user_token are correct, proceed with page initialization
                     console.log("LIFF init successful. Language:", liffLang, "UserToken:", liffUserToken || "Not Logged In");
 

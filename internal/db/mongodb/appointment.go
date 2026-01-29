@@ -57,7 +57,7 @@ func (s *appointmentStore) AddMany(ctx context.Context, appointments []*model.Ap
 
 func (s *appointmentStore) QueryUserAppointments(ctx context.Context, userID string) ([]*model.AggrUserAppointment, error) {
 	appointment := model.NewAggUserAppointment()
-	results, err := mgo.PipeFind(ctx, appointment, bson.M{"user_id": userID})
+	results, err := mgo.PipeFind(ctx, appointment, bson.M{"user_id": userID}, defaultLimit)
 
 	if err != nil {
 		return nil, err
@@ -127,7 +127,7 @@ func (s *appointmentStore) GetLeave(ctx context.Context, id string) (*model.Aggr
 
 func (s *appointmentStore) QueryLeaveByDate(ctx context.Context, q bson.M) ([]*model.AggrTrainingHasAppointOnLeave, error) {
 	aggr := model.NewAggrTrainingHasAppointOnLeave()
-	results, err := mgo.PipeFind(ctx, aggr, q)
+	results, err := mgo.PipeFind(ctx, aggr, q, 200)
 	return results, err
 }
 
@@ -148,6 +148,6 @@ func (s *appointmentStore) CancelLeave(ctx context.Context, leaveID string) (*mo
 
 func (s *appointmentStore) AppointmentState(ctx context.Context, q bson.M) ([]*model.AggrAppointmentState, error) {
 	appointment := model.NewAggrAppointmentState()
-	results, err := mgo.PipeFind(ctx, appointment, q)
+	results, err := mgo.PipeFind(ctx, appointment, q, defaultLimit)
 	return results, err
 }

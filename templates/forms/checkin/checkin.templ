@@ -11,6 +11,7 @@ import (
 type CheckinPageModel struct {
 	SlotID       string
 	SlotInfo     string // e.g., "10月26日 (週日) 09:00 - 10:30 @ 中和運動中心"
+	StartTime    string
 	CheckinItems []*CheckinItem
 	OnLeaveItems []*CheckinItem
 	EnableCSRF   bool
@@ -25,6 +26,7 @@ type CheckinItem struct {
 
 type InputCheckinForm struct {
 	SlotID            string   `form:"slotId"`
+	StartTime           string   `form:"startTime"`
 	CheckedInBookingIDs []string `form:"checkedInBookingIds[]"` // Array of checked booking IDs
 }
 
@@ -101,11 +103,13 @@ templ CheckinPage(model *CheckinPageModel, liffId string) {
 
 					const formData = new FormData(checkinForm);
 					const slotId = formData.get('slotId');
+					const startTime = formData.get('startTime');
 					const csrfToken = formData.get('_csrf');
 					const checkedInBookingIDs = formData.getAll('checkedInBookingIds[]');
 
 					try {
 						const params = new URLSearchParams();
+						params.append('startTime', startTime);
 						params.append('slotId', slotId);
 						params.append('_csrf', csrfToken);
 						checkedInBookingIDs.forEach(id => params.append('checkedInBookingIds[]', id));
@@ -152,6 +156,7 @@ templ CheckinPage(model *CheckinPageModel, liffId string) {
 
 templ CheckinList(model *CheckinPageModel) {
 	<form id="checkin-form">
+		<input type="hidden" name="startTime" value={ model.StartTime }/>
 		<input type="hidden" name="slotId" value={ model.SlotID }/>
 		if model.EnableCSRF {
 			@csrf.CSRF()

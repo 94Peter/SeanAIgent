@@ -19,7 +19,7 @@ func NewTrainingDateStore() db.TrainingDateStore {
 type trainingDateStore struct{}
 
 func (es *trainingDateStore) Find(ctx context.Context, q bson.M) ([]*model.TrainingDate, error) {
-	return mgo.Find(ctx, model.NewTrainingDate(), q)
+	return mgo.Find(ctx, model.NewTrainingDate(), q, defaultLimit)
 }
 
 func (es *trainingDateStore) Add(ctx context.Context, trainingDate *model.TrainingDate) error {
@@ -51,11 +51,11 @@ func (es *trainingDateStore) Delete(ctx context.Context, id string) error {
 }
 
 func (es *trainingDateStore) QueryTrainingDateAppointmentState(ctx context.Context, id string, q bson.M) ([]*model.AggrTrainingDateAppointState, error) {
-	return mgo.PipeFind(ctx, model.NewAggrTrainingDateAppointState(id), q)
+	return mgo.PipeFind(ctx, model.NewAggrTrainingDateAppointState(id), q, defaultLimit)
 }
 
 func (es *trainingDateStore) QueryTrainingDataHasAppointment(ctx context.Context, q bson.M) ([]*model.AggrTrainingDateHasAppoint, error) {
-	return mgo.PipeFind(ctx, model.NewAggrTrainingDateHasAppoint(), q)
+	return mgo.PipeFind(ctx, model.NewAggrTrainingDateHasAppoint(), q, defaultLimit)
 }
 
 func (es *trainingDateStore) QueryTrainingDateHasCheckinList(ctx context.Context, now time.Time) (*model.AggrTrainingdateHasCheckinItems, error) {

@@ -25,18 +25,16 @@ type checkinAPI struct {
 
 var initCheckinApiOnce sync.Once
 
-func InitCheckinApi(service service.Service, enableCSRF bool) {
+func initCheckinApi(r ezapi.Router, service service.Service, enableCSRF bool) {
 	initCheckinApiOnce.Do(func() {
 		api := &checkinAPI{
 			svc:        service,
 			enableCSRF: enableCSRF,
 		}
 
-		ezapi.RegisterGinApi(func(r ezapi.Router) {
-			r.GET("/:lang/admin/checkin", api.getCheckinPage)
-			r.GET("/admin/checkin", api.getCheckinPage)
-			r.POST("/admin/checkin/submit", api.submitCheckin)
-		})
+		r.GET("/:lang/admin/checkin", api.getCheckinPage)
+		r.GET("/admin/checkin", api.getCheckinPage)
+		r.POST("/admin/checkin/submit", api.submitCheckin)
 	})
 }
 
@@ -46,30 +44,43 @@ func (api *checkinAPI) getCheckinPage(c *gin.Context) {
 	lineliffid := lineliff.GetCheckinLiffId() // Assuming same liffId for now
 
 	var viewModel *checkin.CheckinPageModel
-
+	var queryTime time.Time
 	if !isAdmin(c) {
 		viewModel = &checkin.CheckinPageModel{
 			ErrorMessage: "您沒有權限開啟此頁面。",
 		}
 	} else {
 		// Determine current time slot
-		now := time.Now().Add(tenMin)
-
-		// Query bookings for this slot
-		checkinList, err := api.svc.QueryCheckinList(c, now)
-		// checkinList, err := api.svc.QueryCheckinList(c, time.Date(2025, 11, 4, 14, 0, 0, 0, now.Location()))
-		if err != nil {
-			log.Errorf("Failed to query checkin list: %v", err)
-			viewModel = &checkin.CheckinPageModel{
-				ErrorMessage: "無法載入簽到列表，請稍後再試。",
+		if trainingTimeStr := c.Query("time"); trainingTimeStr != "" {
+			parseTime, err := time.Parse(time.RFC3339, trainingTimeStr)
+			if err != nil {
+				viewModel = &checkin.CheckinPageModel{
+					ErrorMessage: "時間格式錯誤",
+				}
 			}
+			queryTime = parseTime
 		} else {
-			// Transform to view model
-			viewModel = modelToCheckinPageModel(checkinList)
+			queryTime = time.Now().Add(tenMin)
+		}
+
+		if !queryTime.IsZero() {
+			// Query bookings for this slot
+			checkinList, err := api.svc.QueryCheckinList(c, queryTime)
+			// checkinList, err := api.svc.QueryCheckinList(c, time.Date(2025, 11, 4, 14, 0, 0, 0, now.Location()))
+			if err != nil {
+				log.Errorf("Failed to query checkin list: %v", err)
+				viewModel = &checkin.CheckinPageModel{
+					ErrorMessage: "無法載入簽到列表，請稍後再試。",
+				}
+			} else {
+				// Transform to view model
+				viewModel = modelToCheckinPageModel(checkinList)
+			}
 		}
 	}
 
 	viewModel.EnableCSRF = api.enableCSRF
+	viewModel.StartTime = queryTime.Format(time.RFC3339)
 
 	com := templates.Layout(
 		checkin.CheckinPage(viewModel, lineliffid),
@@ -108,7 +119,13 @@ func (api *checkinAPI) submitCheckin(c *gin.Context) {
 	}
 
 	// Re-query checkin list to get updated status for message
-	now := time.Now().Add(tenMin)
+	now, err := time.Parse(time.RFC3339, input.StartTime)
+	if err != nil {
+		log.Errorf("Failed to parse start time: %v", err)
+		addToastTrigger(c, "提交失敗", "更新簽到狀態失敗，請稍後再試。", "error")
+		c.Status(http.StatusInternalServerError)
+		return
+	}
 
 	updatedCheckinList, err := api.svc.QueryCheckinList(c, now)
 	//updatedCheckinList, err := api.svc.QueryCheckinList(c, time.Date(2025, 11, 4, 14, 0, 0, 0, now.Location()))

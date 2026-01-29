@@ -1,0 +1,1344 @@
+[{
+  "_id": {
+    "$oid": "6900d202a84a2070c0ebc742"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "卓",
+  "training_date_id": {
+    "$oid": "6900a5df0b590aa2f77ba50c"
+  },
+  "created_at": {
+    "$date": "2025-10-28T14:24:02.520Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "6906f84bb23c2361e17e98ac"
+  },
+  "user_id": "Uf555da4eda6258deb6292ada727e4c91",
+  "user_name": "Peter",
+  "child_name": "小紅",
+  "training_date_id": {
+    "$oid": "690631f30147eb3dfb01c444"
+  },
+  "created_at": {
+    "$date": "2025-11-01T06:20:59.467Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": true
+},
+{
+  "_id": {
+    "$oid": "6906fc0142264bd687f7d660"
+  },
+  "user_id": "Uf555da4eda6258deb6292ada727e4c91",
+  "user_name": "Peter",
+  "child_name": "小黑",
+  "training_date_id": {
+    "$oid": "690631f30147eb3dfb01c444"
+  },
+  "created_at": {
+    "$date": "2025-11-02T06:36:49.139Z"
+  },
+  "is_checked_in": true,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "6906fc0142264bd687f7d661"
+  },
+  "user_id": "Uf555da4eda6258deb6292ada727e4c91",
+  "user_name": "Peter",
+  "child_name": "小粉",
+  "training_date_id": {
+    "$oid": "690631f30147eb3dfb01c444"
+  },
+  "created_at": {
+    "$date": "2025-11-02T06:36:49.139Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adba05e6e914fc08ad4ff"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Sean",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607b"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:07:44.277Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adba05e6e914fc08ad500"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Sofie",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607b"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:07:44.277Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adba05e6e914fc08ad501"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Marcus",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607b"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:07:44.277Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adba05e6e914fc08ad502"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Melody",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607b"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:07:44.277Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adeb65e6e914fc08ad50c"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Sean",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607c"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:20:54.662Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adeb65e6e914fc08ad50d"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Sofie",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607c"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:20:54.662Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adebe5e6e914fc08ad510"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Marcus",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607d"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:21:02.353Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adebe5e6e914fc08ad511"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Melody",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607d"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:21:02.353Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adec75e6e914fc08ad514"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Sofie",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607e"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:21:11.768Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adec75e6e914fc08ad515"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Melody",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607e"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:21:11.768Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adecb5e6e914fc08ad518"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Marcus",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607f"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:21:15.746Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690aded35e6e914fc08ad51b"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Sean",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016080"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:21:23.702Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690aded35e6e914fc08ad51c"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Melody",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016080"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:21:23.702Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adeea5e6e914fc08ad51f"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Sean",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016081"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:21:46.020Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adeea5e6e914fc08ad520"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Marcus",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016081"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:21:46.020Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adeea5e6e914fc08ad521"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Melody",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016081"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:21:46.020Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adeea5e6e914fc08ad522"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "sofie",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016081"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:21:46.020Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adf1d5e6e914fc08ad525"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Sean",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016082"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:22:37.729Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adf1d5e6e914fc08ad526"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Marcus",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016082"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:22:37.729Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adf1d5e6e914fc08ad527"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Melody",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016082"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:22:37.729Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adf265e6e914fc08ad52a"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Sean",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016083"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:22:46.352Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adf265e6e914fc08ad52b"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Marcus",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016083"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:22:46.352Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adf4e5e6e914fc08ad52e"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Melody",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016084"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:23:26.287Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adf4e5e6e914fc08ad52f"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Sean",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016084"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:23:26.287Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adf4e5e6e914fc08ad530"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Sofie",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016084"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:23:26.287Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adf655e6e914fc08ad533"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Sean",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016085"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:23:49.975Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adf655e6e914fc08ad534"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Marcus",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016085"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:23:49.975Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adf705e6e914fc08ad537"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Sofie",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016086"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:24:00.312Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adf705e6e914fc08ad538"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Sean",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016086"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:24:00.312Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690adf705e6e914fc08ad539"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Melody",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016086"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:24:00.312Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae095a5fd08f4b25dad9b"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Ayden",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607b"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:28:53.243Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae095a5fd08f4b25dad9c"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Kayla",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607b"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:28:53.243Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae09aa5fd08f4b25dad9f"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Ayden",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607e"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:28:58.989Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae09aa5fd08f4b25dada0"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "kayla",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607e"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:28:58.989Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae0a0a5fd08f4b25dada3"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Kayla",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016081"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:29:04.822Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae0a6a5fd08f4b25dada6"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Ayden",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016082"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:29:10.210Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae0a6a5fd08f4b25dada7"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Kayla",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016082"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:29:10.210Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae0aba5fd08f4b25dadaa"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Ayden",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016084"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:29:15.915Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae0aba5fd08f4b25dadab"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Kayla",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016084"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:29:15.915Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae0b1a5fd08f4b25dadae"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Ayden",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016086"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:29:21.365Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae0b1a5fd08f4b25dadaf"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "kayla",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016086"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:29:21.365Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae231a4fe18ab15084955"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "CHASE",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607b"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:35:45.829Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae234a4fe18ab15084958"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "CHASE",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607c"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:35:48.768Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae23aa4fe18ab1508495b"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "KAI",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607d"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:35:54.192Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae23aa4fe18ab1508495c"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "CHASE",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607d"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:35:54.192Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae23fa4fe18ab1508495f"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "YOYO",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607e"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:35:59.071Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae23fa4fe18ab15084960"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "CHASE",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607e"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:35:59.071Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae247a4fe18ab15084963"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "CHASE",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607f"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:36:07.277Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae247a4fe18ab15084964"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "KAI",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607f"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:36:07.277Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae24da4fe18ab15084967"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "MAI",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016080"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:36:13.357Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae3ae00d8ff7726e8c7d1"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Sean",
+  "training_date_id": {
+    "$oid": "690ae34e00d8ff7726e8c790"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:42:06.216Z"
+  },
+  "is_checked_in": true,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae3ae00d8ff7726e8c7d2"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Sofie",
+  "training_date_id": {
+    "$oid": "690ae34e00d8ff7726e8c790"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:42:06.216Z"
+  },
+  "is_checked_in": true,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae3ae00d8ff7726e8c7d3"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Peter",
+  "training_date_id": {
+    "$oid": "690ae34e00d8ff7726e8c790"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:42:06.216Z"
+  },
+  "is_checked_in": true,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae3ae00d8ff7726e8c7d4"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Melody",
+  "training_date_id": {
+    "$oid": "690ae34e00d8ff7726e8c790"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:42:06.216Z"
+  },
+  "is_checked_in": true,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae3ae00d8ff7726e8c7d5"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Marcus",
+  "training_date_id": {
+    "$oid": "690ae34e00d8ff7726e8c790"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:42:06.216Z"
+  },
+  "is_checked_in": true,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae3ae00d8ff7726e8c7d6"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Ayden",
+  "training_date_id": {
+    "$oid": "690ae34e00d8ff7726e8c790"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:42:06.216Z"
+  },
+  "is_checked_in": true,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae3ae00d8ff7726e8c7d7"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Kai",
+  "training_date_id": {
+    "$oid": "690ae34e00d8ff7726e8c790"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:42:06.216Z"
+  },
+  "is_checked_in": true,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae3ae00d8ff7726e8c7d8"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Chase",
+  "training_date_id": {
+    "$oid": "690ae34e00d8ff7726e8c790"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:42:06.216Z"
+  },
+  "is_checked_in": true,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae3ae00d8ff7726e8c7d9"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Kailey",
+  "training_date_id": {
+    "$oid": "690ae34e00d8ff7726e8c790"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:42:06.216Z"
+  },
+  "is_checked_in": true,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae3ae00d8ff7726e8c7da"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Kayla",
+  "training_date_id": {
+    "$oid": "690ae34e00d8ff7726e8c790"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:42:06.216Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae3ae00d8ff7726e8c7db"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Darren",
+  "training_date_id": {
+    "$oid": "690ae34e00d8ff7726e8c790"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:42:06.216Z"
+  },
+  "is_checked_in": true,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae3ae00d8ff7726e8c7dc"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Aaron",
+  "training_date_id": {
+    "$oid": "690ae34e00d8ff7726e8c790"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:42:06.216Z"
+  },
+  "is_checked_in": true,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae3ae00d8ff7726e8c7dd"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Ivan",
+  "training_date_id": {
+    "$oid": "690ae34e00d8ff7726e8c790"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:42:06.216Z"
+  },
+  "is_checked_in": true,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae4125e36b7fe93885ea6"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Man",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607f"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:43:46.447Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae4135e36b7fe93885ea9"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Man",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016080"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:43:47.716Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae4155e36b7fe93885eac"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Man",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016081"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:43:49.559Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae4175e36b7fe93885eaf"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Man",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016082"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:43:51.590Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae4195e36b7fe93885eb2"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Man",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016083"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:43:53.611Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae41b5e36b7fe93885eb5"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Man",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016084"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:43:55.082Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae41d5e36b7fe93885eb8"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Man",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016085"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:43:57.225Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae41f5e36b7fe93885ebb"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Man",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc016086"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:43:59.894Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae4725e36b7fe93885ec1"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Man",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607e"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:45:22.056Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae4e95e36b7fe93885eca"
+  },
+  "user_id": "Uf555da4eda6258deb6292ada727e4c91",
+  "user_name": "Peter",
+  "child_name": "Huge",
+  "training_date_id": {
+    "$oid": "690ae34e00d8ff7726e8c790"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:47:21.417Z"
+  },
+  "is_checked_in": true,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae4ff5e36b7fe93885ed2"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Fiona",
+  "training_date_id": {
+    "$oid": "690ae34e00d8ff7726e8c790"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:47:43.400Z"
+  },
+  "is_checked_in": true,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae5065e36b7fe93885ed5"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Giselle",
+  "training_date_id": {
+    "$oid": "690631f30147eb3dfb01c445"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:47:50.134Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae50c5e36b7fe93885ed8"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "Jennifer",
+  "training_date_id": {
+    "$oid": "6900a6140b590aa2f77ba50e"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:47:56.715Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae5615e36b7fe93885edd"
+  },
+  "user_id": "Uf555da4eda6258deb6292ada727e4c91",
+  "user_name": "Peter",
+  "child_name": "小綠",
+  "training_date_id": {
+    "$oid": "690ae34e00d8ff7726e8c790"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:49:21.963Z"
+  },
+  "is_checked_in": true,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "690ae5685e36b7fe93885ee0"
+  },
+  "user_id": "Ufa91de91be0274e3cc9851918a8e9660",
+  "user_name": "Sean",
+  "child_name": "孫弘",
+  "training_date_id": {
+    "$oid": "6900a6140b590aa2f77ba50e"
+  },
+  "created_at": {
+    "$date": "2025-11-05T05:49:28.953Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "692fc6bee4fc61b034e50fac"
+  },
+  "user_id": "Uf555da4eda6258deb6292ada727e4c91",
+  "user_name": "Peter",
+  "child_name": "Peter",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607d"
+  },
+  "created_at": {
+    "$date": "2025-12-03T05:12:30.354Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+},
+{
+  "_id": {
+    "$oid": "6930f7fb54b8f259bce30c97"
+  },
+  "user_id": "Uf555da4eda6258deb6292ada727e4c91",
+  "user_name": "Peter",
+  "child_name": "Pp",
+  "training_date_id": {
+    "$oid": "690adaa67405c5d5dc01607d"
+  },
+  "created_at": {
+    "$date": "2025-12-04T02:54:51.874Z"
+  },
+  "is_checked_in": false,
+  "is_on_leave": false
+}]

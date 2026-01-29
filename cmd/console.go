@@ -5,8 +5,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -16,10 +14,9 @@ import (
 	"github.com/94peter/botreplyer/llm"
 	"github.com/94peter/botreplyer/provider/line"
 	"github.com/94peter/botreplyer/provider/line/flexmsg"
-	lineMid "github.com/94peter/botreplyer/provider/line/mid"
+	"github.com/94peter/botreplyer/provider/line/notify"
 	"github.com/94peter/botreplyer/provider/line/reply/textreply"
 	"github.com/94peter/vulpes/db/mgo"
-	"github.com/94peter/vulpes/ezapi"
 	_ "github.com/94peter/vulpes/ezapi/session"
 	"github.com/94peter/vulpes/log"
 	"github.com/94peter/vulpes/storage"
@@ -27,9 +24,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tmc/langchaingo/llms/googleai"
+	"go.opentelemetry.io/otel"
 
+	"seanAIgent/internal/booking/infra/db"
+	"seanAIgent/internal/booking/transport/line/notification"
 	"seanAIgent/internal/db/factory"
-	"seanAIgent/internal/handler"
 	"seanAIgent/internal/service"
 	"seanAIgent/internal/service/lineliff"
 	"seanAIgent/internal/service/linemsg"
@@ -48,7 +47,16 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("teacher called")
+		tp, err := initTracer("seanAIgen-API")
+		if err != nil {
+			log.Fatalf("initTracer fail: %v", err)
+		}
+		defer func() {
+			if err := tp.Shutdown(context.Background()); err != nil {
+				log.Fatalf("Error shutting down tracer provider: %v", err)
+			}
+		}()
+
 		lineliff.InitLineLiff(viper.GetStringMapString("liffids"))
 		// load locales
 		if err := ctxi18n.Load(locales.Content); err != nil {
@@ -73,12 +81,17 @@ to quickly create a Cobra application.`,
 			log.Fatalf("Failed to load response templates: %v", err)
 		}
 
+		dbTracer := otel.Tracer("Mongodb")
 		// db connection
 		dbCtx, cancel := context.WithTimeout(context.Background(), time.Minute)
-		err := factory.InitializeDb(
+		err = factory.InitializeDb(
 			dbCtx,
-			factory.WithMongoDB(viper.GetString("database.uri"),
-				viper.GetString("database.db")))
+			factory.WithMongoDB(
+				viper.GetString("database.uri"),
+				viper.GetString("database.db"),
+			),
+			factory.WithTracer(dbTracer),
+		)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
@@ -106,21 +119,31 @@ to quickly create a Cobra application.`,
 		var checkinReplyer textreply.LineKeywordReply
 		var appointmentState textreply.LineKeywordReply
 		var catchUpCheckIn textreply.LineKeywordReply
+		var userApptStatsNotify notification.UserApptStatsNotifier
+
 		factory.InjectStore(func(stores *factory.Stores) {
-			svc := service.InitService(
+			_ = service.InitService(
 				service.WithTrainingStore(stores.TrainingDateStore),
 				service.WithAppointmentStore(stores.AppointmentStore),
 			)
-			handler.InitTrainingApi(svc, viper.GetBool("http.csrf.enabled"))
-			handler.InitBookingApi(svc, viper.GetBool("http.csrf.enabled"))
-			handler.InitCheckinApi(svc, viper.GetBool("http.csrf.enabled"))
+
+			// v1 handler
+			// handler.InitHandler(routerGroup, svc, viper.GetBool("http.csrf.enabled"))
+
+			// v2 handler
+			dbRepo := db.NewDbRepoAndIdGenerate()
+			userApptStatsNotify = notification.NewUserApptStatsNotifier(dbRepo)
+			// web.InitWeb(
+			// 	routerGroup,
+			// 	// app.NewScheduleService(dbRepo, idGen),
+			// 	// app.NewAppointmentService(dbRepo, idGen),
+			// 	viper.GetBool("http.csrf.enabled"),
+			// )
 
 			checkinReplyer = linemsg.NewStartCheckinReply(stores.TrainingDateStore)
 			appointmentState = linemsg.NewAppointmentStateReply(stores.AppointmentStore, r2storage)
 			catchUpCheckIn = linemsg.NewCatchUpCheckInReply(stores.TrainingDateStore)
 		})
-		handler.InitHealthApi()
-		handler.InitComponentApi()
 
 		conversationMgr, llmCancel, err := newConversationMgr(context.Background())
 		if err != nil {
@@ -131,6 +154,10 @@ to quickly create a Cobra application.`,
 		// init botreplyer
 		botctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 
+		notifyService := notify.NewLineNotificationService()
+		notifyService.RegisterNotification(
+			"user-appt-stats", userApptStatsNotify,
+		)
 		err = botreplyer.InitBotReplyer(
 			botctx,
 			botreplyer.WithLineConfig(
@@ -144,6 +171,7 @@ to quickly create a Cobra application.`,
 					linemsg.NewLLMReply(conversationMgr),
 				),
 				line.WithAdminUserId(viper.GetString("linebot.admin_user_id")),
+				line.WithNotificationService(notifyService),
 			),
 			botreplyer.WithJoinGroupReplyFunc(replyfunc.MyJoinGroupReply),
 		)
@@ -158,35 +186,8 @@ to quickly create a Cobra application.`,
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 		apiCtx, apicancel := context.WithCancel(context.Background())
-		go func(ctx context.Context) {
-			log.Infof("Starting server on port %d", viper.GetInt("http.port"))
-			if err := ezapi.RunGin(
-				ctx,
-				ezapi.WithPort(viper.GetInt("http.port")),
-				ezapi.WithMiddleware(
-					ezapi.RequestLogger(),
-					lineMid.LineLiff(),
-					ezapi.I18n("zh-tw", locales.LocaleExist),
-					lineMid.CheckAdmin(botreplyer.GetFollowStore()),
-				),
-				ezapi.WithSession(
-					viper.GetBool("http.session.enabled"),
-					viper.GetString("http.session.store"),
-					viper.GetString("http.session.cookie_name"),
-					viper.GetInt("http.session.max_age"),
-					viper.GetStringSlice("http.session.key_pairs")...,
-				),
-				ezapi.WithCsrf(
-					viper.GetBool("http.csrf.enabled"),
-					viper.GetString("http.csrf.secret"),
-					viper.GetString("http.csrf.field_name"),
-					viper.GetStringSlice("http.csrf.ignore_paths")...,
-				),
-				ezapi.WithStaticFS("/assets", http.Dir("assets")),
-			); err != nil {
-				log.Info(err.Error())
-			}
-		}(apiCtx)
+		webService := InitializeWeb()
+		go webService.Run(apiCtx)
 		cancelSlice = append(cancelSlice, apicancel)
 
 		// 等待訊號
@@ -216,7 +217,9 @@ func init() {
 
 func newConversationMgr(ctx context.Context) (llm.ConversationMgr, context.CancelFunc, error) {
 	llmCtx, llmCancel := context.WithCancel(ctx)
-	llmmodel, err := googleai.New(llmCtx, googleai.WithAPIKey(viper.GetString("llm.googleai.api_key")), googleai.WithDefaultModel("gemini-2.5-flash"))
+	llmmodel, err := googleai.New(llmCtx,
+		googleai.WithAPIKey(viper.GetString("llm.googleai.api_key")),
+		googleai.WithDefaultModel(viper.GetString("llm.model")))
 	if err != nil {
 		llmCancel()
 		return nil, nil, err

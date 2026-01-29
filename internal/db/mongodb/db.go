@@ -5,12 +5,15 @@ import (
 	"fmt"
 
 	"github.com/94peter/vulpes/db/mgo"
+	"go.opentelemetry.io/otel/trace"
 
 	"seanAIgent/internal/db"
 )
 
-func IniMongodb(ctx context.Context, uri string, dbName string) (db.CloseDbFunc, error) {
-	err := mgo.InitConnection(ctx, dbName, mgo.WithURI(uri), mgo.WithMinPoolSize(50), mgo.WithMaxPoolSize(100))
+const defaultLimit = 100
+
+func IniMongodb(ctx context.Context, uri string, dbName string, tracer trace.Tracer) (db.CloseDbFunc, error) {
+	err := mgo.InitConnection(ctx, dbName, tracer, mgo.WithURI(uri), mgo.WithMinPoolSize(50), mgo.WithMaxPoolSize(100))
 	if err != nil {
 		return nil, err
 	}

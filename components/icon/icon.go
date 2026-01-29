@@ -19,12 +19,12 @@ var (
 
 // Props defines the properties that can be set for an icon.
 type Props struct {
-	Size        int
 	Color       string
 	Fill        string
 	Stroke      string
-	StrokeWidth string // Stroke Width of Icon, Usage: "2.5"
+	StrokeWidth string
 	Class       string
+	Size        int
 }
 
 // Icon returns a function that generates a templ.Component for the specified icon name.

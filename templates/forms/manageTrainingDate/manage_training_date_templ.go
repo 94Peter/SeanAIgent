@@ -24,15 +24,15 @@ import (
 
 // TrainingDate represents a single training time slot for the view model.
 type TrainingDate struct {
-	ID          string
-	Date        string
-	Start       string
-	End         string
-	Location    string
-	Capacity    int
-	BookedCount int
+	ID       string
+	Date     string
+	Start    string
+	End      string
+	Location string
 	// FormattedDate would be like "10/09 (週四)"
 	FormattedDate string
+	Capacity      int
+	BookedCount   int
 }
 
 type InputDeleteTrainingDate struct {
@@ -45,8 +45,8 @@ type InputTrainingDate struct {
 	Start    string `form:"start"`
 	End      string `form:"end"`
 	Location string `form:"location"`
-	Capacity int    `form:"capacity"`
 	Timezone string `form:"timezone"`
+	Capacity int    `form:"capacity"`
 }
 
 type dateTimeRange struct {
@@ -85,9 +85,9 @@ func toTime(date, timeStr, timezone string) (time.Time, error) {
 
 type MultiTrainingDateFormModel struct {
 	Dates       []*TrainingDate
+	LiffId      string
 	DefaultDate *InputTrainingDate
 	IsAdmin     bool
-	LiffId      string
 	EnableCSRF  bool
 }
 

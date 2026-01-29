@@ -38,17 +38,15 @@ func NewAppointment() *Appointment {
 }
 
 type Appointment struct {
+	CreatedAt      time.Time `bson:"created_at"`
 	mgo.Index      `bson:"-"`
-	ID             bson.ObjectID `bson:"_id"`
 	UserID         string        `bson:"user_id"`
 	UserName       string        `bson:"user_name"`
 	ChildName      string        `bson:"child_name,omitempty"`
+	ID             bson.ObjectID `bson:"_id"`
 	TrainingDateId bson.ObjectID `bson:"training_date_id"`
-	CreatedAt      time.Time     `bson:"created_at"`
-	// 簽到
-	IsCheckedIn bool `bson:"is_checked_in"`
-	// 請假
-	IsOnLeave bool `bson:"is_on_leave"`
+	IsCheckedIn    bool          `bson:"is_checked_in"`
+	IsOnLeave      bool          `bson:"is_on_leave"`
 }
 
 func (s *Appointment) GetId() any {

@@ -12,6 +12,7 @@ import (
 	"github.com/94peter/vulpes/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/otel"
 
 	"seanAIgent/internal/db/factory"
 	"seanAIgent/internal/mcp"
@@ -32,12 +33,28 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("mcp called")
+
+		tp, err := initTracer("seanAIgen-MCP")
+		if err != nil {
+			log.Fatalf("initTracer fail: %v", err)
+		}
+		defer func() {
+			if err := tp.Shutdown(context.Background()); err != nil {
+				log.Fatalf("Error shutting down tracer provider: %v", err)
+			}
+		}()
+
+		dbTracer := otel.Tracer("Mongodb")
 		// db connection
 		dbCtx, cancel := context.WithTimeout(context.Background(), time.Minute)
-		err := factory.InitializeDb(
+		err = factory.InitializeDb(
 			dbCtx,
-			factory.WithMongoDB(viper.GetString("database.uri"),
-				viper.GetString("database.db")))
+			factory.WithMongoDB(
+				viper.GetString("database.uri"),
+				viper.GetString("database.db"),
+			),
+			factory.WithTracer(dbTracer),
+		)
 		if err != nil {
 			log.Fatal(err.Error())
 		}

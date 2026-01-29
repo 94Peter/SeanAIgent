@@ -12,6 +12,7 @@ import (
 type MyBookingsPageModel struct {
 	Bookings   []*BookingGroup
 	EnableCSRF bool
+	NextCursor string
 }
 
 // BookingGroup groups bookings by date.
@@ -28,9 +29,9 @@ type BookingItem struct {
 	StartTime     string
 	EndTime       string
 	Location      string
+	OnLeaveReason string
 	IsCancellable bool
 	IsOnLeave     bool
-	OnLeaveReason string
 }
 
 // --- Components ---
@@ -58,14 +59,28 @@ templ MyBookingsPage(model *MyBookingsPageModel) {
 		}
 		@card.Content(card.ContentProps{ Class: "flex-grow overflow-y-auto" }) {
 			<div class="space-y-6">
-				for _, group := range model.Bookings {
-					@bookingGroup(group, model.EnableCSRF)
-				}
-				if len(model.Bookings) == 0 {
-					<p class="text-muted-foreground text-center p-8">您目前沒有任何預約。</p>
-				}
+				@BookingList(model)
 			</div>
 		}
+	}
+}
+
+templ BookingList(model *MyBookingsPageModel) {
+	for _, group := range model.Bookings {
+		@bookingGroup(group, model.EnableCSRF)
+	}
+	if len(model.Bookings) == 0 && model.NextCursor == "" {
+		<p class="text-muted-foreground text-center p-8">您目前沒有更多的預約。</p>
+	}
+	if model.NextCursor != "" {
+		<div
+			hx-get={ "/my-bookings/items?cursor=" + model.NextCursor }
+			hx-trigger="revealed"
+			hx-swap="outerHTML"
+			class="text-center p-4 text-muted-foreground"
+		>
+			載入更多...
+		</div>
 	}
 }
 
@@ -109,13 +124,22 @@ templ bookingItem(booking *BookingItem, enableCSRF bool) {
 					}
 				</form>
 			} else if booking.IsOnLeave {
-				@button.Button(button.Props{
-					Disabled: true,
-					Variant:  button.VariantOutline,
-					Attributes: templ.Attributes{"title": "您已為此預約申請請假"},
-				}) {
-					已請假
-				}
+				<form
+					hx-delete={ "/booking/" + booking.BookingID + "/leave" }
+					hx-target={ "#my-booking-" + booking.BookingID }
+					hx-swap="outerHTML"
+					hx-confirm="您確定要取消請假嗎？"
+				>
+					if enableCSRF {
+						@csrf.CSRF()
+					}
+					@button.Button(button.Props{
+						Type:    "submit",
+						Variant: button.VariantOutline,
+					}) {
+						取消請假
+					}
+				</form>
 			} else {
 				@button.Button(button.Props{
 					Variant:  button.VariantOutline,
@@ -123,7 +147,6 @@ templ bookingItem(booking *BookingItem, enableCSRF bool) {
 						"hx-get":    "/booking/leave-request-form/" + booking.BookingID,
 						"hx-target": "body",
 						"hx-swap":   "beforeend",
-						"title":     "預約已超過24小時，如需請假請直接聯繫教練",
 					},
 				}) {
 					我要請假

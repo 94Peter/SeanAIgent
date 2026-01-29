@@ -40,7 +40,6 @@ type TrainingDateService interface {
 	QueryLeaveByTrainingDate(ctx context.Context, date time.Time) ([]*model.AggrTrainingHasAppointOnLeave, error)
 	CancelLeave(ctx context.Context, leaveID string) error
 	TrainingDateRangeFormat(start, end time.Time, timezone string) string
-	AppointmentState(ctx context.Context, month int, year int) ([]*model.AggrAppointmentState, error)
 }
 
 type trainingDateService struct {
@@ -58,7 +57,6 @@ func (s *trainingDateService) QueryLeaveByTrainingDate(ctx context.Context, date
 	for i := range data {
 		data[i].StartDate = model.ToTime(data[i].StartDate, "Asia/Taipei")
 		data[i].EndDate = model.ToTime(data[i].EndDate, "Asia/Taipei")
-		fmt.Println(data[i])
 	}
 	return data, nil
 }
@@ -196,8 +194,4 @@ func (s *trainingDateService) TrainingDateRangeFormat(start, end time.Time, time
 	start = model.ToTime(start, timezone)
 	end = model.ToTime(end, timezone)
 	return fmt.Sprintf("%s %s - %s", start.Format("01/02"), start.Format("15:04"), end.Format("15:04"))
-}
-
-func (s *trainingDateService) AppointmentState(ctx context.Context, month int, year int) ([]*model.AggrAppointmentState, error) {
-	return s.appointmentStore.AppointmentState(ctx, bson.M{})
 }

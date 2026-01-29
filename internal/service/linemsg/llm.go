@@ -23,6 +23,9 @@ type llmReply struct {
 	mgr llm.ConversationMgr
 }
 
+const readHistoryTimeout = 5 * time.Second
+const chatTimeout = 30 * time.Second
+
 func (r *llmReply) MessageTextReply(ctx context.Context, typ linebot.EventSourceType, groupID, userID, msg string, mysession sessions.Session) ([]linebot.SendingMessage, textreply.DelayedMessage, error) {
 	if !session.IsAdmin(mysession) {
 		return nil, nil, nil
@@ -30,12 +33,18 @@ func (r *llmReply) MessageTextReply(ctx context.Context, typ linebot.EventSource
 	if typ != linebot.EventSourceTypeUser {
 		return nil, nil, nil
 	}
-	conversation, err := r.mgr.NewConversation(ctx, userID)
+
+	mgrCtx, mgrCancel := context.WithTimeout(context.Background(), readHistoryTimeout)
+	defer mgrCancel()
+	conversation, err := r.mgr.NewConversation(mgrCtx, userID)
 	if err != nil {
 		return nil, nil, err
 	}
 	today := time.Now()
-	response, err := conversation.Chat(ctx, msg, map[string]any{
+
+	chatCtx, chatCancel := context.WithTimeout(context.Background(), chatTimeout)
+	defer chatCancel()
+	response, err := conversation.Chat(chatCtx, msg, map[string]any{
 		"line_user_id": userID,
 		"today":        today.Format(time.RFC3339),
 		"weekday":      today.Weekday().String(),
@@ -43,7 +52,6 @@ func (r *llmReply) MessageTextReply(ctx context.Context, typ linebot.EventSource
 	if err != nil {
 		return nil, nil, err
 	}
-
 	return []linebot.SendingMessage{
 		linebot.NewTextMessage(response),
 	}, nil, nil

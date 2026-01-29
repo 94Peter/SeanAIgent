@@ -15,13 +15,11 @@ import (
 
 var initComponentApiOnce sync.Once
 
-func InitComponentApi() {
+func initComponentApi(r ezapi.Router) {
 	initComponentApiOnce.Do(func() {
 		api := &componentAPI{}
 
-		ezapi.RegisterGinApi(func(r ezapi.Router) {
-			r.GET("/components/toast", api.getToast)
-		})
+		r.GET("/components/toast", api.getToast)
 	})
 }
 

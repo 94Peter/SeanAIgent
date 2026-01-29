@@ -18,15 +18,10 @@ func NewAggUserAppointment() *AggrUserAppointment {
 // an appointment with its corresponding training date information.
 // It's used to display a user's list of their own bookings.
 type AggrUserAppointment struct {
-	mgo.Index      `bson:"-"`
-	ID             bson.ObjectID `bson:"_id"`
-	UserID         string        `bson:"user_id"`
-	UserName       string        `bson:"user_name"`
-	ChildName      string        `bson:"child_name,omitempty"`
-	CreatedAt      time.Time     `bson:"created_at"`
-	TrainingDateId bson.ObjectID `bson:"training_date_id"`
-	IsOnLeave      bool          `bson:"is_on_leave"`
-	TrainingDate   *struct {     // Use a slice for the lookup result
+	CreatedAt    time.Time `bson:"created_at"`
+	UpdateAt     time.Time `bson:"update_at"`
+	mgo.Index    `bson:"-"`
+	TrainingDate *struct {
 		Date      string    `bson:"date"`
 		Location  string    `bson:"location"`
 		StartDate time.Time `bson:"start_date"`
@@ -34,10 +29,17 @@ type AggrUserAppointment struct {
 		Timezone  string    `bson:"timezone"`
 	} `bson:"training_date_info"`
 	LeaveInfo *struct {
+		CreatedAt time.Time `bson:"created_at"`
 		Reason    string    `bson:"reason"`
 		Status    string    `bson:"status"`
-		CreatedAt time.Time `bson:"created_at"`
 	} `bson:"leave_info"`
+	UserID         string        `bson:"user_id"`
+	UserName       string        `bson:"user_name"`
+	ChildName      string        `bson:"child_name,omitempty"`
+	ID             bson.ObjectID `bson:"_id"`
+	TrainingDateId bson.ObjectID `bson:"training_date_id"`
+	IsCheckedIn    bool          `bson:"is_checked_in"`
+	IsOnLeave      bool          `bson:"is_on_leave"`
 }
 
 func (aggr *AggrUserAppointment) GetPipeline(q bson.M) mongo.Pipeline {

@@ -16,26 +16,25 @@ func NewAggrTrainingDateAppointState(targetUserID string) *AggrTrainingDateAppoi
 }
 
 type UserAppointment struct {
-	ID        bson.ObjectID `bson:"_id"`
-	ChildName string        `bson:"child_name,omitempty"`
-	IsOnLeave bool          `bson:"is_on_leave"`
 	CreatedAt time.Time     `bson:"created_at"`
+	ChildName string        `bson:"child_name,omitempty"`
+	ID        bson.ObjectID `bson:"_id"`
+	IsOnLeave bool          `bson:"is_on_leave"`
 }
 
 type AggrTrainingDateAppointState struct {
+	StartDate            time.Time `bson:"start_date"`
+	EndDate              time.Time `bson:"end_date"`
 	mgo.Index            `bson:"-"`
-	ID                   bson.ObjectID     `bson:"_id"`
 	Date                 string            `bson:"date"`
 	Location             string            `bson:"location"`
-	Capacity             int               `bson:"capacity"`
-	StartDate            time.Time         `bson:"start_date"`
-	EndDate              time.Time         `bson:"end_date"`
 	Timezone             string            `bson:"timezone"`
-	TotalAppointments    int               `bson:"total_appointments"`
+	targetUserID         string            `bson:"-"`
 	UserAppointments     []UserAppointment `bson:"user_appointments"`
 	AppointmentUserNames []string          `bson:"appointment_user_names"`
-
-	targetUserID string `bson:"-"`
+	Capacity             int               `bson:"capacity"`
+	TotalAppointments    int               `bson:"total_appointments"`
+	ID                   bson.ObjectID     `bson:"_id"`
 }
 
 func (aggr *AggrTrainingDateAppointState) GetPipeline(q bson.M) mongo.Pipeline {
@@ -108,6 +107,9 @@ func (aggr *AggrTrainingDateAppointState) GetPipeline(q bson.M) mongo.Pipeline {
 			{"user_appointments.created_at", 1},
 			{"user_appointments.is_on_leave", 1},
 		}}},
+
+		// order by start_date
+		{{"$sort", bson.D{{"start_date", 1}}}},
 	}
 	return pipeline
 }

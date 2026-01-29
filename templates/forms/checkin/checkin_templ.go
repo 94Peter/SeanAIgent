@@ -19,6 +19,7 @@ import (
 type CheckinPageModel struct {
 	SlotID       string
 	SlotInfo     string // e.g., "10月26日 (週日) 09:00 - 10:30 @ 中和運動中心"
+	StartTime    string
 	CheckinItems []*CheckinItem
 	OnLeaveItems []*CheckinItem
 	EnableCSRF   bool
@@ -33,6 +34,7 @@ type CheckinItem struct {
 
 type InputCheckinForm struct {
 	SlotID              string   `form:"slotId"`
+	StartTime           string   `form:"startTime"`
 	CheckedInBookingIDs []string `form:"checkedInBookingIds[]"` // Array of checked booking IDs
 }
 
@@ -127,7 +129,7 @@ func CheckinPage(model *CheckinPageModel, liffId string) templ.Component {
 					var templ_7745c5c3_Var6 string
 					templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(model.SlotInfo)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/checkin/checkin.templ`, Line: 42, Col: 38}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/checkin/checkin.templ`, Line: 44, Col: 38}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 					if templ_7745c5c3_Err != nil {
@@ -140,7 +142,7 @@ func CheckinPage(model *CheckinPageModel, liffId string) templ.Component {
 					var templ_7745c5c3_Var7 string
 					templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(len(model.CheckinItems))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/checkin/checkin.templ`, Line: 43, Col: 50}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/checkin/checkin.templ`, Line: 45, Col: 50}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 					if templ_7745c5c3_Err != nil {
@@ -186,7 +188,7 @@ func CheckinPage(model *CheckinPageModel, liffId string) templ.Component {
 					var templ_7745c5c3_Var9 string
 					templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(model.ErrorMessage)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/checkin/checkin.templ`, Line: 50, Col: 26}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/checkin/checkin.templ`, Line: 52, Col: 26}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 					if templ_7745c5c3_Err != nil {
@@ -226,13 +228,13 @@ func CheckinPage(model *CheckinPageModel, liffId string) templ.Component {
 		}
 		templ_7745c5c3_Var10, templ_7745c5c3_Err := templruntime.ScriptContentInsideStringLiteral(liffId)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/checkin/checkin.templ`, Line: 75, Col: 33}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/checkin/checkin.templ`, Line: 77, Col: 33}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "' }).then(() => {\n\t\t\t\tif (liff.isInClient()) {\n\t\t\t\t\t// Enable the form if in LINE client\n\t\t\t\t\tif (checkinInterface) {\n\t\t\t\t\t\tcheckinInterface.classList.remove('opacity-50', 'pointer-events-none');\n\t\t\t\t\t}\n\t\t\t\t\tsetupCheckinForm(); // Initial setup\n\t\t\t\t} else {\n\t\t\t\t\tshowLiffError('請在 LINE App 中開啟此頁面以進行簽到。');\n\t\t\t\t}\n\t\t\t}).catch((err) => {\n\t\t\t\tconsole.error(\"LIFF init failed:\", err);\n\t\t\t\tshowLiffError('LIFF 初始化失敗，無法載入簽到系統，請確認網路連線正常。');\n\t\t\t\tshowToast({\n\t\t\t\t\ttitle: 'LIFF 初始化失敗',\n\t\t\t\t\tdescription: '無法載入簽到系統，請確認網路連線正常。',\n\t\t\t\t\tvariant: 'error',\n\t\t\t\t\tduration: 0,\n\t\t\t\t});\n\t\t\t});\n\n\t\t\tconst setupCheckinForm = () => {\n\t\t\t\tif (!checkinForm) return;\n\n\t\t\t\tcheckinForm.addEventListener('submit', async (e) => {\n\t\t\t\t\te.preventDefault();\n\n\t\t\t\t\tconst formData = new FormData(checkinForm);\n\t\t\t\t\tconst slotId = formData.get('slotId');\n\t\t\t\t\tconst csrfToken = formData.get('_csrf');\n\t\t\t\t\tconst checkedInBookingIDs = formData.getAll('checkedInBookingIds[]');\n\n\t\t\t\t\ttry {\n\t\t\t\t\t\tconst params = new URLSearchParams();\n\t\t\t\t\t\tparams.append('slotId', slotId);\n\t\t\t\t\t\tparams.append('_csrf', csrfToken);\n\t\t\t\t\t\tcheckedInBookingIDs.forEach(id => params.append('checkedInBookingIds[]', id));\n\n\t\t\t\t\t\tconst response = await fetch('/admin/checkin/submit', {\n\t\t\t\t\t\t\tmethod: 'POST',\n\t\t\t\t\t\t\theaders: { 'Content-Type': 'application/x-www-form-urlencoded' },\n\t\t\t\t\t\t\tbody: params.toString(),\n\t\t\t\t\t\t});\n\n\t\t\t\t\t\tif (!response.ok) {\n\t\t\t\t\t\t\tconst errorText = await response.text();\n\t\t\t\t\t\t\tthrow new Error(`Server error: ${response.status} ${errorText}`);\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\tconst data = await response.json();\n\n\t\t\t\t\t\tif (data.liffMessage) {\n\t\t\t\t\t\t\tif (liff.isInClient()) {\n\t\t\t\t\t\t\t\tawait liff.sendMessages([{\n\t\t\t\t\t\t\t\t\ttype: 'text',\n\t\t\t\t\t\t\t\t\ttext: data.liffMessage,\n\t\t\t\t\t\t\t\t}]);\n\t\t\t\t\t\t\t\tliff.closeWindow();\n\t\t\t\t\t\t\t} else {\n\t\t\t\t\t\t\t\tshowToast({ title: '訊息發送失敗', description: '請在 LINE App 中開啟以發送訊息。', variant: 'error' });\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t} else {\n\t\t\t\t\t\t\tshowToast({ title: '提交成功', description: '簽到狀態已更新，但未收到 LIFF 訊息。', variant: 'warning' });\n\t\t\t\t\t\t}\n\t\t\t\t\t} catch (error) {\n\t\t\t\t\t\tconsole.error('Check-in submission failed:', error);\n\t\t\t\t\t\tshowToast({ title: '提交失敗', description: `簽到狀態更新失敗: ${error.message}`, variant: 'error' });\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t}\n\n\t\t\tdocument.body.addEventListener('htmx:responseError', function(evt) {\n\t\t\t\tshowToast({ title: '操作失敗', description: '簽到提交失敗，請稍後再試。 ', variant: 'error' });\n\t\t\t});\n\t\t});\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "' }).then(() => {\n\t\t\t\tif (liff.isInClient()) {\n\t\t\t\t\t// Enable the form if in LINE client\n\t\t\t\t\tif (checkinInterface) {\n\t\t\t\t\t\tcheckinInterface.classList.remove('opacity-50', 'pointer-events-none');\n\t\t\t\t\t}\n\t\t\t\t\tsetupCheckinForm(); // Initial setup\n\t\t\t\t} else {\n\t\t\t\t\tshowLiffError('請在 LINE App 中開啟此頁面以進行簽到。');\n\t\t\t\t}\n\t\t\t}).catch((err) => {\n\t\t\t\tconsole.error(\"LIFF init failed:\", err);\n\t\t\t\tshowLiffError('LIFF 初始化失敗，無法載入簽到系統，請確認網路連線正常。');\n\t\t\t\tshowToast({\n\t\t\t\t\ttitle: 'LIFF 初始化失敗',\n\t\t\t\t\tdescription: '無法載入簽到系統，請確認網路連線正常。',\n\t\t\t\t\tvariant: 'error',\n\t\t\t\t\tduration: 0,\n\t\t\t\t});\n\t\t\t});\n\n\t\t\tconst setupCheckinForm = () => {\n\t\t\t\tif (!checkinForm) return;\n\n\t\t\t\tcheckinForm.addEventListener('submit', async (e) => {\n\t\t\t\t\te.preventDefault();\n\n\t\t\t\t\tconst formData = new FormData(checkinForm);\n\t\t\t\t\tconst slotId = formData.get('slotId');\n\t\t\t\t\tconst startTime = formData.get('startTime');\n\t\t\t\t\tconst csrfToken = formData.get('_csrf');\n\t\t\t\t\tconst checkedInBookingIDs = formData.getAll('checkedInBookingIds[]');\n\n\t\t\t\t\ttry {\n\t\t\t\t\t\tconst params = new URLSearchParams();\n\t\t\t\t\t\tparams.append('startTime', startTime);\n\t\t\t\t\t\tparams.append('slotId', slotId);\n\t\t\t\t\t\tparams.append('_csrf', csrfToken);\n\t\t\t\t\t\tcheckedInBookingIDs.forEach(id => params.append('checkedInBookingIds[]', id));\n\n\t\t\t\t\t\tconst response = await fetch('/admin/checkin/submit', {\n\t\t\t\t\t\t\tmethod: 'POST',\n\t\t\t\t\t\t\theaders: { 'Content-Type': 'application/x-www-form-urlencoded' },\n\t\t\t\t\t\t\tbody: params.toString(),\n\t\t\t\t\t\t});\n\n\t\t\t\t\t\tif (!response.ok) {\n\t\t\t\t\t\t\tconst errorText = await response.text();\n\t\t\t\t\t\t\tthrow new Error(`Server error: ${response.status} ${errorText}`);\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\tconst data = await response.json();\n\n\t\t\t\t\t\tif (data.liffMessage) {\n\t\t\t\t\t\t\tif (liff.isInClient()) {\n\t\t\t\t\t\t\t\tawait liff.sendMessages([{\n\t\t\t\t\t\t\t\t\ttype: 'text',\n\t\t\t\t\t\t\t\t\ttext: data.liffMessage,\n\t\t\t\t\t\t\t\t}]);\n\t\t\t\t\t\t\t\tliff.closeWindow();\n\t\t\t\t\t\t\t} else {\n\t\t\t\t\t\t\t\tshowToast({ title: '訊息發送失敗', description: '請在 LINE App 中開啟以發送訊息。', variant: 'error' });\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t} else {\n\t\t\t\t\t\t\tshowToast({ title: '提交成功', description: '簽到狀態已更新，但未收到 LIFF 訊息。', variant: 'warning' });\n\t\t\t\t\t\t}\n\t\t\t\t\t} catch (error) {\n\t\t\t\t\t\tconsole.error('Check-in submission failed:', error);\n\t\t\t\t\t\tshowToast({ title: '提交失敗', description: `簽到狀態更新失敗: ${error.message}`, variant: 'error' });\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t}\n\n\t\t\tdocument.body.addEventListener('htmx:responseError', function(evt) {\n\t\t\t\tshowToast({ title: '操作失敗', description: '簽到提交失敗，請稍後再試。 ', variant: 'error' });\n\t\t\t});\n\t\t});\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -261,20 +263,33 @@ func CheckinList(model *CheckinPageModel) templ.Component {
 			templ_7745c5c3_Var11 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<form id=\"checkin-form\"><input type=\"hidden\" name=\"slotId\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<form id=\"checkin-form\"><input type=\"hidden\" name=\"startTime\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var12 string
-		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(model.SlotID)
+		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(model.StartTime)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/checkin/checkin.templ`, Line: 155, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/checkin/checkin.templ`, Line: 159, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\"> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\"> <input type=\"hidden\" name=\"slotId\" value=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var13 string
+		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(model.SlotID)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/checkin/checkin.templ`, Line: 160, Col: 57}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\"> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -284,128 +299,128 @@ func CheckinList(model *CheckinPageModel) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<div id=\"checkin-list-container\" class=\"space-y-4\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<div id=\"checkin-list-container\" class=\"space-y-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if len(model.CheckinItems) == 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<p class=\"text-muted-foreground text-center p-8\">此時段沒有預約。</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<p class=\"text-muted-foreground text-center p-8\">此時段沒有預約。</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
 			for _, item := range model.CheckinItems {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"flex items-center justify-between bg-background/50 p-3 rounded-lg\"><label for=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var13 string
-				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs("checkin-" + item.BookingID)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/checkin/checkin.templ`, Line: 165, Col: 46}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\" class=\"flex items-center gap-3 flex-grow cursor-pointer\"><input type=\"checkbox\" id=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<div class=\"flex items-center justify-between bg-background/50 p-3 rounded-lg\"><label for=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var14 string
 				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs("checkin-" + item.BookingID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/checkin/checkin.templ`, Line: 168, Col: 40}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/checkin/checkin.templ`, Line: 170, Col: 46}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\" name=\"checkedInBookingIds[]\" value=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\" class=\"flex items-center gap-3 flex-grow cursor-pointer\"><input type=\"checkbox\" id=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var15 string
-				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(item.BookingID)
+				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs("checkin-" + item.BookingID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/checkin/checkin.templ`, Line: 170, Col: 30}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/checkin/checkin.templ`, Line: 173, Col: 40}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				if item.IsCheckedIn {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, " checked")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, " class=\"size-5 rounded border-gray-300 text-primary focus:ring-primary\"> <span class=\"text-base font-medium\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "\" name=\"checkedInBookingIds[]\" value=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var16 string
-				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(item.ChildName)
+				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(item.BookingID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/checkin/checkin.templ`, Line: 174, Col: 59}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/checkin/checkin.templ`, Line: 175, Col: 30}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</span></label></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-			}
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</div><div class=\"mt-8\"><h3 class=\"text-lg font-semibold mb-4\">請假人員</h3>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		if len(model.OnLeaveItems) == 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<p class=\"text-muted-foreground text-center p-8\">此時段沒有請假人員。</p>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<div class=\"space-y-4\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			for _, item := range model.OnLeaveItems {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<div class=\"flex items-center justify-between bg-background/50 p-3 rounded-lg opacity-70\"><span class=\"text-base font-medium text-muted-foreground\">")
+				if item.IsCheckedIn {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, " checked")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, " class=\"size-5 rounded border-gray-300 text-primary focus:ring-primary\"> <span class=\"text-base font-medium\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(item.ChildName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/checkin/checkin.templ`, Line: 188, Col: 81}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/checkin/checkin.templ`, Line: 179, Col: 59}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, " (請假)</span></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</span></label></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "</div>")
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</div><div class=\"mt-8\"><h3 class=\"text-lg font-semibold mb-4\">請假人員</h3>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if len(model.OnLeaveItems) == 0 {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<p class=\"text-muted-foreground text-center p-8\">此時段沒有請假人員。</p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		} else {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<div class=\"space-y-4\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			for _, item := range model.OnLeaveItems {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<div class=\"flex items-center justify-between bg-background/50 p-3 rounded-lg opacity-70\"><span class=\"text-base font-medium text-muted-foreground\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var18 string
+				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(item.ChildName)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/checkin/checkin.templ`, Line: 193, Col: 81}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, " (請假)</span></div>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "</div><div class=\"mt-6\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "</div><div class=\"mt-6\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var18 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Var19 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 			if !templ_7745c5c3_IsBuffer {
@@ -417,7 +432,7 @@ func CheckinList(model *CheckinPageModel) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "提交簽到")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "提交簽到")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -427,11 +442,11 @@ func CheckinList(model *CheckinPageModel) templ.Component {
 			Type:    "submit",
 			Class:   "w-full",
 			Variant: button.VariantDefault,
-		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var18), templ_7745c5c3_Buffer)
+		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var19), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</div></form>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "</div></form>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

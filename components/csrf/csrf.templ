@@ -1,6 +1,6 @@
 package csrf
-
+import "github.com/94peter/vulpes/ezapi"
 
 templ CSRF() {
-	<input type="hidden" name="_csrf" value={ ctx.Value("gorilla.csrf.Token").(string) }/>
+	<input type="hidden" name="_csrf" value={ ctx.Value(ezapi.CtxKeyCSRFToken).(string) }/>
 }
