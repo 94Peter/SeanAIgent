@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/94peter/vulpes/log"
 	"github.com/spf13/cobra"
@@ -73,7 +74,7 @@ func initConfig() {
 		viper.SetConfigType("yaml")
 		viper.SetConfigName(".seanAIgent")
 	}
-
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
