@@ -10,7 +10,9 @@ import (
 )
 
 func NewApptRepository() repository.AppointmentRepository {
-	return &apptRepoImpl{}
+	return &migrateV1ToV2apptRepoImpl{
+		AppointmentRepository: &apptRepoImpl{},
+	}
 }
 
 type apptRepoImpl struct {

@@ -87,17 +87,21 @@ func TestModelConversion(t *testing.T) {
 			UserName:       userName,
 			ChildName:      childName,
 			TrainingDateId: trainID,
-			Status:         string(entity.StatusAttended),
-			CreatedAt:      now,
-			UpdateAt:       now,
-			IsCheckedIn:    true,
-			VerifyTime:     &verifiedAt,
-			IsOnLeave:      true,
-			Leave: &leaveInfo{
-				Reason:    "vacation",
-				Status:    string(entity.LeaveStatusPending),
-				CreatedAt: now.Add(time.Hour),
+			v2Fields: v2Fields{
+				Status:     string(entity.StatusAttended),
+				UpdateAt:   now,
+				VerifyTime: &verifiedAt,
+				Leave: &leaveInfo{
+					Reason:    "vacation",
+					Status:    string(entity.LeaveStatusPending),
+					CreatedAt: now.Add(time.Hour),
+				},
 			},
+			v1_deprecatedFields: v1_deprecatedFields{
+				IsCheckedIn: true,
+				IsOnLeave:   true,
+			},
+			CreatedAt: now,
 		}
 
 		domain, err := model.toDomain()
@@ -127,9 +131,11 @@ func TestModelConversion(t *testing.T) {
 			UserID:         "u1",
 			UserName:       "n1",
 			TrainingDateId: bson.NewObjectID(),
-			Status:         "INVALID_STATUS",
-			CreatedAt:      time.Now(),
-			UpdateAt:       time.Now(),
+			v2Fields: v2Fields{
+				Status:   "INVALID_STATUS",
+				UpdateAt: time.Now(),
+			},
+			CreatedAt: time.Now(),
 		}
 
 		// toDomain handles invalid status by defaulting to StatusConfirmed inside AppointmentStatusFromString logic?

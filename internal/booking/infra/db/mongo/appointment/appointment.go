@@ -84,6 +84,10 @@ func withDomainAppt(appt *entity.Appointment) apptOpt {
 			model.IsOnLeave = false
 			model.Leave = nil
 		}
+		model.Migration.Status = mgo.MigrateStatusSuccess
+		model.Migration.Version = 2
+		model.Migration.LastRun = time.Now()
+		model.Migration.Error = ""
 		return nil
 	}
 }
@@ -103,19 +107,31 @@ func newModelAppt(opts ...apptOpt) (*appointment, error) {
 }
 
 type appointment struct {
-	UpdateAt       time.Time `bson:"update_at"`
-	CreatedAt      time.Time `bson:"created_at"`
-	mgo.Index      `bson:"-"`
-	Leave          *leaveInfo    `bson:"leave,omitempty"`
-	VerifyTime     *time.Time    `bson:"verify_time,omitempty"`
-	Status         string        `bson:"status"`
-	ChildName      string        `bson:"child_name,omitempty"`
-	UserName       string        `bson:"user_name"`
-	UserID         string        `bson:"user_id"`
-	TrainingDateId bson.ObjectID `bson:"training_date_id"`
-	ID             bson.ObjectID `bson:"_id"`
-	IsCheckedIn    bool          `bson:"is_checked_in"`
-	IsOnLeave      bool          `bson:"is_on_leave"`
+	// v2 field
+	CreatedAt time.Time `bson:"created_at"`
+	mgo.Index `bson:"-"`
+	Migration mgo.MigrationInfo `bson:"_migration"`
+	// v2 field
+	v2Fields `bson:",inline"`
+	// deprecated v1 field
+	v1_deprecatedFields `bson:",inline"`
+	ChildName           string        `bson:"child_name,omitempty"`
+	UserName            string        `bson:"user_name"`
+	UserID              string        `bson:"user_id"`
+	TrainingDateId      bson.ObjectID `bson:"training_date_id"`
+	ID                  bson.ObjectID `bson:"_id"`
+}
+
+type v2Fields struct {
+	UpdateAt   time.Time  `bson:"update_at"`
+	VerifyTime *time.Time `bson:"verify_time,omitempty"`
+	Leave      *leaveInfo `bson:"leave,omitempty"`
+	Status     string     `bson:"status"`
+}
+
+type v1_deprecatedFields struct {
+	IsCheckedIn bool `bson:"is_checked_in"`
+	IsOnLeave   bool `bson:"is_on_leave"`
 }
 
 type leaveInfo struct {
@@ -206,6 +222,7 @@ func (*apptRepoImpl) SaveManyAppointments(
 		if err != nil {
 			return newInternalError(op, err)
 		}
+
 		bulkOpts = bulkOpts.InsertOne(modelAppt)
 	}
 	_, err = bulkOpts.Execute(ctx)
