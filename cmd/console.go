@@ -28,6 +28,7 @@ import (
 
 	"seanAIgent/internal/booking/infra/db"
 	"seanAIgent/internal/booking/transport/line/notification"
+	"seanAIgent/internal/booking/transport/web"
 	"seanAIgent/internal/db/factory"
 	"seanAIgent/internal/service"
 	"seanAIgent/internal/service/lineliff"
@@ -90,6 +91,10 @@ to quickly create a Cobra application.`,
 				viper.GetString("database.uri"),
 				viper.GetString("database.db"),
 			),
+			factory.WithMongoDBPoolSize(
+				viper.GetUint64("database.max_pool_size"),
+				viper.GetUint64("database.min_pool_size"),
+			),
 			factory.WithTracer(dbTracer),
 		)
 		if err != nil {
@@ -120,15 +125,14 @@ to quickly create a Cobra application.`,
 		var appointmentState textreply.LineKeywordReply
 		var catchUpCheckIn textreply.LineKeywordReply
 		var userApptStatsNotify notification.UserApptStatsNotifier
-
+		var webService web.WebService
 		factory.InjectStore(func(stores *factory.Stores) {
 			_ = service.InitService(
 				service.WithTrainingStore(stores.TrainingDateStore),
 				service.WithAppointmentStore(stores.AppointmentStore),
 			)
-
+			webService = InitializeWeb()
 			// v1 handler
-			// handler.InitHandler(routerGroup, svc, viper.GetBool("http.csrf.enabled"))
 
 			// v2 handler
 			dbRepo := db.NewDbRepoAndIdGenerate()
@@ -186,7 +190,7 @@ to quickly create a Cobra application.`,
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 		apiCtx, apicancel := context.WithCancel(context.Background())
-		webService := InitializeWeb()
+
 		go webService.Run(apiCtx)
 		cancelSlice = append(cancelSlice, apicancel)
 
