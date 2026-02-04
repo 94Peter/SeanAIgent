@@ -33,18 +33,13 @@ func (r *llmReply) MessageTextReply(ctx context.Context, typ linebot.EventSource
 	if typ != linebot.EventSourceTypeUser {
 		return nil, nil, nil
 	}
-
-	mgrCtx, mgrCancel := context.WithTimeout(context.Background(), readHistoryTimeout)
-	defer mgrCancel()
-	conversation, err := r.mgr.NewConversation(mgrCtx, userID)
+	conversation, err := r.mgr.NewConversation(ctx, userID)
 	if err != nil {
 		return nil, nil, err
 	}
-	today := time.Now()
 
-	chatCtx, chatCancel := context.WithTimeout(context.Background(), chatTimeout)
-	defer chatCancel()
-	response, err := conversation.Chat(chatCtx, msg, map[string]any{
+	today := time.Now()
+	response, err := conversation.Chat(ctx, msg, map[string]any{
 		"line_user_id": userID,
 		"today":        today.Format(time.RFC3339),
 		"weekday":      today.Weekday().String(),
