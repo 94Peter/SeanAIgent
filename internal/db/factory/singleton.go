@@ -27,7 +27,12 @@ func InitializeDb(ctx context.Context, opts ...option) error {
 		return errors.New("tracer not set")
 	}
 	var err error
-	closeDbFunc, err = mongodb.IniMongodb(ctx, defaultConfig.mongo.URI, defaultConfig.mongo.DB, defaultConfig.tracer)
+	closeDbFunc, err = mongodb.IniMongodb(
+		ctx,
+		defaultConfig.mongo.URI, defaultConfig.mongo.DB,
+		defaultConfig.mongo.MaxPoolSize,
+		defaultConfig.mongo.MinPoolSize,
+		defaultConfig.tracer)
 	if err != nil {
 		return err
 	}
@@ -59,7 +64,11 @@ func ProvideStores(ctx context.Context, opts ...option) (*Stores, func(), error)
 	}
 
 	// 2. 初始化底層驅動
-	closeDbFunc, err := mongodb.IniMongodb(ctx, cfg.mongo.URI, cfg.mongo.DB, cfg.tracer)
+	closeDbFunc, err := mongodb.IniMongodb(ctx,
+		cfg.mongo.URI, cfg.mongo.DB,
+		cfg.mongo.MaxPoolSize, cfg.mongo.MinPoolSize,
+		cfg.tracer,
+	)
 	if err != nil {
 		return nil, nil, err
 	}

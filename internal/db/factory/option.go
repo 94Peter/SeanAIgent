@@ -20,3 +20,13 @@ func WithTracer(t trace.Tracer) option {
 		c.tracer = t
 	}
 }
+
+func WithMongoDBPoolSize(maxPoolSize, minPoolSize uint64) option {
+	return func(c *dbConfig) {
+		if c.mongo == nil {
+			c.mongo = &mongodbConfig{}
+		}
+		c.mongo.MaxPoolSize = maxPoolSize
+		c.mongo.MinPoolSize = minPoolSize
+	}
+}

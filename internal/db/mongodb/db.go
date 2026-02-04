@@ -12,8 +12,12 @@ import (
 
 const defaultLimit = 100
 
-func IniMongodb(ctx context.Context, uri string, dbName string, tracer trace.Tracer) (db.CloseDbFunc, error) {
-	err := mgo.InitConnection(ctx, dbName, tracer, mgo.WithURI(uri), mgo.WithMinPoolSize(50), mgo.WithMaxPoolSize(100))
+func IniMongodb(ctx context.Context, uri string, dbName string, maxPoolSize, minPoolSize uint64, tracer trace.Tracer) (db.CloseDbFunc, error) {
+	err := mgo.InitConnection(
+		ctx, dbName, tracer, mgo.WithURI(uri),
+		mgo.WithMinPoolSize(minPoolSize),
+		mgo.WithMaxPoolSize(maxPoolSize),
+	)
 	if err != nil {
 		return nil, err
 	}
