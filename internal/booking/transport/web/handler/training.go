@@ -46,8 +46,8 @@ type trainingAPI struct {
 
 func (api *trainingAPI) InitRouter(r ezapi.Router) {
 	api.once.Do(func() {
-		r.GET("/training", api.getForm)
-		r.GET("/:lang/training", api.getForm)
+		// r.GET("/training", api.getForm)
+		// r.GET("/:lang/training", api.getForm)
 
 		r.POST("/training-date/add", api.addTrainingDate)
 		r.POST("/training-date/delete", api.deleteTrainingDate)

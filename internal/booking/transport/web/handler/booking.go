@@ -80,23 +80,23 @@ type bookingAPI struct {
 func (api *bookingAPI) InitRouter(r ezapi.Router) {
 	api.once.Do(func() {
 		// 建立活動表單
-		r.GET("/training/booking", api.getBookingForm)
-		r.GET("/:lang/training/booking", api.getBookingForm)
-		r.GET("/my-bookings", api.getMyBookingsPage)
-		r.GET("/:lang/my-bookings", api.getMyBookingsPage)
-		r.GET("/my-bookings/items", api.getMyBookingsNextPage)
-		r.GET("/:lang/my-bookings/items", api.getMyBookingsNextPage)
+		// r.GET("/training/booking", api.getBookingForm)
+		// r.GET("/:lang/training/booking", api.getBookingForm)
+		// r.GET("/my-bookings", api.getMyBookingsPage)
+		// r.GET("/:lang/my-bookings", api.getMyBookingsPage)
+		// r.GET("/my-bookings/items", api.getMyBookingsNextPage)
+		// r.GET("/:lang/my-bookings/items", api.getMyBookingsNextPage)
 		r.POST("/booking/create", api.bookTraining)
 		// 取消預約
 		r.POST("/booking/delete", api.bookingCancel)
-		r.GET("/booking/summary/:type", api.bookingSummary)
-		r.GET("/booking/leave-request-form/:bookingId", api.getLeaveRequestForm) // New route for leave request modal
+		// r.GET("/booking/summary/:type", api.bookingSummary)
+		// r.GET("/booking/leave-request-form/:bookingId", api.getLeaveRequestForm) // New route for leave request modal
 		// 請假
 		r.POST("/booking/:bookingId/leave", api.submitLeaveRequest) // New route for submitting leave request
 		r.DELETE("/booking/:bookingId/leave", api.cancelLeave)
 		// 簽到
-		r.GET("/:lang/admin/checkin", api.getCheckinPage)
-		r.GET("/admin/checkin", api.getCheckinPage)
+		// r.GET("/:lang/admin/checkin", api.getCheckinPage)
+		// r.GET("/admin/checkin", api.getCheckinPage)
 		r.POST("/admin/checkin/submit", api.submitCheckin)
 	})
 }

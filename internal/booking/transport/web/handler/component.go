@@ -19,7 +19,7 @@ type componentAPI struct {
 
 func (api *componentAPI) InitRouter(r ezapi.Router) {
 	api.once.Do(func() {
-		r.GET("/components/toast", api.getToast)
+		// r.GET("/components/toast", api.getToast)
 	})
 }
 
