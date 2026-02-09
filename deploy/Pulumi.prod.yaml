@@ -1,0 +1,4 @@
+config:
+  seanaigent:label: seanaigent-prod
+  seanaigent:region: nrt
+  seanaigent:plan: vhp-1c-1gb
