@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/base64"
+
 	"github.com/dirien/pulumi-vultr/sdk/v2/go/vultr"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
@@ -70,8 +72,10 @@ fi
 curl -fsSL https://get.coollabs.io/coolify/install.sh | bash
 `
 
+		encodedScript := base64.StdEncoding.EncodeToString([]byte(startupScript))
+
 		script, err := vultr.NewStartupScript(ctx, "coolify-init", &vultr.StartupScriptArgs{
-			Script: pulumi.String(startupScript),
+			Script: pulumi.String(encodedScript),
 		})
 		if err != nil {
 			return err
