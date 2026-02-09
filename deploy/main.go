@@ -76,7 +76,7 @@ export HOME=/root
 export USER=root
 
 # 安裝 Coolify
-curl -fsSL https://get.coollabs.io/coolify/install.sh | bash
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
 `
 		encodedScript := base64.StdEncoding.EncodeToString([]byte(rawScript))
 		script, err := vultr.NewStartupScript(ctx, "coolify-init", &vultr.StartupScriptArgs{
