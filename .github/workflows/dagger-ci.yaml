@@ -3,6 +3,10 @@ name: Dagger CI             # 第一行必須是 Key，不能是 "-" 開頭的�
 on:
   push:
     branches: [ main ]      # 或是你的主分支名稱
+    paths-ignore:
+      - 'deploy/**'  # 如果變動只發生在 deploy 資料夾，就不觸發此 Workflow
+      - 'README.md'  # 建議順便忽略文件變動
+      - '.gitignore'
 
 jobs:
   dagger:

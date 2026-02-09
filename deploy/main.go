@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/base64"
+	"fmt"
+	"strings"
 
 	"github.com/dirien/pulumi-vultr/sdk/v2/go/vultr"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
@@ -10,58 +12,65 @@ import (
 
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
-		// --- 1. 讀取不同 Stack 的配置 ---
-		// 這些值會從 Pulumi.prod.yaml 或 Pulumi.dev.yaml 讀取
 		cfg := config.New(ctx, "")
 
-		// 預設值設定：如果沒設定就用東京 (nrt) 和 高性能方案 (vhp)
-		// 正確寫法：使用 cfg.Get，如果回傳空字串則給予預設值
+		// --- 1. 配置讀取 ---
 		region := cfg.Get("region")
 		if region == "" {
-			region = "nrt" // 預設東京
+			region = "nrt"
 		}
-
 		plan := cfg.Get("plan")
 		if plan == "" {
-			plan = "vhp-1c-1gb" // 預設高效能方案
+			plan = "vhp-1c-1gb"
 		}
 		instanceLabel := cfg.Require("label")
 
-		// --- 2. 防火牆設定 (與之前邏輯相同) ---
-		fwGroup, err := vultr.NewFirewallGroup(ctx, "coolify-fw-group", &vultr.FirewallGroupArgs{
-			Description: pulumi.Sprintf("Managed by Pulumi: %s", instanceLabel),
+		// --- 2. Cloudflare IPv4 清單 ---
+		cfIpv4List := []string{
+			"173.245.48.0/20", "103.21.244.0/22", "103.22.200.0/22",
+			"103.31.4.0/22", "141.101.64.0/18", "108.162.192.0/18",
+			"190.93.240.0/20", "188.114.96.0/20", "197.234.240.0/22",
+			"198.41.128.0/17", "162.158.0.0/15", "104.16.0.0/13",
+			"172.64.0.0/13", "131.0.72.0/22",
+		}
+
+		fwGroup, err := vultr.NewFirewallGroup(ctx, "cloudflare-only-fw", &vultr.FirewallGroupArgs{
+			Description: pulumi.Sprintf("ONLY Cloudflare Access for %s (No SSH)", instanceLabel),
 		})
 		if err != nil {
 			return err
 		}
 
-		rules := []struct {
-			port string
-			name string
-		}{
-			{"22", "ssh"},
-			{"80", "http"},
-			{"443", "https"},
-			{"8000", "coolify-ui"},
-		}
+		// 核心規則：僅允許 Cloudflare 存取 80 (HTTP) 與 443 (HTTPS)
+		// 注意：完全沒有 Port 22 的規則
+		for i, cidr := range cfIpv4List {
+			parts := strings.Split(cidr, "/")
+			subnet := parts[0]
+			var size int
+			fmt.Sscanf(parts[1], "%d", &size)
 
-		for _, r := range rules {
-			_, err = vultr.NewFirewallRule(ctx, "fw-rule-"+r.name, &vultr.FirewallRuleArgs{
+			vultr.NewFirewallRule(ctx, fmt.Sprintf("cf-http-%d", i), &vultr.FirewallRuleArgs{
 				FirewallGroupId: fwGroup.ID(),
 				Protocol:        pulumi.String("tcp"),
 				IpType:          pulumi.String("v4"),
-				Subnet:          pulumi.String("0.0.0.0"),
-				SubnetSize:      pulumi.Int(0),
-				Port:            pulumi.String(r.port),
+				Subnet:          pulumi.String(subnet),
+				SubnetSize:      pulumi.Int(size),
+				Port:            pulumi.String("80"),
 			})
-			if err != nil {
-				return err
-			}
+			vultr.NewFirewallRule(ctx, fmt.Sprintf("cf-https-%d", i), &vultr.FirewallRuleArgs{
+				FirewallGroupId: fwGroup.ID(),
+				Protocol:        pulumi.String("tcp"),
+				IpType:          pulumi.String("v4"),
+				Subnet:          pulumi.String(subnet),
+				SubnetSize:      pulumi.Int(size),
+				Port:            pulumi.String("443"),
+			})
 		}
 
-		// --- 3. 啟動腳本 ---
-		startupScript := `#!/bin/bash
+		// --- 3. 啟動腳本 (Base64) ---
+		rawScript := `#!/bin/bash
 set -e
+# 設定 Swap
 if [ ! -f /swapfile ]; then
     fallocate -l 2G /swapfile
     chmod 600 /swapfile
@@ -69,11 +78,15 @@ if [ ! -f /swapfile ]; then
     swapon /swapfile
     echo '/swapfile append swap sw 0 0' >> /etc/fstab
 fi
+
+# 2. 關鍵修正：定義環境變數，防止 Coolify 腳本崩潰
+export HOME=/root
+export USER=root
+
+# 安裝 Coolify
 curl -fsSL https://get.coollabs.io/coolify/install.sh | bash
 `
-
-		encodedScript := base64.StdEncoding.EncodeToString([]byte(startupScript))
-
+		encodedScript := base64.StdEncoding.EncodeToString([]byte(rawScript))
 		script, err := vultr.NewStartupScript(ctx, "coolify-init", &vultr.StartupScriptArgs{
 			Script: pulumi.String(encodedScript),
 		})
@@ -95,9 +108,7 @@ curl -fsSL https://get.coollabs.io/coolify/install.sh | bash
 			return err
 		}
 
-		// 輸出
 		ctx.Export("Server_IP", server.MainIp)
-		ctx.Export("Environment", pulumi.String(ctx.Stack()))
 		return nil
 	})
 }
