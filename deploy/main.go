@@ -25,7 +25,7 @@ func main() {
 		}
 		instanceLabel := cfg.Require("label")
 
-		// --- 2. Cloudflare IPv4 清單 ---
+		// --- 2. Cloudflare IPv4 清單 (約 15 條) ---
 		cfIpv4List := []string{
 			"173.245.48.0/20", "103.21.244.0/22", "103.22.200.0/22",
 			"103.31.4.0/22", "141.101.64.0/18", "108.162.192.0/18",
@@ -34,40 +34,32 @@ func main() {
 			"172.64.0.0/13", "131.0.72.0/22",
 		}
 
-		fwGroup, err := vultr.NewFirewallGroup(ctx, "cloudflare-only-fw", &vultr.FirewallGroupArgs{
-			Description: pulumi.Sprintf("ONLY Cloudflare Access for %s (No SSH)", instanceLabel),
+		fwGroup, err := vultr.NewFirewallGroup(ctx, "cloudflare-secure-fw", &vultr.FirewallGroupArgs{
+			Description: pulumi.Sprintf("Cloudflare Protected for %s", instanceLabel),
 		})
 		if err != nil {
 			return err
 		}
 
-		// 核心規則：僅允許 Cloudflare 存取 80 (HTTP) 與 443 (HTTPS)
-		// 注意：完全沒有 Port 22 的規則
+		// --- 3. 核心優化：合併 Port 80 與 443 ---
+		// 使用 "80:443" 範圍格式，一條規則同時搞定 HTTP 與 HTTPS
 		for i, cidr := range cfIpv4List {
 			parts := strings.Split(cidr, "/")
 			subnet := parts[0]
 			var size int
 			fmt.Sscanf(parts[1], "%d", &size)
 
-			vultr.NewFirewallRule(ctx, fmt.Sprintf("cf-http-%d", i), &vultr.FirewallRuleArgs{
+			vultr.NewFirewallRule(ctx, fmt.Sprintf("cf-web-range-%d", i), &vultr.FirewallRuleArgs{
 				FirewallGroupId: fwGroup.ID(),
 				Protocol:        pulumi.String("tcp"),
 				IpType:          pulumi.String("v4"),
 				Subnet:          pulumi.String(subnet),
 				SubnetSize:      pulumi.Int(size),
-				Port:            pulumi.String("80"),
-			})
-			vultr.NewFirewallRule(ctx, fmt.Sprintf("cf-https-%d", i), &vultr.FirewallRuleArgs{
-				FirewallGroupId: fwGroup.ID(),
-				Protocol:        pulumi.String("tcp"),
-				IpType:          pulumi.String("v4"),
-				Subnet:          pulumi.String(subnet),
-				SubnetSize:      pulumi.Int(size),
-				Port:            pulumi.String("443"),
+				Port:            pulumi.String("80:443"), // 合併關鍵點
 			})
 		}
 
-		// --- 3. 啟動腳本 (Base64) ---
+		// --- 4. 啟動腳本 (修正 HOME 變數問題) ---
 		rawScript := `#!/bin/bash
 set -e
 # 設定 Swap
@@ -79,7 +71,7 @@ if [ ! -f /swapfile ]; then
     echo '/swapfile append swap sw 0 0' >> /etc/fstab
 fi
 
-# 2. 關鍵修正：定義環境變數，防止 Coolify 腳本崩潰
+# 補上環境變數避免 Coolify 安裝崩潰
 export HOME=/root
 export USER=root
 
@@ -94,11 +86,11 @@ curl -fsSL https://get.coollabs.io/coolify/install.sh | bash
 			return err
 		}
 
-		// --- 4. 建立 Vultr 執行個體 ---
+		// --- 5. 建立執行個體 ---
 		server, err := vultr.NewInstance(ctx, "seanaigent-server", &vultr.InstanceArgs{
 			Region:          pulumi.String(region),
 			Plan:            pulumi.String(plan),
-			OsId:            pulumi.Int(1743), // Ubuntu 24.04
+			OsId:            pulumi.Int(1743),
 			Label:           pulumi.String(instanceLabel),
 			FirewallGroupId: fwGroup.ID(),
 			ScriptId:        script.ID(),
