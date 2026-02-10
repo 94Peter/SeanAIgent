@@ -50,7 +50,7 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		mainCtx, mainCancel := context.WithCancel(context.Background())
 		defer mainCancel()
-		shutdown, err := initTracer(mainCtx, "seanAIgen-API")
+		shutdown, err := initTracer(mainCtx)
 		if err != nil {
 			log.Fatalf("initTracer fail: %v", err)
 		}

@@ -34,7 +34,7 @@ to quickly create a Cobra application.`,
 		mainCtx, mainCancel := context.WithCancel(context.Background())
 		defer mainCancel()
 		// init tracer
-		shutdown, err := initTracer(mainCtx, "seanAIgen-MCP")
+		shutdown, err := initTracer(mainCtx)
 		if err != nil {
 			log.Fatalf("initTracer fail: %v", err)
 		}
