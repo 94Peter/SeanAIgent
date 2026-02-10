@@ -1,19 +1,27 @@
 package mcp
 
 import (
-	"fmt"
+	"seanAIgent/internal/booking/usecase"
+	"seanAIgent/internal/service"
 
-	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/94peter/vulpes/log"
 	"github.com/mark3labs/mcp-go/server"
 )
 
-var tools []server.ServerTool
-
-func AddTool(tool mcp.Tool, handler server.ToolHandlerFunc) {
-	tools = append(tools, server.ServerTool{Tool: tool, Handler: handler})
+type Server interface {
+	Start()
 }
 
-func Start() {
+type mcpServer struct {
+	s *server.MCPServer
+}
+
+func (s *mcpServer) Start() {
+	log.Info("Starting MCP server on port 9080")
+	server.NewStreamableHTTPServer(s.s).Start(":9080")
+}
+
+func InitMcpServer(svc service.TrainingDateService, registry *usecase.Registry, tools []server.ServerTool) Server {
 	s := server.NewMCPServer(
 		"Calculator Demo",
 		"1.0.0",
@@ -21,6 +29,5 @@ func Start() {
 		server.WithRecovery(),
 	)
 	s.AddTools(tools...)
-	fmt.Println("starting server")
-	server.NewStreamableHTTPServer(s).Start(":9080")
+	return &mcpServer{s: s}
 }

@@ -4,16 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	mymcp "seanAIgent/internal/mcp"
 	"time"
 
 	"github.com/94peter/vulpes/log"
 	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/mark3labs/mcp-go/server"
 )
 
-func init() {
-	mymcp.AddTool(
-		mcp.NewTool("query_all_courses_and_absence_records_on_date",
+func ProvideQueryLeaveByDateTool() server.ServerTool {
+	return server.ServerTool{
+		Tool: mcp.NewTool("query_all_courses_and_absence_records_on_date",
 			// Description: Crucial for the LLM Agent's reasoning process
 			mcp.WithDescription("Retrieves a list of all scheduled training courses on a specific date, including the total enrollment and the corresponding list of participants who have submitted absence requests (leave records) for each course. Use this when the user asks for a summary of courses and who is absent on a particular date."),
 
@@ -24,8 +24,8 @@ func init() {
 				mcp.Description("The time zone for the query, using an IANA Time Zone Database name (e.g., 'Asia/Taipei', 'America/New_York', or 'Europe/London'). If omitted, the server's default time zone will be assumed."),
 			),
 		),
-		queryLeaveByDateHandler,
-	)
+		Handler: queryLeaveByDateHandler,
+	}
 }
 
 func queryLeaveByDateHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {

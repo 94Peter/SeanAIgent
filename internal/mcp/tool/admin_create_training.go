@@ -7,13 +7,14 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 
-	"seanAIgent/internal/db/model"
-	mymcp "seanAIgent/internal/mcp"
+	writeTrain "seanAIgent/internal/booking/usecase/traindate/write"
+
+	"github.com/mark3labs/mcp-go/server"
 )
 
-func init() {
-	mymcp.AddTool(
-		mcp.NewTool(
+func ProvideCreateTrainingCoursesTool() server.ServerTool {
+	return server.ServerTool{
+		Tool: mcp.NewTool(
 			"create_course_sessions",
 			mcp.WithDescription("Create course sessions for a user with multiple schedules"),
 			mcp.WithString("line_user_id",
@@ -54,8 +55,8 @@ func init() {
 				}),
 			),
 		),
-		mcp.NewTypedToolHandler(createTrainingCoursesHandler),
-	)
+		Handler: mcp.NewTypedToolHandler(createTrainingCoursesHandler),
+	}
 }
 
 type createTrainingCoursesArgs struct {
@@ -93,10 +94,9 @@ func createTrainingCoursesHandler(ctx context.Context, request mcp.CallToolReque
 	if trainingDateService == nil {
 		return nil, fmt.Errorf("trainingDateService is not initialized")
 	}
-
-	trainingDates := make([]*model.TrainingDate, len(args.Schedule))
 	var startTime, endTime time.Time
 	var err error
+	reqs := make([]writeTrain.ReqCreateTrainDate, len(args.Schedule))
 	for i, schedule := range args.Schedule {
 		startTime, err = schedule.GetStartTime(args.TimeZone)
 		if err != nil {
@@ -106,16 +106,16 @@ func createTrainingCoursesHandler(ctx context.Context, request mcp.CallToolReque
 		if err != nil {
 			return nil, err
 		}
-		trainingDates[i] = model.NewTrainingDate()
-		trainingDates[i].Date = schedule.Date
-		trainingDates[i].Capacity = args.Capacity
-		trainingDates[i].Location = args.Location
-		trainingDates[i].Timezone = args.TimeZone
-		trainingDates[i].UserID = args.UserId
-		trainingDates[i].StartDate = startTime
-		trainingDates[i].EndDate = endTime
+
+		reqs[i] = writeTrain.ReqCreateTrainDate{
+			StartTime: startTime,
+			EndTime:   endTime,
+			CoachID:   args.UserId,
+			Location:  args.Location,
+			Capacity:  args.Capacity,
+		}
 	}
-	_, err = trainingDateService.AddTrainingDates(ctx, trainingDates)
+	_, err = batchCreateTrainDateUC.Execute(ctx, reqs)
 	if err != nil {
 		return nil, err
 	}

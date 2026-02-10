@@ -7,11 +7,15 @@
 package cmd
 
 import (
+	"github.com/mark3labs/mcp-go/server"
 	"seanAIgent/internal/booking/domain/service"
 	"seanAIgent/internal/booking/infra/db"
 	"seanAIgent/internal/booking/transport/web"
 	"seanAIgent/internal/booking/transport/web/handler"
 	"seanAIgent/internal/booking/usecase"
+	"seanAIgent/internal/mcp"
+	"seanAIgent/internal/mcp/tool"
+	service2 "seanAIgent/internal/service"
 )
 
 import (
@@ -60,4 +64,49 @@ func InitializeWeb() web.WebService {
 	config := ProvideWebConfig()
 	webService := web.InitWeb(bookingUseCaseSet, trainingUseCaseSet, config)
 	return webService
+}
+
+func InitializeMCP(svc service2.TrainingDateService) mcp.Server {
+	dbRepository := db.NewDbRepoAndIdGenerate()
+	trainDateService := service.NewTrainDateService(dbRepository)
+	serviceAggregator := usecase.ServiceAggregator{
+		TrainDateService: trainDateService,
+	}
+	writeUseCase := usecase.ProvideCreateTrainDateUC(dbRepository, serviceAggregator)
+	coreWriteUseCase := usecase.ProvideBatchCreateTrainDateUC(dbRepository, serviceAggregator)
+	writeUseCase2 := usecase.ProvideDeleteTrainDateUC(dbRepository)
+	readUseCase := usecase.ProvideQueryFutureTrainUC(dbRepository)
+	coreReadUseCase := usecase.ProvideFindNearestTrainByTimeUC(dbRepository)
+	readUseCase2 := usecase.ProvideUserQueryFutureTrainUC(dbRepository)
+	readUseCase3 := usecase.ProvideUserQueryTrainByIDUC(dbRepository)
+	writeUseCase3 := usecase.ProvideCreateApptUC(dbRepository)
+	writeUseCase4 := usecase.ProvideCheckInUC(dbRepository)
+	writeUseCase5 := usecase.ProvideCancelApptUC(dbRepository)
+	writeUseCase6 := usecase.ProvideCreateLeaveUC(dbRepository)
+	writeUseCase7 := usecase.ProvideCancelLeaveUC(dbRepository)
+	readUseCase4 := usecase.ProvideQueryUserBookingsUC(dbRepository)
+	registry := &usecase.Registry{
+		CreateTrainDate:        writeUseCase,
+		BatchCreateTrainDate:   coreWriteUseCase,
+		DeleteTrainDate:        writeUseCase2,
+		QueryFutureTrain:       readUseCase,
+		FindNearestTrainByTime: coreReadUseCase,
+		UserQueryFutureTrain:   readUseCase2,
+		UserQueryTrainByID:     readUseCase3,
+		CreateAppt:             writeUseCase3,
+		CheckIn:                writeUseCase4,
+		CancelAppt:             writeUseCase5,
+		CreateLeave:            writeUseCase6,
+		CancelLeave:            writeUseCase7,
+		QueryUserBookings:      readUseCase4,
+	}
+	v := toolSet()
+	server := mcp.InitMcpServer(svc, registry, v)
+	return server
+}
+
+// wire.go:
+
+func toolSet() []server.ServerTool {
+	return []server.ServerTool{tool.ProvideCreateTrainingCoursesTool(), tool.ProvideDeleteLeaveByIdTool(), tool.ProvideQueryLeaveByDateTool(), tool.ProvideQueryTrainingByRangeTool()}
 }
