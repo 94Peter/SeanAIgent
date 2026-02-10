@@ -16,8 +16,6 @@ import (
 
 	"seanAIgent/internal/db/factory"
 	"seanAIgent/internal/mcp"
-	"seanAIgent/internal/mcp/tool"
-	_ "seanAIgent/internal/mcp/tool"
 	"seanAIgent/internal/service"
 )
 
@@ -33,20 +31,18 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("mcp called")
-
-		tp, err := initTracer("seanAIgen-MCP")
+		mainCtx, mainCancel := context.WithCancel(context.Background())
+		defer mainCancel()
+		// init tracer
+		shutdown, err := initTracer(mainCtx, "seanAIgen-MCP")
 		if err != nil {
 			log.Fatalf("initTracer fail: %v", err)
 		}
-		defer func() {
-			if err := tp.Shutdown(context.Background()); err != nil {
-				log.Fatalf("Error shutting down tracer provider: %v", err)
-			}
-		}()
+		defer shutdown(mainCtx)
 
 		dbTracer := otel.Tracer("Mongodb")
 		// db connection
-		dbCtx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		dbCtx, cancel := context.WithTimeout(mainCtx, time.Minute)
 		err = factory.InitializeDb(
 			dbCtx,
 			factory.WithMongoDB(
@@ -59,7 +55,7 @@ to quickly create a Cobra application.`,
 			log.Fatal(err.Error())
 		}
 		defer func() {
-			closeCtx, cancel := context.WithTimeout(context.Background(), time.Minute)
+			closeCtx, cancel := context.WithTimeout(mainCtx, time.Minute)
 			err = mgo.Close(closeCtx)
 			if err != nil {
 				log.Fatal(err.Error())
@@ -68,15 +64,16 @@ to quickly create a Cobra application.`,
 		}()
 		cancel()
 
+		var mcpServer mcp.Server
 		factory.InjectStore(func(stores *factory.Stores) {
 			svc := service.InitService(
 				service.WithTrainingStore(stores.TrainingDateStore),
 				service.WithAppointmentStore(stores.AppointmentStore),
 			)
-			tool.InitTool(svc)
+			mcpServer = InitializeMCP(svc)
 		})
 
-		mcp.Start()
+		mcpServer.Start()
 	},
 }
 

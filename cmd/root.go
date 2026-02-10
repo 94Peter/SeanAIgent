@@ -8,12 +8,17 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/94peter/vulpes/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+
+	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
@@ -91,30 +96,107 @@ func initConfig() {
 	)
 }
 
-func initTracer(service string) (*sdktrace.TracerProvider, error) {
-	// 這裡使用 Stdout exporter，實際生產環境通常會換成 Jaeger 或 OTLP exporter
-	// exporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
-	// if err != nil {
-	// 	return nil, err
-	// }
+func initTracer(ctx context.Context, service string) (func(ctx context.Context), error) {
 	endpoint := viper.GetString("tracing.endpoint")
-	fmt.Println("tracing endpoint: ", endpoint)
-	exporter, err := otlptracehttp.New(context.Background(),
+	log.Info("tracing init:",
+		log.String("endpoint", endpoint),
+		log.String("api_key", viper.GetString("tracing.api_key")),
+	)
+	t, err := newOtelTracer(ctx, service)
+	if err != nil {
+		return nil, err
+	}
+	return t.Start()
+}
+
+func newOtelTracer(ctx context.Context, service string) (*otelTracer, error) {
+	endpoint := viper.GetString("tracing.endpoint")
+	sample := viper.GetFloat64("tracing.sample")
+	log.Info("tracing init:",
+		log.String("endpoint", endpoint),
+		log.Float64("sample", sample),
+	)
+	headers := viper.GetStringMapString("tracing.headers")
+	exporter, err := otlptracehttp.New(ctx,
 		otlptracehttp.WithEndpoint(endpoint), // OTLP HTTP 預設埠
-		otlptracehttp.WithInsecure(),
+		otlptracehttp.WithHeaders(headers),
 	)
 	if err != nil {
 		return nil, err
 	}
 
+	headers["x-honeycomb-dataset"] = service
+	metricExporter, err := otlpmetrichttp.New(ctx,
+		otlpmetrichttp.WithEndpoint(endpoint),
+		otlpmetrichttp.WithHeaders(headers),
+	)
+	return &otelTracer{
+		exporter:       exporter,
+		resource:       getResource(service),
+		sample:         getSampler(sample),
+		metricExporter: metricExporter,
+	}, nil
+}
+
+func getResource(service string) *resource.Resource {
+	return resource.NewWithAttributes(
+		semconv.SchemaURL,
+		semconv.ServiceNameKey.String(service), // 服務名稱
+	)
+}
+
+func getSampler(sample float64) sdktrace.Sampler {
+	if sample <= 0 {
+		sample = 1
+	}
+	if sample == 1 {
+		return sdktrace.AlwaysSample()
+	}
+	return sdktrace.TraceIDRatioBased(sample)
+}
+
+const defaultMetricInterval = 30 * time.Second
+
+type otelTracer struct {
+	exporter       sdktrace.SpanExporter
+	metricExporter metric.Exporter
+	resource       *resource.Resource
+	sample         sdktrace.Sampler
+}
+
+func (t *otelTracer) Start() (func(ctx context.Context), error) {
+	// Start a new tracer provider
 	tp := sdktrace.NewTracerProvider(
-		sdktrace.WithSampler(sdktrace.AlwaysSample()), // 採樣所有請求
-		sdktrace.WithBatcher(exporter),
-		sdktrace.WithResource(resource.NewWithAttributes(
-			semconv.SchemaURL,
-			semconv.ServiceNameKey.String(service), // 服務名稱
-		)),
+		sdktrace.WithSampler(t.sample),
+		sdktrace.WithBatcher(t.exporter),
+		sdktrace.WithResource(t.resource),
 	)
 	otel.SetTracerProvider(tp)
-	return tp, nil
+
+	// Start a new matrics provider
+	mp := metric.NewMeterProvider(
+		metric.WithResource(t.resource),
+		metric.WithReader(metric.NewPeriodicReader(t.metricExporter,
+			metric.WithInterval(defaultMetricInterval))),
+	)
+
+	// 設定全域 MeterProvider
+	otel.SetMeterProvider(mp)
+	err := runtime.Start(
+		runtime.WithMinimumReadMemStatsInterval(defaultMetricInterval),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to start runtime instrumentation: %w", err)
+	}
+
+	return func(ctx context.Context) {
+
+		if err := tp.Shutdown(ctx); err != nil {
+			log.Fatalf("Error shutting down tracer provider: %v", err)
+		}
+		if err := mp.Shutdown(ctx); err != nil {
+			log.Fatalf("Error shutting down meter provider: %v", err)
+		}
+
+	}, nil
 }

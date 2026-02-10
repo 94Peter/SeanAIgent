@@ -48,14 +48,20 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		tp, err := initTracer("seanAIgen-API")
+		mainCtx, mainCancel := context.WithCancel(context.Background())
+		defer mainCancel()
+		shutdown, err := initTracer(mainCtx, "seanAIgen-API")
 		if err != nil {
 			log.Fatalf("initTracer fail: %v", err)
 		}
 		defer func() {
-			if err := tp.Shutdown(context.Background()); err != nil {
-				log.Fatalf("Error shutting down tracer provider: %v", err)
-			}
+			// 建立一個跟 mainCtx 脫鉤的 Context
+			// 給予 5 秒鐘的緩衝時間，確保即使 mainCtx 結束了，監控數據也能發完
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel()
+
+			log.Info("正在關閉監控並推送最後數據...")
+			shutdown(ctx)
 		}()
 
 		lineliff.InitLineLiff(viper.GetStringMapString("liffids"))
@@ -84,7 +90,7 @@ to quickly create a Cobra application.`,
 
 		dbTracer := otel.Tracer("Mongodb")
 		// db connection
-		dbCtx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		dbCtx, cancel := context.WithTimeout(mainCtx, time.Minute)
 		err = factory.InitializeDb(
 			dbCtx,
 			factory.WithMongoDB(
@@ -110,7 +116,7 @@ to quickly create a Cobra application.`,
 		}()
 		cancel()
 		var cancelSlice []context.CancelFunc
-		storageCtx, storageCancel := context.WithCancel(context.Background())
+		storageCtx, storageCancel := context.WithCancel(mainCtx)
 		cancelSlice = append(cancelSlice, storageCancel)
 		r2storage, err := storage.New(storageCtx,
 			storage.WithAccessKey(viper.GetString("storage.r2.access_key_id")),
@@ -149,14 +155,14 @@ to quickly create a Cobra application.`,
 			catchUpCheckIn = linemsg.NewCatchUpCheckInReply(stores.TrainingDateStore)
 		})
 
-		conversationMgr, llmCancel, err := newConversationMgr(context.Background())
+		conversationMgr, llmCancel, err := newConversationMgr(mainCtx)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
 		cancelSlice = append(cancelSlice, llmCancel)
 
 		// init botreplyer
-		botctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		botctx, cancel := context.WithTimeout(mainCtx, time.Minute)
 
 		notifyService := notify.NewLineNotificationService()
 		notifyService.RegisterNotification(
@@ -189,7 +195,7 @@ to quickly create a Cobra application.`,
 		// 註冊要接收的訊號：SIGINT(Ctrl+C), SIGTERM(kill)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-		apiCtx, apicancel := context.WithCancel(context.Background())
+		apiCtx, apicancel := context.WithCancel(mainCtx)
 
 		go webService.Run(apiCtx)
 		cancelSlice = append(cancelSlice, apicancel)
