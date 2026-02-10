@@ -40,6 +40,64 @@ func (m *Aigent) GrepDir(ctx context.Context, directoryArg *dagger.Directory, pa
 		Stdout(ctx)
 }
 
+func (m *Aigent) BuildWithGoSdk(
+	ctx context.Context,
+	src *dagger.Directory,
+	username string,
+	repoName string,
+	tag string,
+	dockerHubToken *dagger.Secret,
+) (string, error) {
+	goModCache := dag.CacheVolume("go-mod-cache")
+	goBuildCache := dag.CacheVolume("go-build-cache")
+
+	platforms := []dagger.Platform{
+		"linux/amd64",
+		// "linux/arm64",
+	}
+	var platformVariants []*dagger.Container
+
+	for _, p := range platforms {
+		// 2. 使用 Container API 模擬 Dockerfile 的過程
+		// 這樣我們才能在執行 go build 時掛載快取
+		builder := dag.Container(dagger.ContainerOpts{Platform: p}).
+			From("golang:1.24-alpine").
+			WithExec([]string{"apk", "add", "--no-cache", "tzdata"}).
+			WithMountedDirectory("/src", src).
+			WithWorkdir("/src").
+			// 掛載快取路徑
+			WithMountedCache("/go/pkg/mod", goModCache).
+			WithMountedCache("/root/.cache/go-build", goBuildCache).
+			WithEnvVariable("CGO_ENABLED", "0").
+			WithExec([]string{"go", "build", "-ldflags", "-s -w", "-o", "bot", "./main.go"})
+
+		// 3. 建立輕量化的運行環境 (Multi-stage build)
+		// 這能讓你上傳到 GHCR 的 Image 從 90MB 變成 20MB
+		runtime := dag.Container(dagger.ContainerOpts{Platform: p}).
+			From("alpine:latest").
+			WithDirectory("/usr/share/zoneinfo", builder.Directory("/usr/share/zoneinfo")).
+			WithFile("/app/bot", builder.File("/src/bot")).
+			WithWorkdir("/app").
+			WithEntrypoint([]string{"/app/bot"})
+
+		platformVariants = append(platformVariants, runtime)
+	}
+
+	// 4. 定義推送到 GHCR 的地址 (轉小寫處理)
+	address := fmt.Sprintf("ghcr.io/%s/%s:%s",
+		strings.ToLower(username),
+		strings.ToLower(repoName),
+		tag,
+	)
+
+	// 5. 推送所有平台變體
+	return dag.Container().
+		WithRegistryAuth("ghcr.io", username, dockerHubToken).
+		Publish(ctx, address, dagger.ContainerPublishOpts{
+			PlatformVariants: platformVariants,
+		})
+}
+
 func (m *Aigent) BuildWithDockerfile(
 	ctx context.Context,
 	src *dagger.Directory, // 專案原始碼目錄
@@ -54,7 +112,7 @@ func (m *Aigent) BuildWithDockerfile(
 	// 1. 定義要支援的平台
 	platforms := []dagger.Platform{
 		"linux/amd64",
-		"linux/arm64",
+		// "linux/arm64",
 	}
 	// 2. 建立存放各平台 Container 的切片
 	var platformVariants []*dagger.Container
