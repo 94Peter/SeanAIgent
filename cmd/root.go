@@ -128,6 +128,8 @@ func newOtelTracer(ctx context.Context, service string) (*otelTracer, error) {
 	if env == "" {
 		env = "dev"
 	}
+	// service name with env
+	service = service + "-" + env
 
 	headers["x-honeycomb-dataset"] = service
 	metricExporter, err := otlpmetrichttp.New(ctx,
@@ -136,16 +138,16 @@ func newOtelTracer(ctx context.Context, service string) (*otelTracer, error) {
 	)
 	return &otelTracer{
 		exporter:       exporter,
-		resource:       getResource(service, env),
+		resource:       getResource(service),
 		sample:         getSampler(sample),
 		metricExporter: metricExporter,
 	}, nil
 }
 
-func getResource(service string, env string) *resource.Resource {
+func getResource(service string) *resource.Resource {
 	return resource.NewWithAttributes(
 		semconv.SchemaURL,
-		semconv.ServiceNameKey.String(service+"-"+env), // 服務名稱
+		semconv.ServiceNameKey.String(service), // 服務名稱
 	)
 }
 
