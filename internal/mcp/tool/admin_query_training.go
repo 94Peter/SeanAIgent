@@ -8,13 +8,12 @@ import (
 
 	"github.com/94peter/vulpes/log"
 	"github.com/mark3labs/mcp-go/mcp"
-
-	mymcp "seanAIgent/internal/mcp"
+	"github.com/mark3labs/mcp-go/server"
 )
 
-func init() {
-	mymcp.AddTool(
-		mcp.NewTool("query_training_courses_by_range",
+func ProvideQueryTrainingByRangeTool() server.ServerTool {
+	return server.ServerTool{
+		Tool: mcp.NewTool("query_training_courses_by_range",
 			// Description: Crucial for the LLM Agent's reasoning process
 			mcp.WithDescription("Queries the training course schedule for a specific user over a date range. **The query results will be returned based on the specified time zone.** Use this when the user asks about courses, classes, or their schedule."),
 
@@ -39,8 +38,8 @@ func init() {
 				mcp.Description("The time zone for the query, using an IANA Time Zone Database name (e.g., 'Asia/Taipei', 'America/New_York', or 'Europe/London'). If omitted, the server's default time zone will be assumed."),
 			),
 		),
-		queryTrainingCoursesByRangeHandler,
-	)
+		Handler: queryTrainingCoursesByRangeHandler,
+	}
 }
 
 func queryTrainingCoursesByRangeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
