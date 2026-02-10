@@ -15,8 +15,9 @@ import (
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/propagation"
 
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -100,7 +101,7 @@ func initTracer(ctx context.Context, service string) (func(ctx context.Context),
 	endpoint := viper.GetString("tracing.endpoint")
 	log.Info("tracing init:",
 		log.String("endpoint", endpoint),
-		log.String("api_key", viper.GetString("tracing.api_key")),
+		log.String("env", viper.GetString("tracing.env")),
 	)
 	t, err := newOtelTracer(ctx, service)
 	if err != nil {
@@ -116,10 +117,9 @@ func newOtelTracer(ctx context.Context, service string) (*otelTracer, error) {
 		log.String("endpoint", endpoint),
 		log.Float64("sample", sample),
 	)
-	headers := viper.GetStringMapString("tracing.headers")
-	exporter, err := otlptracehttp.New(ctx,
-		otlptracehttp.WithEndpoint(endpoint), // OTLP HTTP 預設埠
-		otlptracehttp.WithHeaders(headers),
+	exporter, err := otlptracegrpc.New(ctx,
+		otlptracegrpc.WithEndpoint(endpoint),
+		otlptracegrpc.WithInsecure(),
 	)
 	if err != nil {
 		return nil, err
@@ -130,11 +130,9 @@ func newOtelTracer(ctx context.Context, service string) (*otelTracer, error) {
 	}
 	// service name with env
 	service = service + "-" + env
-
-	headers["x-honeycomb-dataset"] = service
-	metricExporter, err := otlpmetrichttp.New(ctx,
-		otlpmetrichttp.WithEndpoint(endpoint),
-		otlpmetrichttp.WithHeaders(headers),
+	metricExporter, err := otlpmetricgrpc.New(ctx,
+		otlpmetricgrpc.WithEndpoint(endpoint),
+		otlpmetricgrpc.WithInsecure(),
 	)
 	return &otelTracer{
 		exporter:       exporter,
@@ -153,12 +151,12 @@ func getResource(service string) *resource.Resource {
 
 func getSampler(sample float64) sdktrace.Sampler {
 	if sample <= 0 {
-		sample = 1
+		return sdktrace.ParentBased(sdktrace.NeverSample())
 	}
 	if sample == 1 {
-		return sdktrace.AlwaysSample()
+		return sdktrace.ParentBased(sdktrace.AlwaysSample())
 	}
-	return sdktrace.TraceIDRatioBased(sample)
+	return sdktrace.ParentBased(sdktrace.TraceIDRatioBased(sample))
 }
 
 const defaultMetricInterval = 30 * time.Second
@@ -178,6 +176,10 @@ func (t *otelTracer) Start() (func(ctx context.Context), error) {
 		sdktrace.WithResource(t.resource),
 	)
 	otel.SetTracerProvider(tp)
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
+		propagation.TraceContext{},
+		propagation.Baggage{},
+	))
 
 	// Start a new matrics provider
 	mp := metric.NewMeterProvider(
