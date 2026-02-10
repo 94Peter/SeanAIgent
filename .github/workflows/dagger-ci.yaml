@@ -1,5 +1,9 @@
 name: Dagger CI             # 第一行必須是 Key，不能是 "-" 開頭的清單
 
+permissions:
+  contents: read
+  packages: write
+
 on:
   push:
     branches: [ main ]      # 或是你的主分支名稱
@@ -21,7 +25,16 @@ jobs:
         uses: dagger/dagger-for-github@v8.2.0
         with:
           verb: call
-          # 注意這裡的縮進，args 應該在 with 底下
-          args: build-with-dockerfile --src=. --username=${{ secrets.DOCKERHUB_USER }} --repo-name=seanaigent --tag=${{ github.sha }} --docker-hub-token=env:DOCKERHUB_TOKEN
+          # 修改 args：將參數對接到 GHCR 的邏輯
+          # 1. username 改用 github.repository_owner (會自動轉小寫處理建議在 Dagger 內做)
+          # 2. 這裡假設你的 Dagger 函數名還是 build-with-dockerfile
+          args: >
+            build-with-dockerfile 
+            --src=. 
+            --username=${{ github.repository_owner }} 
+            --repo-name=seanaigent 
+            --tag=${{ github.sha }} 
+            --docker-hub-token=env:GH_TOKEN
         env:
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }} 
+          # 使用內建的 GITHUB_TOKEN，不需要另外去 Settings 設 Secret
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

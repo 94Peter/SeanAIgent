@@ -16,8 +16,11 @@ package main
 
 import (
 	"context"
-	"dagger/aigent/internal/dagger"
 	"fmt"
+	"strings"
+
+	"dagger/aigent/internal/dagger"
+	"dagger/aigent/secrets"
 )
 
 type Aigent struct{}
@@ -40,10 +43,10 @@ func (m *Aigent) GrepDir(ctx context.Context, directoryArg *dagger.Directory, pa
 func (m *Aigent) BuildWithDockerfile(
 	ctx context.Context,
 	src *dagger.Directory, // 專案原始碼目錄
-	username string, // Docker Hub 帳號
+	username string, // GHCR 帳號
 	repoName string, // 映像檔名稱
 	tag string, // 標籤
-	dockerHubToken *dagger.Secret, // Docker Hub Token
+	dockerHubToken *dagger.Secret, // GHCR Token
 	// +optional
 	// +default="Dockerfile"
 	dockerfilePath string,
@@ -69,13 +72,14 @@ func (m *Aigent) BuildWithDockerfile(
 	}
 
 	// 3. 設定推送目標
-	address := fmt.Sprintf("docker.io/%s/%s:%s", username, repoName, tag)
+
+	address := fmt.Sprintf("ghcr.io/%s/%s:%s", strings.ToLower(username), strings.ToLower(repoName), tag)
 
 	// 4. 一次性推送所有平台（Dagger 會自動處理 Manifest）
 	fmt.Printf("🚀 正在推送多平台映像檔到 %s...\n", address)
 
 	imageDigest, err := dag.Container().
-		WithRegistryAuth("docker.io", username, dockerHubToken).
+		WithRegistryAuth("ghcr.io", username, dockerHubToken).
 		Publish(ctx, address, dagger.ContainerPublishOpts{
 			PlatformVariants: platformVariants,
 		})
@@ -83,6 +87,114 @@ func (m *Aigent) BuildWithDockerfile(
 	if err != nil {
 		return "", fmt.Errorf("多平台推送失敗: %w", err)
 	}
-
-	return fmt.Sprintf("✅ 多平台建置成功！\n地址: %s\nDigest: %s", address, imageDigest), nil
+	fmt.Printf("✅ 多平台建置成功！\n地址: %s\nDigest: %s", address, imageDigest)
+	return address, nil
 }
+
+func (m *Aigent) CD_Dev(
+	ctx context.Context,
+	env string,
+	pulumiToken *dagger.Secret,
+	infisicalClientID string,
+	infisicalClientSecret *dagger.Secret,
+	infisicalProjectID string,
+) error {
+	// 第一步：Build
+	// imageAddr, err := m.BuildWithDockerfile(ctx, ...)
+	// if err != nil {
+	//     return err
+	// }
+	imageAddr := "94peter/seanaigent:03b7a6e9a84ee460233702d8da9e5666afef9571"
+	// 第二步：Deploy，直接把第一步的結果傳進去
+	out, err := m.deployDocker(ctx, env, imageAddr, pulumiToken, infisicalClientID, infisicalClientSecret, infisicalProjectID)
+	fmt.Println(out)
+	return err
+}
+
+func (m *Aigent) deployDocker(
+	ctx context.Context,
+	env string, // 例如 "dev" 或 "prod"
+	imageAddr string, // 新增此參數，接收來自 Build 的結果
+	pulumiToken *dagger.Secret,
+	infisicalClientID string,
+	infisicalClientSecret *dagger.Secret,
+	infisicalProjectID string,
+) (string, error) {
+
+	infisicalProvider, err := secrets.NewInfisical(ctx, dag, infisicalClientID, infisicalClientSecret)
+	if err != nil {
+		return "", err
+	}
+	// 1. 根據傳入的 env 去 Infisical 抓對應環境的 Secret
+	// 注意：這裡將 "prod" 改成了變數 env
+	secrets, err := infisicalProvider.GetSecrets(ctx, infisicalProjectID, env, "/deploy")
+	if err != nil {
+		return "", err
+	}
+
+	// 2. 啟動 Pulumi 容器
+	container := dag.Container().
+		From("pulumi/pulumi-go:latest").
+		WithSecretVariable("PULUMI_ACCESS_TOKEN", pulumiToken).
+		WithMountedDirectory("/src", dag.CurrentModule().Source().Directory("deploy")).
+		WithWorkdir("/src")
+
+	// 3. 根據環境切換 Pulumi Stack
+	// 如果 stack 不存在就建立它
+	container = container.
+		WithExec([]string{"pulumi", "stack", "select", env, "--create"}).
+		WithExec([]string{"pulumi", "config", "set", "appImage", imageAddr})
+
+	// 4. 注入該環境特有的 Secrets
+	for key, val := range secrets {
+
+		container = container.
+			WithSecretVariable(key, val).
+			WithExec([]string{"sh", "-c", fmt.Sprintf("pulumi config set --secret %s $%s", key, key)})
+	}
+
+	// 5. 執行部署
+	return container.WithExec([]string{"pulumi", "up", "--yes"}).Stdout(ctx)
+}
+
+// func (m *Aigent) getSecretsFromInfisical(
+// 	ctx context.Context,
+// 	env string, // 接收傳入的環境名稱
+// 	clientID string,
+// 	clientSecret *dagger.Secret,
+// 	projectID string,
+// ) (map[string]*dagger.Secret, error) {
+// 	// 1. 解開 Dagger Secret 取得明文（僅用於 SDK 認證）
+// 	plainSecret, err := clientSecret.Plaintext(ctx)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	// 2. 初始化 Infisical SDK
+// 	client := infisical.NewInfisicalClient(ctx, infisical.Config{
+// 		SiteUrl: "https://app.infisical.com",
+// 	})
+
+// 	_, err = client.Auth().UniversalAuthLogin(clientID, plainSecret)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("Infisical login failed: %w", err)
+// 	}
+
+// 	// 3. 獲取特定路徑下的所有 Secrets
+// 	secrets, err := client.Secrets().List(infisical.ListSecretsOptions{
+// 		ProjectID:   projectID,
+// 		Environment: env,
+// 		SecretPath:  "/deploy",
+// 	})
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	// 4. 將結果封裝回 Dagger Secret Map
+// 	secretMap := make(map[string]*dagger.Secret)
+// 	for _, s := range secrets {
+// 		secretMap[s.SecretKey] = dag.SetSecret(s.SecretKey, s.SecretValue)
+// 	}
+
+// 	return secretMap, nil
+// }
