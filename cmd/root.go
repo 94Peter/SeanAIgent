@@ -124,6 +124,10 @@ func newOtelTracer(ctx context.Context, service string) (*otelTracer, error) {
 	if err != nil {
 		return nil, err
 	}
+	env := viper.GetString("tracing.env")
+	if env == "" {
+		env = "dev"
+	}
 
 	headers["x-honeycomb-dataset"] = service
 	metricExporter, err := otlpmetrichttp.New(ctx,
@@ -132,16 +136,16 @@ func newOtelTracer(ctx context.Context, service string) (*otelTracer, error) {
 	)
 	return &otelTracer{
 		exporter:       exporter,
-		resource:       getResource(service),
+		resource:       getResource(service, env),
 		sample:         getSampler(sample),
 		metricExporter: metricExporter,
 	}, nil
 }
 
-func getResource(service string) *resource.Resource {
+func getResource(service string, env string) *resource.Resource {
 	return resource.NewWithAttributes(
 		semconv.SchemaURL,
-		semconv.ServiceNameKey.String(service), // 服務名稱
+		semconv.ServiceNameKey.String(service+"-"+env), // 服務名稱
 	)
 }
 
