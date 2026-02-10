@@ -28,13 +28,7 @@ jobs:
           # 修改 args：將參數對接到 GHCR 的邏輯
           # 1. username 改用 github.repository_owner (會自動轉小寫處理建議在 Dagger 內做)
           # 2. 這裡假設你的 Dagger 函數名還是 build-with-dockerfile
-          args: >
-            build-with-dockerfile 
-            --src=. 
-            --username=${{ github.repository_owner }} 
-            --repo-name=seanaigent 
-            --tag=${{ github.sha }} 
-            --docker-hub-token=env:GH_TOKEN
+          args: "build-with-dockerfile --src=. --username=${{ github.repository_owner }} --repo-name=seanaigent --tag=${{ github.sha }} --docker-hub-token=env:GH_TOKEN"
         env:
           # 使用內建的 GITHUB_TOKEN，不需要另外去 Settings 設 Secret
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
