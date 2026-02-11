@@ -48,7 +48,7 @@ func withDomainTrainDate(training *entity.TrainDate) trainingDateOpt {
 		td.AvailableCapacity = training.AvailableCapacity()
 		td.StartDate = training.Period().Start()
 		td.EndDate = training.Period().End()
-		td.Timezone = training.Period().Start().Location().String()
+		td.Timezone = training.Timezone()
 		td.Status = string(training.Status())
 		td.CreatedAt = training.CreatedAt()
 		td.UpdatedAt = training.UpdatedAt()
@@ -382,6 +382,7 @@ func getUpdateFieldFromModel(training *trainDate) bson.M {
 		"status":             training.Status,
 		"created_at":         training.CreatedAt,
 		"updated_at":         training.UpdatedAt,
+		"_migration":         training.Migration,
 	}
 	return updateField
 }
