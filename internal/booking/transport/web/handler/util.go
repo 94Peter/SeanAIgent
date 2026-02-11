@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"errors"
+	"strings"
 	"time"
 
 	"github.com/94peter/botreplyer/provider/line/mid"
@@ -35,4 +37,13 @@ func toTime(t time.Time, timezone string) time.Time {
 		panic(err)
 	}
 	return t.In(loc)
+}
+
+func getAllErrorMessage(err error) string {
+	var msgs []string
+	for err != nil {
+		msgs = append(msgs, err.Error())
+		err = errors.Unwrap(err) // 取得下一層錯誤
+	}
+	return strings.Join(msgs, ": ")
 }
