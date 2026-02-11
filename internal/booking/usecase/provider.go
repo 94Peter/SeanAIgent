@@ -104,6 +104,12 @@ func ProvideFindNearestTrainByTimeUC(
 	return core.WithReadOTel(readTrain.NewFindNearestTrainByTimeUseCase(repo))
 }
 
+func ProvideFindTrainHasApptsByIdUC(
+	repo Repository,
+) core.ReadUseCase[readTrain.ReqFindTrainHasApptsById, *entity.TrainDateHasApptState] {
+	return core.WithReadOTel(readTrain.NewFindTrainHasApptsByIdUseCase(repo))
+}
+
 var UseCaseSet = wire.NewSet(
 	ProvideCreateTrainDateUC,
 	ProvideBatchCreateTrainDateUC,
@@ -112,6 +118,7 @@ var UseCaseSet = wire.NewSet(
 	ProvideUserQueryFutureTrainUC,
 	ProvideUserQueryTrainByIDUC,
 	ProvideFindNearestTrainByTimeUC,
+	ProvideFindTrainHasApptsByIdUC,
 
 	ProvideCreateApptUC,
 	ProvideCancelApptUC,

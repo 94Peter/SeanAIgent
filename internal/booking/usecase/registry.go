@@ -16,6 +16,7 @@ type Registry struct {
 
 	QueryFutureTrain       core.ReadUseCase[readTrain.ReqQueryFutureTrain, []*entity.TrainDateHasApptState]
 	FindNearestTrainByTime core.ReadUseCase[readTrain.ReqFindNearestTrainByTime, *entity.TrainDateHasApptState]
+	FindTrainHasApptsById  core.ReadUseCase[readTrain.ReqFindTrainHasApptsById, *entity.TrainDateHasApptState]
 	UserQueryFutureTrain   core.ReadUseCase[readTrain.ReqUserQueryFutureTrain, []*entity.TrainDateHasUserApptState]
 	UserQueryTrainByID     core.ReadUseCase[readTrain.ReqUserQueryTrainByID, *entity.TrainDateHasUserApptState]
 

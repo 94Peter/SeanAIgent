@@ -42,6 +42,7 @@ func NewBookingUseCaseSet(registry *usecase.Registry) BookingUseCaseSet {
 		cancelLeaveUC:            registry.CancelLeave,
 		queryUserBookingsUC:      registry.QueryUserBookings,
 		findNearestTrainByTimeUC: registry.FindNearestTrainByTime,
+		findTranHasApptByIdUC:    registry.FindTrainHasApptsById,
 		checkinUC:                registry.CheckIn,
 	}
 }
@@ -61,6 +62,9 @@ type BookingUseCaseSet struct {
 	checkinUC                uccore.WriteUseCase[writeAppt.ReqCheckIn, []*entity.Appointment]
 	findNearestTrainByTimeUC uccore.ReadUseCase[
 		readTrain.ReqFindNearestTrainByTime, *entity.TrainDateHasApptState,
+	]
+	findTranHasApptByIdUC uccore.ReadUseCase[
+		readTrain.ReqFindTrainHasApptsById, *entity.TrainDateHasApptState,
 	]
 }
 
@@ -491,7 +495,7 @@ func (api *bookingAPI) bookTraining(c *gin.Context) {
 }
 
 func (api *bookingAPI) postErrorHandler(c *gin.Context, err error, slotId, userId string) {
-	log.Warnf("post error: %v", err)
+	log.Warnf("post error: %v: %v", err, errors.Unwrap(err))
 	addToastTrigger(c, "操作失敗", err.Error(), "error")
 	api.returnSlotContent(c, slotId, userId)
 }
@@ -735,17 +739,8 @@ func (api *bookingAPI) submitCheckin(c *gin.Context) {
 		return
 	}
 
-	// Re-query checkin list to get updated status for message
-	now, err := time.Parse(time.RFC3339, input.StartTime)
-	if err != nil {
-		log.Errorf("Failed to parse start time: %v", err)
-		addToastTrigger(c, "提交失敗", "更新簽到狀態失敗，請稍後再試。", "error")
-		c.Status(http.StatusInternalServerError)
-		return
-	}
-
-	updatedCheckinList, err := api.findNearestTrainByTimeUC.Execute(
-		c.Request.Context(), readTrain.ReqFindNearestTrainByTime{TimeAfter: now},
+	updatedCheckinList, err := api.findTranHasApptByIdUC.Execute(
+		c.Request.Context(), readTrain.ReqFindTrainHasApptsById{TrainID: input.SlotID},
 	)
 	if err != nil {
 		log.Errorf("Failed to re-query checkin list for notification after submit: %v", err)

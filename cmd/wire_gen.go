@@ -20,7 +20,6 @@ import (
 
 import (
 	_ "github.com/94peter/vulpes/ezapi/session"
-	_ "seanAIgent/internal/mcp/tool"
 )
 
 // Injectors from wire.go:
@@ -36,28 +35,30 @@ func InitializeWeb() web.WebService {
 	writeUseCase2 := usecase.ProvideDeleteTrainDateUC(dbRepository)
 	readUseCase := usecase.ProvideQueryFutureTrainUC(dbRepository)
 	coreReadUseCase := usecase.ProvideFindNearestTrainByTimeUC(dbRepository)
-	readUseCase2 := usecase.ProvideUserQueryFutureTrainUC(dbRepository)
-	readUseCase3 := usecase.ProvideUserQueryTrainByIDUC(dbRepository)
+	readUseCase2 := usecase.ProvideFindTrainHasApptsByIdUC(dbRepository)
+	readUseCase3 := usecase.ProvideUserQueryFutureTrainUC(dbRepository)
+	readUseCase4 := usecase.ProvideUserQueryTrainByIDUC(dbRepository)
 	writeUseCase3 := usecase.ProvideCreateApptUC(dbRepository)
 	writeUseCase4 := usecase.ProvideCheckInUC(dbRepository)
 	writeUseCase5 := usecase.ProvideCancelApptUC(dbRepository)
 	writeUseCase6 := usecase.ProvideCreateLeaveUC(dbRepository)
 	writeUseCase7 := usecase.ProvideCancelLeaveUC(dbRepository)
-	readUseCase4 := usecase.ProvideQueryUserBookingsUC(dbRepository)
+	readUseCase5 := usecase.ProvideQueryUserBookingsUC(dbRepository)
 	registry := &usecase.Registry{
 		CreateTrainDate:        writeUseCase,
 		BatchCreateTrainDate:   coreWriteUseCase,
 		DeleteTrainDate:        writeUseCase2,
 		QueryFutureTrain:       readUseCase,
 		FindNearestTrainByTime: coreReadUseCase,
-		UserQueryFutureTrain:   readUseCase2,
-		UserQueryTrainByID:     readUseCase3,
+		FindTrainHasApptsById:  readUseCase2,
+		UserQueryFutureTrain:   readUseCase3,
+		UserQueryTrainByID:     readUseCase4,
 		CreateAppt:             writeUseCase3,
 		CheckIn:                writeUseCase4,
 		CancelAppt:             writeUseCase5,
 		CreateLeave:            writeUseCase6,
 		CancelLeave:            writeUseCase7,
-		QueryUserBookings:      readUseCase4,
+		QueryUserBookings:      readUseCase5,
 	}
 	bookingUseCaseSet := handler.NewBookingUseCaseSet(registry)
 	trainingUseCaseSet := handler.NewTrainingUseCaseSet(registry)
@@ -77,28 +78,30 @@ func InitializeMCP(svc service2.TrainingDateService) mcp.Server {
 	writeUseCase2 := usecase.ProvideDeleteTrainDateUC(dbRepository)
 	readUseCase := usecase.ProvideQueryFutureTrainUC(dbRepository)
 	coreReadUseCase := usecase.ProvideFindNearestTrainByTimeUC(dbRepository)
-	readUseCase2 := usecase.ProvideUserQueryFutureTrainUC(dbRepository)
-	readUseCase3 := usecase.ProvideUserQueryTrainByIDUC(dbRepository)
+	readUseCase2 := usecase.ProvideFindTrainHasApptsByIdUC(dbRepository)
+	readUseCase3 := usecase.ProvideUserQueryFutureTrainUC(dbRepository)
+	readUseCase4 := usecase.ProvideUserQueryTrainByIDUC(dbRepository)
 	writeUseCase3 := usecase.ProvideCreateApptUC(dbRepository)
 	writeUseCase4 := usecase.ProvideCheckInUC(dbRepository)
 	writeUseCase5 := usecase.ProvideCancelApptUC(dbRepository)
 	writeUseCase6 := usecase.ProvideCreateLeaveUC(dbRepository)
 	writeUseCase7 := usecase.ProvideCancelLeaveUC(dbRepository)
-	readUseCase4 := usecase.ProvideQueryUserBookingsUC(dbRepository)
+	readUseCase5 := usecase.ProvideQueryUserBookingsUC(dbRepository)
 	registry := &usecase.Registry{
 		CreateTrainDate:        writeUseCase,
 		BatchCreateTrainDate:   coreWriteUseCase,
 		DeleteTrainDate:        writeUseCase2,
 		QueryFutureTrain:       readUseCase,
 		FindNearestTrainByTime: coreReadUseCase,
-		UserQueryFutureTrain:   readUseCase2,
-		UserQueryTrainByID:     readUseCase3,
+		FindTrainHasApptsById:  readUseCase2,
+		UserQueryFutureTrain:   readUseCase3,
+		UserQueryTrainByID:     readUseCase4,
 		CreateAppt:             writeUseCase3,
 		CheckIn:                writeUseCase4,
 		CancelAppt:             writeUseCase5,
 		CreateLeave:            writeUseCase6,
 		CancelLeave:            writeUseCase7,
-		QueryUserBookings:      readUseCase4,
+		QueryUserBookings:      readUseCase5,
 	}
 	v := toolSet()
 	server := mcp.InitMcpServer(svc, registry, v)
