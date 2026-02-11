@@ -78,6 +78,16 @@ func newTrainDate(opts ...trainingDateOpt) (*trainDate, error) {
 			return nil, fmt.Errorf("new train date fail: %w", err)
 		}
 	}
+	if td.CreatedAt.IsZero() {
+		td.CreatedAt = time.Now()
+	}
+	if td.UpdatedAt.IsZero() {
+		td.UpdatedAt = td.CreatedAt
+	}
+	td.Migration.Status = mgo.MigrateStatusSuccess
+	td.Migration.Version = 2
+	td.Migration.LastRun = time.Now()
+	td.Migration.Error = ""
 	return td, nil
 }
 
@@ -87,14 +97,15 @@ type trainDate struct {
 	CreatedAt         time.Time `bson:"created_at"`
 	EndDate           time.Time `bson:"end_date"`
 	mgo.Index         `bson:"-"`
-	Timezone          string        `bson:"timezone"`
-	Location          string        `bson:"location"`
-	Date              string        `bson:"date"`
-	Status            string        `bson:"status"`
-	UserID            string        `bson:"user_id"`
-	AvailableCapacity int           `bson:"available_capacity"`
-	Capacity          int           `bson:"capacity"`
-	ID                bson.ObjectID `bson:"_id"`
+	Migration         mgo.MigrationInfo `bson:"_migration"`
+	Timezone          string            `bson:"timezone"`
+	Location          string            `bson:"location"`
+	Date              string            `bson:"date"`
+	Status            string            `bson:"status"`
+	UserID            string            `bson:"user_id"`
+	AvailableCapacity int               `bson:"available_capacity"`
+	Capacity          int               `bson:"capacity"`
+	ID                bson.ObjectID     `bson:"_id"`
 }
 
 func (s *trainDate) toDomain() (*entity.TrainDate, error) {
