@@ -303,33 +303,20 @@ func (*apptRepoImpl) FindApptsByFilter(
 	return appts, nil
 }
 
-func getUpdateFieldFromDomain(appt *entity.Appointment) (bson.M, error) {
-	oid, err := bson.ObjectIDFromHex(appt.TrainingID())
-	if err != nil {
-		return nil, fmt.Errorf("transform trainID fail: %w", err)
-	}
+func getUpdateFieldFromModel(appt *appointment) (bson.M, error) {
 	updateField := bson.M{
-		"user_id":          appt.User().UserID(),
-		"user_name":        appt.User().UserName(),
-		"child_name":       appt.ChildName(),
-		"training_date_id": oid,
-		"status":           appt.Status(),
-		"update_at":        appt.UpdateAt(),
-	}
-	if appt.VerifiedAt() != nil {
-		updateField["verify_time"] = appt.VerifiedAt()
-		updateField["is_checked_in"] = true
-	}
-	if leave := appt.LeaveInfo(); !leave.IsEmpty() {
-		updateField["leave"] = leaveInfo{
-			Reason:    leave.Reason(),
-			Status:    string(leave.Status()),
-			CreatedAt: leave.CreatedAt(),
-		}
-		updateField["is_on_leave"] = true
-	} else {
-		updateField["is_on_leave"] = false
-		updateField["leave"] = nil
+		"user_id":          appt.UserID,
+		"user_name":        appt.UserName,
+		"child_name":       appt.ChildName,
+		"training_date_id": appt.TrainingDateId,
+		"status":           appt.Status,
+		"update_at":        appt.UpdateAt,
+		"_migration":       appt.Migration,
+		"created_at":       appt.CreatedAt,
+		"verify_time":      appt.VerifyTime,
+		"is_checked_in":    appt.IsCheckedIn,
+		"is_on_leave":      appt.IsOnLeave,
+		"leave":            appt.Leave,
 	}
 	return updateField, nil
 }
@@ -340,7 +327,7 @@ func (*apptRepoImpl) UpdateAppt(ctx context.Context, appt *entity.Appointment) r
 	if err != nil {
 		return newInternalError(op, err)
 	}
-	updateField, err := getUpdateFieldFromDomain(appt)
+	updateField, err := getUpdateFieldFromModel(modelAppt)
 	if err != nil {
 		return newInternalError(op, err)
 	}
@@ -366,7 +353,7 @@ func (*apptRepoImpl) UpdateManyAppts(
 		if err != nil {
 			return newInternalError(op, err)
 		}
-		updateField, err := getUpdateFieldFromDomain(appt)
+		updateField, err := getUpdateFieldFromModel(modelAppt)
 		if err != nil {
 			return newInternalError(op, err)
 		}
