@@ -160,7 +160,9 @@ func (s *appointment) toDomain() (*entity.Appointment, error) {
 			status,
 			s.Leave.CreatedAt)
 	}
-
+	if s.UpdateAt.IsZero() {
+		s.UpdateAt = s.CreatedAt
+	}
 	return entity.NewAppointment(
 		entity.WithApptID(s.ID.Hex()),
 		entity.WithUser(user),
