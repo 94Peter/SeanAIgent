@@ -105,7 +105,7 @@ func initTracer(ctx context.Context) (func(ctx context.Context), error) {
 	endpoint := viper.GetString("tracing.endpoint")
 	log.Info("tracing init:",
 		log.String("endpoint", endpoint),
-		log.String("env", viper.GetString("tracing.env")),
+		log.String("service", viper.GetString("tracing.service")),
 	)
 	t, err := newOtelTracer(ctx, service)
 	if err != nil {
@@ -128,7 +128,6 @@ func newOtelTracer(ctx context.Context, service string) (*otelTracer, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	metricExporter, err := otlpmetricgrpc.New(ctx,
 		otlpmetricgrpc.WithEndpoint(endpoint),
 		otlpmetricgrpc.WithInsecure(),
