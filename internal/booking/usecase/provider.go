@@ -7,6 +7,7 @@ import (
 	readAppt "seanAIgent/internal/booking/usecase/appointment/read"
 	writeAppt "seanAIgent/internal/booking/usecase/appointment/write"
 	"seanAIgent/internal/booking/usecase/core"
+	migrationv1tov2 "seanAIgent/internal/booking/usecase/migration/v1tov2"
 	readTrain "seanAIgent/internal/booking/usecase/traindate/read"
 	writeTrain "seanAIgent/internal/booking/usecase/traindate/write"
 
@@ -129,4 +130,23 @@ var UseCaseSet = wire.NewSet(
 
 	wire.Struct(new(ServiceAggregator), "*"),
 	wire.Struct(new(Registry), "*"),
+)
+
+func ProvideTrainDataMigrationV1ToV2(
+	repo Repository,
+) migrationv1tov2.TrainDataMigrationUseCase {
+	return migrationv1tov2.NewTrainDataUseCase(repo)
+}
+
+func ProvideApptMigrationV1ToV2(
+	repo Repository,
+) migrationv1tov2.ApptMigrationUseCase {
+	return migrationv1tov2.NewApptUseCase(repo)
+}
+
+var MigrationUseCaseSet = wire.NewSet(
+	ProvideTrainDataMigrationV1ToV2,
+	ProvideApptMigrationV1ToV2,
+
+	wire.Struct(new(MigrationRegistry), "*"),
 )
