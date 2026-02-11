@@ -3,19 +3,20 @@ package handler
 import (
 	"time"
 
+	"github.com/94peter/botreplyer/provider/line/mid"
 	"github.com/gin-gonic/gin"
 )
 
 func getUserID(c *gin.Context) string {
-	return c.GetString("line.liff.userid")
+	return mid.GetLineLiffUserId(c)
 }
 
 func getUserDisplayName(c *gin.Context) string {
-	return c.GetString("line.liff.username")
+	return mid.GetLineLiffUserName(c)
 }
 
 func isAdmin(c *gin.Context) bool {
-	return c.GetBool("isAdmin")
+	return mid.IsAdmin(c)
 }
 
 func formattedDate(date time.Time) string {
