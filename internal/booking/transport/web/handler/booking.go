@@ -690,8 +690,15 @@ func (api *bookingAPI) getCheckinPage(c *gin.Context) {
 					ErrorMessage: "無法載入簽到列表，請稍後再試。",
 				}
 			} else {
-				// Transform to view model
-				viewModel = modelToCheckinPageModel(checkinList)
+				if checkinList.StartDate.After(queryTime) &&
+					checkinList.StartDate.Sub(queryTime) > 10*time.Minute {
+					viewModel = &checkin.CheckinPageModel{
+						ErrorMessage: "該時段尚未到達",
+					}
+				} else {
+					// Transform to view model
+					viewModel = modelToCheckinPageModel(checkinList)
+				}
 			}
 		}
 	}
@@ -733,7 +740,7 @@ func (api *bookingAPI) submitCheckin(c *gin.Context) {
 		CheckedInBookingIDs: input.CheckedInBookingIDs,
 	})
 	if err != nil {
-		log.Errorf("Failed to update checkin status: %v", err)
+		log.Errorf("Failed to update checkin status: " + getAllErrorMessage(err))
 		addToastTrigger(c, "提交失敗", "更新簽到狀態失敗，請稍後再試。", "error")
 		c.Status(http.StatusInternalServerError)
 		return
