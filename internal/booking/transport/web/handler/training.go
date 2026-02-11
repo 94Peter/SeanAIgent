@@ -22,7 +22,11 @@ import (
 )
 
 func NewTrainingUseCaseSet(registry *usecase.Registry) TrainingUseCaseSet {
-	return TrainingUseCaseSet{}
+	return TrainingUseCaseSet{
+		batchCreateTrainDateUC: registry.BatchCreateTrainDate,
+		deleteTrainDateUC:      registry.DeleteTrainDate,
+		queryFutureTrainUC:     registry.QueryFutureTrain,
+	}
 }
 
 type TrainingUseCaseSet struct {
