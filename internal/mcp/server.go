@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"seanAIgent/internal/booking/usecase"
+	"seanAIgent/internal/mcp/tool"
 	"seanAIgent/internal/service"
 
 	"github.com/94peter/vulpes/log"
@@ -28,6 +29,7 @@ func InitMcpServer(svc service.TrainingDateService, registry *usecase.Registry, 
 		server.WithToolCapabilities(false),
 		server.WithRecovery(),
 	)
+	tool.InitTool(svc, registry)
 	s.AddTools(tools...)
 	return &mcpServer{s: s}
 }
