@@ -87,7 +87,7 @@ func TestModelConversion(t *testing.T) {
 			UserName:       userName,
 			ChildName:      childName,
 			TrainingDateId: trainID,
-			v2Fields: v2Fields{
+			V2Fields: V2Fields{
 				Status:     string(entity.StatusAttended),
 				UpdateAt:   now,
 				VerifyTime: &verifiedAt,
@@ -97,7 +97,7 @@ func TestModelConversion(t *testing.T) {
 					CreatedAt: now.Add(time.Hour),
 				},
 			},
-			v1_deprecatedFields: v1_deprecatedFields{
+			V1_deprecatedFields: V1_deprecatedFields{
 				IsCheckedIn: true,
 				IsOnLeave:   true,
 			},
@@ -131,7 +131,7 @@ func TestModelConversion(t *testing.T) {
 			UserID:         "u1",
 			UserName:       "n1",
 			TrainingDateId: bson.NewObjectID(),
-			v2Fields: v2Fields{
+			V2Fields: V2Fields{
 				Status:   "INVALID_STATUS",
 				UpdateAt: time.Now(),
 			},

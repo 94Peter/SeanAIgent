@@ -112,9 +112,9 @@ type appointment struct {
 	mgo.Index `bson:"-"`
 	Migration mgo.MigrationInfo `bson:"_migration"`
 	// v2 field
-	v2Fields `bson:",inline"`
+	V2Fields `bson:",inline"`
 	// deprecated v1 field
-	v1_deprecatedFields `bson:",inline"`
+	V1_deprecatedFields `bson:",inline"`
 	ChildName           string        `bson:"child_name,omitempty"`
 	UserName            string        `bson:"user_name"`
 	UserID              string        `bson:"user_id"`
@@ -122,14 +122,14 @@ type appointment struct {
 	ID                  bson.ObjectID `bson:"_id"`
 }
 
-type v2Fields struct {
+type V2Fields struct {
 	UpdateAt   time.Time  `bson:"update_at"`
 	VerifyTime *time.Time `bson:"verify_time,omitempty"`
 	Leave      *leaveInfo `bson:"leave,omitempty"`
 	Status     string     `bson:"status"`
 }
 
-type v1_deprecatedFields struct {
+type V1_deprecatedFields struct {
 	IsCheckedIn bool `bson:"is_checked_in"`
 	IsOnLeave   bool `bson:"is_on_leave"`
 }
@@ -224,7 +224,6 @@ func (*apptRepoImpl) SaveManyAppointments(
 		if err != nil {
 			return newInternalError(op, err)
 		}
-
 		bulkOpts = bulkOpts.InsertOne(modelAppt)
 	}
 	_, err = bulkOpts.Execute(ctx)
