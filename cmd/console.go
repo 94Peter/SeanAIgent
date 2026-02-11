@@ -21,9 +21,9 @@ import (
 	"github.com/94peter/vulpes/log"
 	"github.com/94peter/vulpes/storage"
 	"github.com/invopop/ctxi18n"
+	"github.com/line/line-bot-sdk-go/v7/linebot"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tmc/langchaingo/llms/googleai"
 	"go.opentelemetry.io/otel"
 
 	"seanAIgent/internal/booking/infra/db"
@@ -138,28 +138,15 @@ to quickly create a Cobra application.`,
 				service.WithAppointmentStore(stores.AppointmentStore),
 			)
 			webService = InitializeWeb()
-			// v1 handler
 
 			// v2 handler
 			dbRepo := db.NewDbRepoAndIdGenerate()
 			userApptStatsNotify = notification.NewUserApptStatsNotifier(dbRepo)
-			// web.InitWeb(
-			// 	routerGroup,
-			// 	// app.NewScheduleService(dbRepo, idGen),
-			// 	// app.NewAppointmentService(dbRepo, idGen),
-			// 	viper.GetBool("http.csrf.enabled"),
-			// )
 
 			checkinReplyer = linemsg.NewStartCheckinReply(stores.TrainingDateStore)
 			appointmentState = linemsg.NewAppointmentStateReply(stores.AppointmentStore, r2storage)
 			catchUpCheckIn = linemsg.NewCatchUpCheckInReply(stores.TrainingDateStore)
 		})
-
-		conversationMgr, llmCancel, err := newConversationMgr(mainCtx)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-		cancelSlice = append(cancelSlice, llmCancel)
 
 		// init botreplyer
 		botctx, cancel := context.WithTimeout(mainCtx, time.Minute)
@@ -178,12 +165,26 @@ to quickly create a Cobra application.`,
 					linemsg.NewStartBookingReply(),
 					checkinReplyer,
 					catchUpCheckIn,
-					linemsg.NewLLMReply(conversationMgr),
 				),
 				line.WithAdminUserId(viper.GetString("linebot.admin_user_id")),
 				line.WithNotificationService(notifyService),
 			),
 			botreplyer.WithJoinGroupReplyFunc(replyfunc.MyJoinGroupReply),
+			botreplyer.WithLLMReply(botctx,
+				llm.WithModel(viper.GetString("llm.model")),
+				llm.WithAPIKey(viper.GetString("llm.googleai.api_key")),
+				llm.WithConfigFile(viper.GetString("llm.config_file")),
+				llm.WithMCPBaseUrls(viper.GetStringSlice("llm.mcp_server")),
+				// 只能在私訊時使用，群組不能用LLM
+				llm.WithAllowMsgType([]linebot.EventSourceType{linebot.EventSourceTypeUser}),
+				// 不允許使用者使用LLM，只能在管理員時使用
+				llm.WithAllowUser(false),
+				llm.WithMongo(
+					viper.GetString("database.uri"),
+					viper.GetString("database.db"),
+					viper.GetString("llm.memory_collection"),
+				),
+			),
 		)
 		cancel()
 		if err != nil {
@@ -223,31 +224,4 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// teacherCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-}
-
-func newConversationMgr(ctx context.Context) (llm.ConversationMgr, context.CancelFunc, error) {
-	llmCtx, llmCancel := context.WithCancel(ctx)
-	llmmodel, err := googleai.New(llmCtx,
-		googleai.WithAPIKey(viper.GetString("llm.googleai.api_key")),
-		googleai.WithDefaultModel(viper.GetString("llm.model")))
-	if err != nil {
-		llmCancel()
-		return nil, nil, err
-	}
-
-	conversationMgr, err := llm.NewConversationMgr(
-		llmmodel,
-		viper.GetString("llm.config_file"),
-		viper.GetStringSlice("llm.mcp_server"),
-		llm.WithConversationMemoryMongo(
-			viper.GetString("database.uri"),
-			viper.GetString("database.db"),
-			viper.GetString("llm.memory_collection"),
-		),
-	)
-	if err != nil {
-		llmCancel()
-		return nil, nil, err
-	}
-	return conversationMgr, llmCancel, nil
 }
