@@ -9,7 +9,9 @@ import (
 )
 
 func NewTrainRepository() repository.TrainRepository {
-	return &trainRepoImpl{}
+	return &migrateV1ToV2trainRepoImpl{
+		TrainRepository: &trainRepoImpl{},
+	}
 }
 
 type trainRepoImpl struct{}

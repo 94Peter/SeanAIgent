@@ -67,6 +67,13 @@ func withTrainDateID(id string) trainingDateOpt {
 	}
 }
 
+func withMigrationInfo(migration mgo.MigrationInfo) trainingDateOpt {
+	return func(td *trainDate) error {
+		td.Migration = migration
+		return nil
+	}
+}
+
 func newTrainDate(opts ...trainingDateOpt) (*trainDate, error) {
 	td := &trainDate{
 		Index: trainingDateCollection,
@@ -84,10 +91,6 @@ func newTrainDate(opts ...trainingDateOpt) (*trainDate, error) {
 	if td.UpdatedAt.IsZero() {
 		td.UpdatedAt = td.CreatedAt
 	}
-	td.Migration.Status = mgo.MigrateStatusSuccess
-	td.Migration.Version = 2
-	td.Migration.LastRun = time.Now()
-	td.Migration.Error = ""
 	return td, nil
 }
 
@@ -153,7 +156,14 @@ func (*trainRepoImpl) SaveTrainDate(
 	ctx context.Context, training *entity.TrainDate,
 ) repository.RepoError {
 	const op = "save_train_date"
-	modelTraining, err := newTrainDate(withDomainTrainDate(training))
+	modelTraining, err := newTrainDate(
+		withDomainTrainDate(training),
+		withMigrationInfo(mgo.MigrationInfo{
+			Status:  mgo.MigrateStatusSuccess,
+			Version: 2,
+			LastRun: time.Now(),
+		}),
+	)
 	if err != nil {
 		return newInternalError(op, err)
 	}
@@ -173,7 +183,14 @@ func (*trainRepoImpl) SaveManyTrainDates(
 		return newInternalError(op, fmt.Errorf("new bulk operation fail: %w", err))
 	}
 	for _, training := range trainings {
-		modelTraining, err := newTrainDate(withDomainTrainDate(training))
+		modelTraining, err := newTrainDate(
+			withDomainTrainDate(training),
+			withMigrationInfo(mgo.MigrationInfo{
+				Status:  mgo.MigrateStatusSuccess,
+				Version: 2,
+				LastRun: time.Now(),
+			}),
+		)
 		if err != nil {
 			return newInternalError(op, err)
 		}
@@ -315,9 +332,12 @@ func (*trainRepoImpl) DeductCapacity(
 		{Key: "$set", Value: bson.D{{Key: "updated_at", Value: time.Now()}}},
 	}
 	doc, _ := newTrainDate()
-	_, err = mgo.UpdateOne(ctx, doc, filter, update)
+	updatedCount, err := mgo.UpdateOne(ctx, doc, filter, update)
 	if err != nil {
 		return newInternalError(op, err)
+	}
+	if updatedCount == 0 {
+		return newNotFoundError(op, fmt.Errorf("no document updated"))
 	}
 	return nil
 }
@@ -338,9 +358,12 @@ func (*trainRepoImpl) IncreaseCapacity(
 		{Key: "$set", Value: bson.D{{Key: "updated_at", Value: time.Now()}}},
 	}
 	doc, _ := newTrainDate()
-	_, err = mgo.UpdateOne(ctx, doc, filter, update)
+	updatedCount, err := mgo.UpdateOne(ctx, doc, filter, update)
 	if err != nil {
 		return newInternalError(op, err)
+	}
+	if updatedCount == 0 {
+		return newNotFoundError(op, fmt.Errorf("no document updated"))
 	}
 	return nil
 }
@@ -354,7 +377,14 @@ func (*trainRepoImpl) UpdateManyTrainDates(
 		return newInternalError(op, fmt.Errorf("new bulk operation fail: %w", err))
 	}
 	for _, training := range trainings {
-		modelTraining, err := newTrainDate(withDomainTrainDate(training))
+		modelTraining, err := newTrainDate(
+			withDomainTrainDate(training),
+			withMigrationInfo(mgo.MigrationInfo{
+				Status:  mgo.MigrateStatusSuccess,
+				Version: 2,
+				LastRun: time.Now(),
+			}),
+		)
 		if err != nil {
 			return newInternalError(op, err)
 		}
