@@ -1,3 +1,4 @@
 .seanAIgent.yaml
 llm.md
 tmp/*
+.app/*

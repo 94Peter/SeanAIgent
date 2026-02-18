@@ -9,11 +9,14 @@ GOARCH=amd64
 
 WORKDIR /build
 
-COPY . .
 RUN apk add --no-cache tzdata
+# COPY go.mod go.sum ./
+COPY . .
 RUN go mod download
 
-RUN go build -o bot ./main.go
+
+# 加上 -ldflags="-s -w" 移除除錯資訊，Image 會再縮小約 10-20MB
+RUN go build -ldflags="-s -w" -o bot ./main.go
 
 RUN cat <<EOF > /build/config.yaml
 http:

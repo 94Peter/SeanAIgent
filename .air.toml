@@ -1,0 +1,29 @@
+root = "."
+testdata_dir = "testdata"
+tmp_dir = "tmp"
+
+[build]
+  # 根據你的專案修改 binary 名稱
+  bin = "./tmp/main --config /app/.app/console_v2.yaml serve console"
+  # 編譯指令，加上 -o 輸出到 tmp 避免污染源碼
+  cmd = "go build -o ./tmp/main ."
+  # 監控的副檔名
+  include_ext = ["go", "tpl", "tmpl", "html", "toml"]
+  # 忽略不需要監控的目錄 (這對效能很重要)
+  exclude_dir = ["assets", "tmp", "vendor", ".git"]
+  # 每次重編後是否停止舊的 binary
+  stop_on_error = true
+  # 延遲編譯，避免存檔瞬間頻繁觸發 (毫秒)
+  delay = 1000
+
+[log]
+  time = true
+
+[color]
+  main = "magenta"
+  watcher = "cyan"
+  build = "yellow"
+  runner = "green"
+
+[screen]
+  clear_on_rebuild = true

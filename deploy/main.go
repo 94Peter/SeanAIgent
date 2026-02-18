@@ -32,14 +32,19 @@ func main() {
 
 		// --- 3. 核心優化：合併 Port 80 與 443 ---
 		// 使用 "80:443" 範圍格式，一條規則同時搞定 HTTP 與 HTTPS
-
-		vultr.NewFirewallRule(ctx, "cf-web-range", &vultr.FirewallRuleArgs{
+		// vultr.NewFirewallRule()
+		_, err = vultr.NewFirewallRule(ctx, "cf-web-range", &vultr.FirewallRuleArgs{
 			FirewallGroupId: fwGroup.ID(),
 			Protocol:        pulumi.String("tcp"),
 			IpType:          pulumi.String("v4"),
-			Source:          pulumi.String("cloudflare"),
+			Source:          pulumi.StringPtr("cloudflare"),
 			Port:            pulumi.String("80:443"), // 合併關鍵點
+			Subnet:          pulumi.String("0.0.0.0"),
+			SubnetSize:      pulumi.Int(0),
 		})
+		if err != nil {
+			return err
+		}
 
 		// --- 4. 啟動腳本 (修正 HOME 變數問題) ---
 		rawScript := `#!/bin/bash

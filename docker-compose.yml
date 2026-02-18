@@ -1,26 +1,102 @@
 services:
-  mcp:
-    container_name: mcp
-    image: 94peter/seanaigent:latest
+  otel-collector:
+    image: 'otel/opentelemetry-collector-contrib:latest'
+    container_name: otel-collector
+    deploy:
+      resources:
+        limits:
+          memory: 40M
+        reservations:
+          memory: 20M
+    restart: always
+    command:
+      - '--config=/etc/otel-collector-config.yaml'
     volumes:
-      - ~/.Secret/seanAigent/config.yaml:/app/.seanAIgent.yaml
-    command: --config /app/.seanAIgent.yaml serve mcp
-
-  console:
-    container_name: console
+      - './.app/collector/config.yaml:/etc/otel-collector-config.yaml'
+  mcp:
+    container_name: seanaigent-mcp
+    image: 'ghcr.io/94peter/seanaigent:ab171b75d78f1b70771d754bd23d00d39261cbe0'
+    environment:
+      - GOGC=50
+      - GOMEMLIMIT=58MiB
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+        reservations:
+          memory: 32M
+    command: '--config /app/.seanAIgent.yaml serve mcp'
+    volumes:
+      - './.app/mcp.yaml:/app/.seanAIgent.yaml'
+  console_v1:
+    container_name: seanaigent-console
     depends_on:
       - mcp
-    image: 94peter/seanaigent:latest
+    image: '94peter/seanaigent:latest'
+    environment:
+      - GOGC=50
+      - GOMEMLIMIT=72MiB
+    deploy:
+      resources:
+        limits:
+          memory: 80M
+        reservations:
+          memory: 40M
+    command: '--config /app/.seanAIgent.yaml serve console'
+    healthcheck:
+      test:
+        - CMD
+        - /app/bot
+        - '--config'
+        - /app/.seanAIgent.yaml
+        - checkHealth
+      interval: 30s
+      timeout: 5s
+      retries: 2
+      start_period: 3s
     volumes:
-      - ~/.Secret/seanAigent/config.yaml:/app/.seanAIgent.yaml
-    command: --config /app/.seanAIgent.yaml serve console
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.seanaigent-console.rule=Host(`seanaigent.94peter.dev`)"
-      - "traefik.http.routers.seanaigent-console.entrypoints=web"
-      - "traefik.http.services.seanaigent-console.loadbalancer.server.port=8082"
-
-networks:
-  default:
-    external:
-      name: dev_proxy
+      - './.app/console_v1.yaml:/app/.seanAIgent.yaml'
+  console_v2:
+    container_name: seanaigent-console-v2
+    build:
+      context: .             # 代表當前目錄，即專案根目錄
+      dockerfile: Dockerfile.dev
+    depends_on:
+      - mcp
+    image: 'seanaigent-console:local'
+    healthcheck:
+      test:
+        - CMD
+        - /app/bot
+        - '--config'
+        - /app/.seanAIgent.yaml
+        - checkHealth
+      interval: 30s
+      timeout: 5s
+      retries: 2
+      start_period: 3s
+    volumes:
+      - './:/app'
+  proxy:
+    image: 'nginx:latest'
+    volumes:
+      - './.app/nginx/default.conf:/etc/nginx/conf.d/default.conf'
+    deploy:
+      resources:
+        limits:
+          memory: 40M
+        reservations:
+          memory: 10M
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'curl -f http://localhost/__health || exit 1'
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    depends_on:
+      - console_v1
+      - console_v2
+    ports:
+      - '8080:80'

@@ -1,4 +1,4 @@
-IMAGE_TAG := latest
+IMAGE_TAG := local
 IMAGE_NAME := seanaigent
 
 # Run templ generation in watch mode
