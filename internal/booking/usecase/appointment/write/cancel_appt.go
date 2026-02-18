@@ -13,6 +13,8 @@ type ReqCancelAppt struct {
 	UserID string
 }
 
+type CancelApptUseCase core.WriteUseCase[ReqCancelAppt, *entity.Appointment]
+
 type cancelApptUseCaseRepo interface {
 	repository.AppointmentRepository
 	repository.TrainRepository

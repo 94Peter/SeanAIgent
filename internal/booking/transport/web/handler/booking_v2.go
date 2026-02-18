@@ -20,11 +20,13 @@ import (
 func NewV2BookingUseCaseSet(registry *usecase.Registry) V2BookingUseCaseSet {
 	return V2BookingUseCaseSet{
 		createApptUC: registry.CreateAppt,
+		cancelApptUC: registry.CancelAppt,
 	}
 }
 
 type V2BookingUseCaseSet struct {
 	createApptUC writeappt.CreateApptUseCase
+	cancelApptUC writeappt.CancelApptUseCase
 }
 
 func NewV2BookingApi(enableCSRF bool, bookingUseCaseSet V2BookingUseCaseSet) WebAPI {
@@ -211,13 +213,13 @@ func (api *v2BookingAPI) createBookingV2(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "Failed to create user"})
 		return
 	}
-	appts, err := api.createApptUC.Execute(c.Request.Context(), writeappt.ReqCreateAppt{
+	appts, errUC := api.createApptUC.Execute(c.Request.Context(), writeappt.ReqCreateAppt{
 		TrainDateID: req.SlotID,
 		User:        domainUser,
 		ChildNames:  req.StudentNames,
 	})
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "Failed to create booking"})
+	if errUC != nil {
+		c.JSON(getStatus(errUC.Type()), gin.H{"success": false, "message": errUC.Message()})
 		return
 	}
 
@@ -256,6 +258,21 @@ func (api *v2BookingAPI) cancelBookingV2(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "Booking ID required"})
 		return
 	}
+	userID := getUserID(c)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "message": "User not logged in"})
+		return
+	}
+
+	_, errUC := api.cancelApptUC.Execute(c.Request.Context(), writeappt.ReqCancelAppt{
+		ApptID: bookingID,
+		UserID: userID,
+	})
+	if errUC != nil {
+		c.JSON(getStatus(errUC.Type()), gin.H{"success": false, "message": errUC.Message()})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "預約已取消",
