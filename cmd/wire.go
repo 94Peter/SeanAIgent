@@ -32,6 +32,7 @@ func InitializeWeb() web.WebService {
 		// 4. 提供 API 需要的 UseCaseSet
 		handler.NewBookingUseCaseSet,
 		handler.NewTrainingUseCaseSet,
+		handler.NewV2BookingUseCaseSet,
 		// 5. 提供 WebConfig
 		ProvideWebConfig,
 		// 5. 提供 WebService

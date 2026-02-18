@@ -1,0 +1,1200 @@
+package booking_v2
+
+import (
+	"fmt"
+	"encoding/json"
+	"time"
+)
+
+// --- View Models ---
+
+// BookingV2Model contains all data required for the Booking V2 Page.
+type BookingV2Model struct {
+	LiffID      string
+	Stats       *StatsSummary
+	Weeks       []*WeekData
+	CurrentUser *UserContext
+	MyBookings  []*MyBookingItem
+}
+
+type UserContext struct {
+	DisplayName string
+	UserID      string
+	FrequentChildren []string
+}
+
+// MyBookingItem represents a booking entry in the "My Bookings" list.
+type MyBookingItem struct {
+	ID          string
+	DateDisplay string // e.g. "02/14 (六) 14:30"
+	Title       string // e.g. "師大班 @ 師大附中"
+	Attendees   []*Attendee
+}
+
+// StatsSummary represents the 90-day statistics.
+type StatsSummary struct {
+	TotalSessions int
+	TotalLeave    int
+	Children      []*ChildStat
+}
+
+// ChildStat represents statistics for a single child.
+type ChildStat struct {
+	Name      string
+	Completed int
+	Leave     int
+	Absent    int
+	AvgWeek   float64
+}
+
+// WeekData represents a week in the calendar.
+type WeekData struct {
+	ID        string // e.g. "2026-W07"
+	Days      []*DayData
+	IsCurrent bool
+}
+
+// DayData represents a day in the calendar.
+type DayData struct {
+	DateDisplay string // e.g. "13"
+	DayOfWeek   string // e.g. "Fri"
+	FullDate    string // e.g. "2026-02-13"
+	IsToday     bool
+	Slots       []*SlotData
+}
+
+// SlotData represents a time slot.
+type SlotData struct {
+	ID          string
+	TimeDisplay string // e.g. "16:30"
+	CourseName  string // e.g. "足球"
+	Location    string
+	Capacity    int
+	BookedCount int
+	Attendees   []*Attendee
+	IsFull      bool
+	IsEmpty     bool // If true, this is an empty slot (no course)
+}
+
+// Attendee represents a child in a slot.
+type Attendee struct {
+	Name        string
+	Status      string // "Booked", "Leave", "CheckedIn", "Absent"
+	BookingTime time.Time
+	BookingID   string
+}
+
+// --- Colors ---
+// Using arbitrary values to match the spec exactly where standard Tailwind might differ.
+const (
+	BgBase        = "bg-[#000000]"
+	BgSurface     = "bg-[#1C1C1E]"
+	TextWhite     = "text-white"
+	TextGray      = "text-[#8E8E93]"
+	ColorPrimary  = "text-[#FFD700]" // Gold
+	ColorBlue     = "bg-[#60A5FA]"   // Blue-400
+	ColorRed      = "text-[#F87171]" // Red-400
+	ColorRedBg    = "bg-[#F87171]"   // Red-400
+	ColorGreen    = "text-[#34D399]" // Emerald-400
+	ColorGreenBg  = "bg-[#34D399]"   // Emerald-400
+	ColorZinc     = "bg-[#27272A]"   // Zinc-800 (Available)
+)
+
+// --- Components ---
+
+// Page is the main entry point.
+templ Page(model *BookingV2Model) {
+	<div class={ "w-full h-[100dvh] flex flex-col font-sans overflow-hidden " + BgBase + " " + TextWhite }>
+		<!-- 1. Sticky Header -->
+		@StickyHeader(model.Stats)
+
+		<!-- 2. Main Calendar Area (Vertical Scroll) -->
+		<div id="calendar-container" class="flex-grow overflow-y-auto snap-y snap-mandatory scroll-smooth pb-24 relative">
+			<!-- Sentinel Top -->
+			<div id="sentinel-top" class="h-1 w-full shrink-0"></div>
+
+			<!-- Initial Weeks -->
+			for _, week := range model.Weeks {
+				@WeekRow(week)
+			}
+
+			<!-- Sentinel Bottom -->
+			<div id="sentinel-bottom" class="h-1 w-full shrink-0"></div>
+		</div>
+
+		<!-- 3. Fixed FABs -->
+		@FixedFABs()
+
+		<!-- 4. Modals / Popups (Initially Hidden) -->
+		@BookingPopup(model.CurrentUser)
+		@MyBookingsModal(model.MyBookings)
+		
+		<!-- Initialization Script -->
+		@Script(model.LiffID)
+	</div>
+}
+
+// StickyHeader renders the top 90-day stats.
+templ StickyHeader(stats *StatsSummary) {
+	<div class="sticky top-0 z-40 w-full bg-[#121212] border-b border-[#27272A] shadow-md transition-all duration-300" x-data="{ expanded: false }">
+		<div class="px-4 py-3">
+			<div class="flex items-center justify-between">
+				<!-- Title & Primary Stat -->
+				<div>
+					<h2 id="current-month-title" class="text-xl font-bold text-[#FFD700] leading-none mb-1">
+						<!-- Dynamic Date will be injected here via JS -->
+						載入中...
+					</h2>
+					<div class="flex items-baseline gap-2 text-xs text-[#8E8E93]">
+						<span id="stats-label" class="font-medium">90天統計:</span>
+						<span id="total-sessions" class="text-white font-bold text-sm">{ fmt.Sprintf("%d", stats.TotalSessions) } 堂</span>
+						<span>(請假 <span id="total-leave">{ fmt.Sprintf("%d", stats.TotalLeave) }</span>)</span>
+					</div>
+				</div>
+				<!-- Expand Toggle -->
+				<button 
+					@click="expanded = !expanded" 
+					class="p-2 text-[#8E8E93] hover:text-white transition-colors focus:outline-none"
+				>
+					<!-- Chevron Icon -->
+					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
+						class="transform transition-transform duration-300"
+						:class="expanded ? 'rotate-180' : ''">
+						<polyline points="6 9 12 15 18 9"></polyline>
+					</svg>
+				</button>
+			</div>
+
+			<!-- Expandable Table Area -->
+			<div 
+				x-show="expanded" 
+				x-collapse 
+				class="mt-2 overflow-hidden"
+				style="display: none;"
+			>
+				<table class="w-full text-sm text-right">
+					<thead>
+						<tr class="text-[#8E8E93] border-b border-[#27272A]">
+							<th class="pb-2 text-left font-medium">姓名</th>
+							<th class="pb-2 font-medium">上課</th>
+							<th class="pb-2 font-medium">請假</th>
+							<th class="pb-2 font-medium">缺席</th>
+							<th class="pb-2 font-medium">週均</th>
+						</tr>
+					</thead>
+					<tbody id="stats-children-body" class="text-white">
+						for _, child := range stats.Children {
+							<tr class="border-b border-[#27272A]/50 last:border-0">
+								<td class="py-2 text-left">{ child.Name }</td>
+								<td class={ "py-2 " + ColorGreen }>{ fmt.Sprintf("%d", child.Completed) }</td>
+								<td class="py-2 text-[#8E8E93]">{ fmt.Sprintf("%d", child.Leave) }</td>
+								<td class={ "py-2 " + cond(child.Absent > 0, ColorRed, "text-[#8E8E93]") }>{ fmt.Sprintf("%d", child.Absent) }</td>
+								<td class="py-2 text-[#8E8E93]">{ fmt.Sprintf("%.1f", child.AvgWeek) }</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+}
+
+// WeekRow renders a single week (7 days).
+templ WeekRow(week *WeekData) {
+	<div class="snap-start pt-4 pb-2 border-b border-[#27272A] min-h-[50vh]" data-week-id={ week.ID }>
+		<!-- Days Grid -->
+		<div class="grid grid-cols-7 gap-1 px-1">
+			for _, day := range week.Days {
+				<div class="flex flex-col items-center gap-2 min-h-[120px]" data-date={ day.FullDate }>
+					<!-- Date Circle -->
+					<div class={ "flex flex-col items-center justify-center w-10 h-10 rounded-full text-sm font-medium " + cond(day.IsToday, "bg-white text-black", "text-[#8E8E93]") }>
+						<span class="text-[10px] uppercase leading-none">{ day.DayOfWeek }</span>
+						<span class="text-lg leading-none font-bold">{ day.DateDisplay }</span>
+					</div>
+
+					<!-- Slots Stack -->
+					<div class="w-full flex flex-col gap-2 px-0.5">
+						for _, slot := range day.Slots {
+							if slot.IsEmpty {
+								@EmptyCapsule(slot)
+							} else {
+								@CourseCapsule(slot)
+							}
+						}
+					</div>
+				</div>
+			}
+		</div>
+	</div>
+}
+
+// CourseCapsule renders a booked/available slot.
+templ CourseCapsule(slot *SlotData) {
+	{{
+		attendeesJson, _ := json.Marshal(slot.Attendees)
+	}}
+	<button 
+		class={ "w-full rounded-[8px] p-1.5 flex flex-col gap-1 text-left transition-transform active:scale-95 " + BgSurface }
+		{ templ.Attributes{"onclick": fmt.Sprintf("openBookingPopup('%s', '%s', '%s', %s)", slot.ID, slot.TimeDisplay, slot.CourseName, string(attendeesJson))}... }
+	>
+		<!-- Header: Time & Title -->
+		<div class="flex flex-col leading-tight">
+			<span class="text-[10px] text-[#8E8E93] font-mono">{ slot.TimeDisplay }</span>
+			<span class="text-xs font-bold text-white truncate">{ slot.CourseName }</span>
+		</div>
+
+		<!-- Name Tag Stack (Only Booked/Leave) -->
+		<div class="flex flex-col gap-1 mt-1">
+			for _, p := range slot.Attendees {
+				if p.Status == "Booked" {
+					<span class={ "text-[9px] px-1.5 py-0.5 rounded-[4px] text-white truncate " + ColorBlue }>
+						{ p.Name }
+					</span>
+				} else if p.Status == "Leave" {
+					<span class={ "text-[9px] px-1.5 py-0.5 rounded-[4px] border border-[#F87171] text-[#F87171] truncate" }>
+						{ p.Name }
+					</span>
+				}
+			}
+		</div>
+	</button>
+}
+
+// EmptyCapsule renders an empty/bookable slot placeholder.
+templ EmptyCapsule(slot *SlotData) {
+	<div 
+		class="w-full rounded-[8px] p-2 border border-dashed border-[#3A3A3C] flex items-center justify-center text-left min-h-[40px] opacity-50 cursor-default"
+	>
+		<span class="text-[10px] text-[#8E8E93]">[未排課]</span>
+	</div>
+}
+
+// FixedFABs renders the bottom floating buttons.
+templ FixedFABs() {
+	<div class="fixed bottom-6 left-4 right-4 flex justify-between items-end pointer-events-none z-50">
+		<!-- My Bookings (Left) -->
+		<button 
+			onclick="openMyBookings()"
+			class="pointer-events-auto bg-[#1C1C1E] text-white border border-[#3A3A3C] shadow-lg rounded-full px-5 py-3 font-semibold text-sm flex items-center gap-2 active:bg-[#2C2C2E] transition-colors"
+		>
+			<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+			我的預約
+		</button>
+
+		<!-- Share (Right) -->
+		<button 
+			onclick="shareBookingStatus()"
+			class="pointer-events-auto bg-[#06C755] text-white shadow-lg rounded-full px-5 py-3 font-semibold text-sm flex items-center gap-2 active:bg-[#05B04B] transition-colors"
+		>
+			<span>分享預約</span>
+			<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+		</button>
+	</div>
+}
+
+// BookingPopup renders the Smart Booking Input modal.
+templ BookingPopup(user *UserContext) {
+	<div 
+		id="booking-popup" 
+		class="fixed inset-0 z-[60] hidden flex items-end sm:items-center justify-center"
+		role="dialog" 
+		aria-modal="true"
+	>
+		<!-- Backdrop -->
+		<div class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onclick="closeBookingPopup()"></div>
+
+		<!-- Modal Content -->
+		<div class="relative w-full max-w-md bg-[#1C1C1E] rounded-t-xl sm:rounded-xl p-5 shadow-2xl transform transition-transform overflow-hidden">
+			<!-- Header -->
+			<div class="flex justify-between items-start mb-4">
+				<div>
+					<h3 id="popup-course-title" class="text-xl font-bold text-white">Course Title</h3>
+					<p id="popup-time-info" class="text-sm text-[#8E8E93] mt-1">Date Time Location</p>
+					<!-- Hidden Slot ID for submission -->
+					<input type="hidden" id="popup-slot-id" />
+				</div>
+				<button onclick="closeBookingPopup()" class="text-[#8E8E93] p-1">
+					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+				</button>
+			</div>
+
+			<!-- MAIN VIEW -->
+			<div id="booking-main-view">
+				<!-- Participants List (Existing Bookings) -->
+				<div class="mb-4" id="booked-list-wrapper">
+					<label class="block text-xs font-medium text-[#8E8E93] mb-2 uppercase">已加入名單 (點擊可管理)</label>
+					<div id="booked-participants-list" class="flex flex-wrap gap-2 min-h-[32px]">
+						<!-- Interactive Tags injected via JS -->
+					</div>
+				</div>
+
+				<!-- Smart Input Area (New Entries) -->
+				<div class="mb-4">
+					<label class="block text-xs font-medium text-[#8E8E93] mb-2 uppercase">新增參與者 (輸入名字或從下方選擇)</label>
+					
+					<!-- Tag Container & Input -->
+					<div class="flex flex-wrap gap-2 p-3 bg-[#000000] border border-[#3A3A3C] rounded-lg min-h-[50px] items-center" id="smart-input-container">
+						<!-- Draft Tags injected here -->
+						
+						<!-- Just Input here -->
+						<input 
+							type="text" 
+							id="smart-input" 
+							class="bg-transparent border-none outline-none text-white text-base min-w-[100px] flex-grow placeholder-[#525252]"
+							placeholder="輸入名字..."
+							autocomplete="off"
+						/>
+					</div>
+				</div>
+
+				<!-- Frequent List (Quick Select) -->
+				<div class="mb-6">
+					<label class="block text-xs font-medium text-[#8E8E93] mb-2">快速選擇</label>
+					<div class="flex flex-wrap gap-2" id="frequent-names-list">
+						for _, name := range user.FrequentChildren {
+							<button 
+								{ templ.Attributes{"onclick": fmt.Sprintf("addDraftTag('%s')", name)}... }
+								class="px-3 py-1.5 rounded-full bg-[#27272A] text-white text-sm border border-[#3A3A3C] hover:bg-[#3A3A3C]"
+							>
+								{ name }
+							</button>
+						}
+					</div>
+				</div>
+
+				<!-- Footer -->
+				<div class="flex gap-3 mt-6">
+					<button onclick="submitBooking()" class="w-full bg-[#FFD700] text-black font-bold py-3 rounded-lg text-base hover:bg-[#E6C200] transition-colors">完成</button>
+				</div>
+			</div>
+
+			<!-- LEAVE FORM VIEW (Hidden by default) -->
+			<div id="booking-leave-view" class="hidden">
+				<form id="leave-request-form" onsubmit="submitLeaveRequest(event)">
+					<input type="hidden" id="leave-booking-id" name="bookingId" />
+					
+					<div class="mb-4">
+						<p class="text-white text-lg font-bold mb-1">
+							<span id="leave-student-name" class="text-[#FFD700]"></span>
+							<span class="text-white">要請假</span>
+						</p>
+					</div>
+
+					<div class="mb-4">
+						<label for="leaveReason" class="block text-sm font-medium text-[#8E8E93] mb-2">請假原因</label>
+						<textarea 
+							id="leaveReason" 
+							name="reason" 
+							rows="4" 
+							class="w-full bg-[#000000] border border-[#3A3A3C] rounded-lg p-3 text-white text-sm focus:border-[#FFD700] outline-none transition-colors resize-none"
+							placeholder="請輸入請假原因..."
+							required
+						></textarea>
+					</div>
+
+					<div class="flex gap-3 pt-2">
+						<button 
+							type="button" 
+							onclick="cancelLeaveRequest()" 
+							class="flex-1 px-4 py-2.5 rounded-lg border border-[#3A3A3C] text-white text-sm font-medium hover:bg-[#27272A] transition-colors"
+						>
+							取消
+						</button>
+						<button 
+							type="submit" 
+							class="flex-1 px-4 py-2.5 rounded-lg bg-[#FFD700] text-black text-sm font-bold hover:bg-[#E6C200] transition-colors"
+						>
+							提交申請
+						</button>
+					</div>
+				</form>
+			</div>
+
+			<!-- INLINE CONFIRMATION PANEL -->
+			@InlineConfirmation("booking")
+		</div>
+	</div>
+}
+
+// InlineConfirmation renders a bottom-sheet style confirmation panel inside a modal.
+templ InlineConfirmation(idPrefix string) {
+	<div 
+		id={ idPrefix + "-confirm-panel" }
+		class="absolute bottom-0 left-0 right-0 bg-[#2C2C2E] p-5 pt-6 rounded-t-2xl sm:rounded-xl z-[70] flex flex-col gap-4 transform transition-transform duration-300 translate-y-full border-t border-[#3A3A3C] shadow-2xl"
+	>
+		<div class="text-center">
+			<h4 id={ idPrefix + "-confirm-title" } class="text-white font-bold text-lg mb-1">Confirm Action</h4>
+			<p id={ idPrefix + "-confirm-msg" } class="text-[#8E8E93] text-sm">Are you sure?</p>
+		</div>
+		<div class="flex gap-3">
+			<button 
+				id={ idPrefix + "-confirm-cancel" }
+				class="flex-1 py-3 rounded-xl border border-[#3A3A3C] text-white font-bold text-sm hover:bg-[#3A3A3C] transition-colors"
+			>
+				取消
+			</button>
+			<button 
+				id={ idPrefix + "-confirm-ok" }
+				class="flex-1 py-3 rounded-xl bg-[#FFD700] text-black font-bold text-sm hover:bg-[#E6C200] transition-colors"
+			>
+				確定
+			</button>
+		</div>
+	</div>
+}
+
+// MyBookingsModal renders the list of my bookings.
+templ MyBookingsModal(bookings []*MyBookingItem) {
+	<div 
+		id="my-bookings-modal" 
+		class="fixed inset-0 z-[60] hidden flex items-end justify-center sm:items-center"
+		role="dialog" 
+		aria-modal="true"
+	>
+		<div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeMyBookings()"></div>
+		<div class="relative w-full max-w-md h-[85vh] bg-[#1C1C1E] rounded-t-xl sm:rounded-xl shadow-2xl flex flex-col overflow-hidden">
+			<!-- Header -->
+			<div class="flex justify-between items-center p-4 border-b border-[#27272A]">
+				<h3 class="text-lg font-bold text-white">我的預約</h3>
+				<button onclick="closeMyBookings()" class="text-[#8E8E93] p-1">✕</button>
+			</div>
+
+			<!-- Content -->
+			<div class="flex-grow overflow-y-auto p-4 space-y-4">
+				<!-- Tabs -->
+				<div class="flex gap-4 border-b border-[#27272A] mb-4">
+					<button 
+						id="tab-upcoming"
+						onclick="switchMyBookingsTab('upcoming')"
+						class="pb-2 text-[#FFD700] border-b-2 border-[#FFD700] font-medium transition-colors"
+					>
+						即將到來
+					</button>
+					<button 
+						id="tab-history"
+						onclick="switchMyBookingsTab('history')"
+						class="pb-2 text-[#8E8E93] font-medium hover:text-white transition-colors border-b-2 border-transparent"
+					>
+						歷史紀錄
+					</button>
+				</div>
+
+				<!-- List Items -->
+				<div id="my-bookings-list" class="space-y-3">
+					for _, item := range bookings {
+						<div class="bg-[#000000] p-3 rounded-lg border border-[#27272A]">
+							<div class="flex justify-between items-start mb-2">
+								<div>
+									<div class="text-white font-bold">{ item.DateDisplay }</div>
+									<div class="text-xs text-[#8E8E93]">{ item.Title }</div>
+								</div>
+							</div>
+							<!-- Name Tags -->
+							<div class="flex flex-wrap gap-2">
+								for _, p := range item.Attendees {
+									<button 
+										class={ 
+											"text-xs px-2 py-1 rounded transition-colors " + 
+											cond(p.Status == "Booked", "bg-[#60A5FA] text-white", 
+											cond(p.Status == "Leave", "border border-[#F87171] text-[#F87171]", "text-[#8E8E93]")) 
+										}
+										{ templ.Attributes{"onclick": fmt.Sprintf("handleMyBookingTagClick(this, '%s', '%s', '%s', '%s')", p.Name, p.Status, p.BookingTime.Format(time.RFC3339), p.BookingID)}... }
+									>
+										{ p.Name } { cond(p.Status == "Leave", "(請假)", "") }
+									</button>
+								}
+							</div>
+						</div>
+					}
+				</div>
+			</div>
+
+			<!-- INLINE CONFIRMATION PANEL -->
+			@InlineConfirmation("my-booking")
+		</div>
+	</div>
+}
+
+
+
+// Script includes AlpineJS (optional but helpful) or Vanilla JS for logic.
+templ Script(liffId string) {
+	<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+	<script>
+		// --- API Helper ---
+		async function fetchApi(url, options = {}) {
+			const headers = { 'Content-Type': 'application/json', ...options.headers };
+			const response = await fetch(url, { ...options, headers });
+			const data = await response.json();
+			if (!response.ok) {
+				throw new Error(data.message || 'API request failed');
+			}
+			return data;
+		}
+
+		let currentYear = null;
+		let currentMonth = null;
+
+		function updateHeaderTitle() {
+			const container = document.getElementById('calendar-container');
+			const titleEl = document.getElementById('current-month-title');
+			if (!container || !titleEl) return;
+
+			const weeks = container.querySelectorAll('[data-week-id]');
+			const containerRect = container.getBoundingClientRect();
+			
+			for (let week of weeks) {
+				const rect = week.getBoundingClientRect();
+				if (rect.bottom > containerRect.top + 100) {
+					const firstDay = week.querySelector('[data-date]');
+					if (firstDay) {
+						const parts = firstDay.dataset.date.split('-');
+						const year = parts[0];
+						const month = parseInt(parts[1], 10);
+						
+						if (year !== currentYear || month !== currentMonth) {
+							currentYear = year;
+							currentMonth = month;
+							titleEl.innerText = `${year}年${month}月`;
+							fetchMonthlyStats(year, month);
+						}
+					}
+					break;
+				}
+			}
+		}
+
+		async function fetchMonthlyStats(year, month) {
+			const statsLabel = document.getElementById('stats-label');
+			if (statsLabel) statsLabel.innerText = `${year}年${month}月統計:`;
+			
+			try {
+				const stats = await fetchApi(`/api/v2/calendar/stats?year=${year}&month=${month}`);
+				renderStats(stats);
+			} catch (err) {
+				console.error("Failed to fetch stats:", err);
+			}
+		}
+
+		function renderStats(stats) {
+			const totalSessionsEl = document.getElementById('total-sessions');
+			const totalLeaveEl = document.getElementById('total-leave');
+			const childrenBody = document.getElementById('stats-children-body');
+
+			if (totalSessionsEl) totalSessionsEl.innerText = `${stats.total_sessions} 堂`;
+			if (totalLeaveEl) totalLeaveEl.innerText = stats.total_leave;
+
+			if (childrenBody && stats.children) {
+				childrenBody.innerHTML = stats.children.map(child => {
+					const absentClass = child.absent > 0 ? 'text-[#F87171]' : 'text-[#8E8E93]';
+					return `
+						<tr class="border-b border-[#27272A]/50 last:border-0">
+							<td class="py-2 text-left">${child.name}</td>
+							<td class="py-2 text-[#34D399]">${child.completed}</td>
+							<td class="py-2 text-[#8E8E93]">${child.leave}</td>
+							<td class="py-2 ${absentClass}">${child.absent}</td>
+							<td class="py-2 text-[#8E8E93]">${child.avg_week.toFixed(1)}</td>
+						</tr>
+					`;
+				}).join('');
+			}
+		}
+
+		// --- Custom Inline Async Confirm ---
+		function showInlineConfirm(idPrefix, title, message) {
+			return new Promise((resolve) => {
+				const panel = document.getElementById(idPrefix + '-confirm-panel');
+				const titleEl = document.getElementById(idPrefix + '-confirm-title');
+				const msgEl = document.getElementById(idPrefix + '-confirm-msg');
+				const btnCancel = document.getElementById(idPrefix + '-confirm-cancel');
+				const btnOk = document.getElementById(idPrefix + '-confirm-ok');
+
+				titleEl.innerText = title;
+				msgEl.innerText = message;
+				
+				panel.classList.remove('hidden');
+				requestAnimationFrame(() => panel.classList.remove('translate-y-full'));
+
+				const cleanup = (result) => {
+					panel.classList.add('translate-y-full');
+					setTimeout(() => panel.classList.add('hidden'), 300);
+					btnCancel.onclick = null;
+					btnOk.onclick = null;
+					resolve(result);
+				};
+
+				btnCancel.onclick = () => cleanup(false);
+				btnOk.onclick = () => cleanup(true);
+			});
+		}
+
+		// --- Calendar Infinite Scroll Logic ---
+		let firstLoadedDate = null;
+		let lastLoadedDate = null;
+		let isLoading = false;
+		let isEndTop = false;
+		let isEndBottom = false;
+		let autoLoadCount = 0;
+		const MAX_AUTO_LOADS = 3;
+		let observer;
+
+		document.addEventListener('DOMContentLoaded', () => {
+			const days = document.querySelectorAll('[data-date]');
+			if (days.length > 0) {
+				firstLoadedDate = days[0].dataset.date;
+				lastLoadedDate = days[days.length - 1].dataset.date;
+				console.log("Init dates:", firstLoadedDate, "to", lastLoadedDate);
+			}
+
+			const container = document.getElementById('calendar-container');
+			// Find the "today" circle indicator (bg-white text-black)
+			const todayIndicator = container.querySelector('.bg-white.text-black');
+			
+			if (todayIndicator) {
+				console.log("Found today indicator, scrolling to center.");
+				// Scroll the day column (parent) into view, centered
+				todayIndicator.parentElement.scrollIntoView({ block: 'center' });
+			} else {
+				console.log("Today indicator not found, scrolling to offset 20.");
+				// Fallback: scroll down slightly to hide top sentinel
+				if (container.scrollHeight > container.clientHeight) {
+					container.scrollTop = 20; 
+				}
+			}
+
+			// Add scroll listener for robust boundary detection
+			container.addEventListener('scroll', () => {
+				// Reset auto-load count on manual interaction, allowing recursion to resume if needed
+				autoLoadCount = 0;
+				updateHeaderTitle();
+
+				if (isLoading) return;
+
+				const { scrollTop, scrollHeight, clientHeight } = container;
+				const threshold = 100; // px
+
+				if (scrollTop < threshold && !isEndTop) {
+					console.log("Scroll top trigger");
+					loadWeeks('prev');
+				} else if (scrollHeight - scrollTop - clientHeight < threshold && !isEndBottom) {
+					console.log("Scroll bottom trigger");
+					loadWeeks('next');
+				}
+			});
+
+			// Delay observer setup to avoid triggering on initial layout/scroll
+			setTimeout(setupInfiniteScroll, 500); 
+			updateHeaderTitle();
+		});
+
+		function setupInfiniteScroll() {
+			console.log("Setting up infinite scroll observer...");
+			const options = {
+				root: document.getElementById('calendar-container'),
+				rootMargin: '50px 0px', // Increased margin to trigger earlier
+				threshold: 0
+			};
+
+			observer = new IntersectionObserver((entries) => {
+				entries.forEach(entry => {
+					console.log("Observer event:", entry.target.id, "Intersecting:", entry.isIntersecting, "isLoading:", isLoading);
+					if (entry.isIntersecting) {
+						// Reset auto-load counter when user manually scrolls to a sentinel
+						autoLoadCount = 0;
+						if (!isLoading) {
+							if (entry.target.id === 'sentinel-top' && !isEndTop) {
+								loadWeeks('prev');
+							} else if (entry.target.id === 'sentinel-bottom' && !isEndBottom) {
+								loadWeeks('next');
+							}
+						}
+					}
+				});
+			}, options);
+
+			const topSentinel = document.getElementById('sentinel-top');
+			const bottomSentinel = document.getElementById('sentinel-bottom');
+			
+			if (topSentinel) observer.observe(topSentinel);
+			if (bottomSentinel) observer.observe(bottomSentinel);
+		}
+
+		async function loadWeeks(direction) {
+			if (isLoading) return;
+			// Double check flags to prevent manual calls bypassing logic
+			if (direction === 'prev' && isEndTop) return;
+			if (direction === 'next' && isEndBottom) return;
+			
+			const container = document.getElementById('calendar-container');
+			const referenceDate = (direction === 'next') ? lastLoadedDate : firstLoadedDate;
+			
+			console.log("Loading weeks:", direction, "Ref Date:", referenceDate);
+
+			if (!referenceDate) {
+				console.error("No reference date found!");
+				return;
+			}
+
+			isLoading = true;
+			
+			try {
+				const data = await fetchApi(`/api/v2/calendar/weeks?start_date=${referenceDate}&direction=${direction}`);
+				
+				if (data.weeks && data.weeks.length > 0) {
+					// Capture height before prepending
+					const prevScrollHeight = container.scrollHeight;
+					const prevScrollTop = container.scrollTop;
+
+					const newWeeksHtml = data.weeks.map(week => renderWeekRow(week)).join('');
+					const tempDiv = document.createElement('div');
+					tempDiv.innerHTML = newWeeksHtml;
+					const newElements = Array.from(tempDiv.children);
+
+					const topSentinel = document.getElementById('sentinel-top');
+					const bottomSentinel = document.getElementById('sentinel-bottom');
+
+					if (direction === 'next') {
+						newElements.forEach(el => container.insertBefore(el, bottomSentinel));
+						// Update lastLoadedDate
+						const lastWeek = data.weeks[data.weeks.length - 1];
+						const lastDay = lastWeek.days[lastWeek.days.length - 1];
+						lastLoadedDate = lastDay.full_date;
+						console.log("New lastLoadedDate:", lastLoadedDate);
+					} else {
+						// Prepend after topSentinel
+						newElements.reverse().forEach(el => {
+							if (topSentinel.nextSibling) {
+								container.insertBefore(el, topSentinel.nextSibling);
+							} else {
+								container.appendChild(el);
+							}
+						});
+						
+						// Maintain scroll position
+						const newScrollHeight = container.scrollHeight;
+						container.scrollTop = newScrollHeight - prevScrollHeight + prevScrollTop;
+
+						// Update firstLoadedDate
+						const firstWeek = data.weeks[0];
+						const firstDay = firstWeek.days[0];
+						firstLoadedDate = firstDay.full_date;
+						console.log("New firstLoadedDate:", firstLoadedDate);
+					}
+				} else {
+					if (direction === 'next') {
+						isEndBottom = true;
+						alert("沒有更晚的課程了");
+					} else {
+						isEndTop = true;
+						alert("沒有更早的課程了");
+					}
+				}
+			} catch (err) {
+				console.error("Failed to load weeks:", err);
+			} finally {
+				console.log("Finished loading, resetting isLoading");
+				updateHeaderTitle();
+				// Small delay before allowing next fetch to prevent double-triggering while layout settles
+				setTimeout(() => { 
+					isLoading = false; 
+					checkVisibleSentinels();
+				}, 500);
+			}
+		}
+
+		function checkVisibleSentinels() {
+			if (autoLoadCount >= MAX_AUTO_LOADS) {
+				console.log("Max auto loads reached, stopping recursion.");
+				return;
+			}
+
+			const container = document.getElementById('calendar-container');
+			const topSentinel = document.getElementById('sentinel-top');
+			const bottomSentinel = document.getElementById('sentinel-bottom');
+
+			if (!container || !topSentinel || !bottomSentinel) return;
+
+			const cRect = container.getBoundingClientRect();
+
+			// Helper to check if element is within the container's viewport
+			const isVisible = (el) => {
+				const rect = el.getBoundingClientRect();
+				// Allow a small buffer (e.g., 10px) to ensure we catch edge cases
+				return (rect.bottom >= cRect.top - 10 && rect.top <= cRect.bottom + 10);
+			};
+
+			if (!isLoading) {
+				if (!isEndBottom && isVisible(bottomSentinel)) {
+					console.log("Bottom sentinel still visible, triggering next load...");
+					autoLoadCount++;
+					loadWeeks('next');
+				} else if (!isEndTop && isVisible(topSentinel)) {
+					console.log("Top sentinel still visible, triggering prev load...");
+					autoLoadCount++;
+					loadWeeks('prev');
+				}
+			}
+		}
+
+		function renderWeekRow(week) {
+			let daysHtml = '';
+			week.days.forEach(day => {
+				let slotsHtml = '';
+				day.slots.forEach(slot => {
+					if (slot.is_empty) {
+						slotsHtml += `<div class="w-full rounded-[8px] p-2 border border-dashed border-[#3A3A3C] flex items-center justify-center text-left min-h-[40px] opacity-50 cursor-default"><span class="text-[10px] text-[#8E8E93]">[未排課]</span></div>`;
+					} else {
+						const attendeesJson = JSON.stringify(slot.attendees || []);
+						let nameTagsHtml = '';
+						(slot.attendees || []).forEach(p => {
+							if (p.status === 'Booked') {
+								nameTagsHtml += `<span class="text-[9px] px-1.5 py-0.5 rounded-[4px] text-white truncate bg-[#60A5FA]">${p.name}</span>`;
+							} else if (p.status === 'Leave') {
+								nameTagsHtml += `<span class="text-[9px] px-1.5 py-0.5 rounded-[4px] border border-[#F87171] text-[#F87171] truncate">${p.name}</span>`;
+							}
+						});
+
+						slotsHtml += `
+							<button class="w-full rounded-[8px] p-1.5 flex flex-col gap-1 text-left transition-transform active:scale-95 bg-[#1C1C1E]" 
+								onclick="openBookingPopup('${slot.id}', '${slot.time_display}', '${slot.course_name}', ${attendeesJson.replace(/"/g, '&quot;')})">
+								<div class="flex flex-col leading-tight">
+									<span class="text-[10px] text-[#8E8E93] font-mono">${slot.time_display}</span>
+									<span class="text-xs font-bold text-white truncate">${slot.course_name}</span>
+								</div>
+								<div class="flex flex-col gap-1 mt-1">${nameTagsHtml}</div>
+							</button>`;
+					}
+				});
+
+				const todayClass = day.is_today ? "bg-white text-black" : "text-[#8E8E93]";
+				daysHtml += `
+					<div class="flex flex-col items-center gap-2 min-h-[120px]" data-date="${day.full_date}">
+						<div class="flex flex-col items-center justify-center w-10 h-10 rounded-full text-sm font-medium ${todayClass}">
+							<span class="text-[10px] uppercase leading-none">${day.day_of_week}</span>
+							<span class="text-lg leading-none font-bold">${day.date_display}</span>
+						</div>
+						<div class="w-full flex flex-col gap-2 px-0.5">${slotsHtml}</div>
+					</div>`;
+			});
+
+			return `<div class="snap-start pt-4 pb-2 border-b border-[#27272A] min-h-[50vh]" data-week-id="${week.id}"><div class="grid grid-cols-7 gap-1 px-1">${daysHtml}</div></div>`;
+		}
+
+		// --- Popup Logic ---
+		function openBookingPopup(slotId, time, title, attendees) {
+			document.getElementById('popup-course-title').innerText = title;
+			document.getElementById('popup-time-info').innerText = time;
+			document.getElementById('popup-slot-id').value = slotId;
+			
+			const bookedContainer = document.getElementById('booked-participants-list');
+			const draftContainer = document.getElementById('smart-input-container');
+			bookedContainer.innerHTML = '';
+			
+			const input = document.getElementById('smart-input');
+			Array.from(draftContainer.children).forEach(child => { if (child !== input) child.remove(); });
+			input.value = '';
+
+			if (attendees && attendees.length > 0) {
+				document.getElementById('booked-list-wrapper').classList.remove('hidden');
+				attendees.forEach(p => addBookedTag(p.Name || p.name, p.Status || p.status, p.BookingTime || p.booking_time, p.BookingID || p.booking_id));
+			} else {
+				document.getElementById('booked-list-wrapper').classList.add('hidden');
+			}
+
+			document.getElementById('booking-popup').classList.remove('hidden');
+		}
+
+		function closeBookingPopup() {
+			document.getElementById('booking-popup').classList.add('hidden');
+			document.getElementById('booking-leave-view').classList.add('hidden');
+			document.getElementById('booking-main-view').classList.remove('hidden');
+		}
+
+		function openMyBookings() {
+			document.getElementById('my-bookings-modal').classList.remove('hidden');
+			switchMyBookingsTab('upcoming');
+		}
+
+		function closeMyBookings() {
+			document.getElementById('my-bookings-modal').classList.add('hidden');
+		}
+
+		// --- Create Booking Logic ---
+		async function submitBooking() {
+			const slotId = document.getElementById('popup-slot-id').value;
+			const draftTags = document.querySelectorAll('[data-draft="true"]');
+			const names = Array.from(draftTags).map(t => t.dataset.name);
+
+			if (names.length === 0) {
+				closeBookingPopup();
+				return;
+			}
+
+			try {
+				const result = await fetchApi('/api/v2/bookings', {
+					method: 'POST',
+					body: JSON.stringify({ slot_id: slotId, student_names: names })
+				});
+
+				result.new_bookings.forEach(b => {
+					addBookedTag(b.name, b.status, b.booking_time, b.booking_id);
+				});
+
+				draftTags.forEach(t => t.remove());
+				alert("預約成功！"); 
+				closeBookingPopup();
+			} catch (err) {
+				alert("預約失敗: " + err.message);
+			}
+		}
+
+		// --- Leave Request Logic ---
+		function openLeaveRequest(bookingID, name) {
+			document.getElementById('leave-booking-id').value = bookingID;
+			document.getElementById('leave-student-name').innerText = name;
+			document.getElementById('leaveReason').value = '';
+			
+			document.getElementById('booking-main-view').classList.add('hidden');
+			document.getElementById('booking-leave-view').classList.remove('hidden');
+		}
+
+		function cancelLeaveRequest() {
+			document.getElementById('booking-leave-view').classList.add('hidden');
+			document.getElementById('booking-main-view').classList.remove('hidden');
+		}
+
+		async function submitLeaveRequest(event) {
+			event.preventDefault();
+			const bookingId = document.getElementById('leave-booking-id').value;
+			const reason = document.getElementById('leaveReason').value;
+			
+			try {
+				await fetchApi(`/api/v2/bookings/${bookingId}/leave`, {
+					method: 'POST',
+					body: JSON.stringify({ reason })
+				});
+				alert("請假申請已送出");
+				cancelLeaveRequest();
+				closeBookingPopup();
+			} catch (err) {
+				alert("提交失敗: " + err.message);
+			}
+		}
+
+		// --- Smart Input / Tag Logic ---
+		const inputField = document.getElementById('smart-input');
+		const bookedContainer = document.getElementById('booked-participants-list');
+		const draftContainer = document.getElementById('smart-input-container');
+		
+		inputField.addEventListener('keydown', (e) => {
+			if (e.key === 'Enter' || e.key === ',') {
+				e.preventDefault();
+				const val = inputField.value.trim().replace(',', '');
+				if (val) {
+					addDraftTag(val);
+					inputField.value = '';
+				}
+			} else if (e.key === 'Backspace' && inputField.value === '') {
+				const tags = draftContainer.querySelectorAll('[data-draft]');
+				if (tags.length > 0) {
+					tags[tags.length - 1].remove();
+				}
+			}
+		});
+
+		function addDraftTag(name) {
+			const trimmedName = name.trim();
+			if (!trimmedName) return;
+
+			const allTags = [
+				...Array.from(bookedContainer.querySelectorAll('[data-name]')),
+				...Array.from(draftContainer.querySelectorAll('[data-name]'))
+			];
+			if (allTags.some(t => t.dataset.name.toLowerCase() === trimmedName.toLowerCase())) return;
+
+			const tag = document.createElement('div');
+			tag.className = "flex items-center gap-1 px-3 py-1 rounded-full bg-[#27272A] text-white text-sm cursor-pointer select-none transition-all border border-[#3A3A3C]";
+			tag.innerHTML = `<span>${trimmedName}</span><span class="text-[#8E8E93] text-xs ml-1">×</span>`;
+			tag.dataset.name = trimmedName;
+			tag.dataset.draft = "true";
+			tag.addEventListener('click', () => tag.remove());
+			draftContainer.insertBefore(tag, inputField);
+		}
+
+		function addBookedTag(name, status, bookingTimeStr, bookingID) {
+			const tag = document.createElement('div');
+			tag.dataset.name = name;
+			tag.dataset.status = status;
+			tag.dataset.bookingId = bookingID;
+			updateBookedTagStyle(tag, name, status);
+			
+			tag.addEventListener('click', () => {
+				handleTagAction("booking", name, tag.dataset.status, bookingTimeStr, bookingID, (newStatus) => {
+					if (newStatus === "Remove") {
+						tag.remove();
+						if (bookedContainer.children.length === 0) {
+							document.getElementById('booked-list-wrapper').classList.add('hidden');
+						}
+					} else {
+						tag.dataset.status = newStatus;
+						updateBookedTagStyle(tag, name, newStatus);
+					}
+				});
+			});
+			bookedContainer.appendChild(tag);
+			document.getElementById('booked-list-wrapper').classList.remove('hidden');
+		}
+
+		function updateBookedTagStyle(tag, name, status) {
+			tag.innerHTML = `<span>${name}</span>`;
+			if (status === "Booked") {
+				tag.className = "flex items-center gap-1 px-3 py-1 rounded-full bg-[#60A5FA] text-white text-sm cursor-pointer select-none transition-all";
+			} else if (status === "Leave") {
+				tag.className = "flex items-center gap-1 px-3 py-1 rounded-full border border-[#F87171] text-[#F87171] text-sm cursor-pointer select-none transition-all";
+			}
+		}
+
+		// --- My Bookings Logic ---
+		let currentTab = 'upcoming';
+
+		function switchMyBookingsTab(type) {
+			currentTab = type;
+			const tabUpcoming = document.getElementById('tab-upcoming');
+			const tabHistory = document.getElementById('tab-history');
+			const listContainer = document.getElementById('my-bookings-list');
+
+			if (type === 'upcoming') {
+				tabUpcoming.className = "pb-2 text-[#FFD700] border-b-2 border-[#FFD700] font-medium transition-colors";
+				tabHistory.className = "pb-2 text-[#8E8E93] font-medium hover:text-white transition-colors border-b-2 border-transparent";
+			} else {
+				tabHistory.className = "pb-2 text-[#FFD700] border-b-2 border-[#FFD700] font-medium transition-colors";
+				tabUpcoming.className = "pb-2 text-[#8E8E93] font-medium hover:text-white transition-colors border-b-2 border-transparent";
+			}
+
+			listContainer.innerHTML = '<div class="text-center text-[#8E8E93] py-8">載入中...</div>';
+
+			fetchApi(`/api/v2/my-bookings?type=${type}`)
+				.then(data => renderMyBookingsList(data.items))
+				.catch(err => {
+					console.error(err);
+					listContainer.innerHTML = '<div class="text-center text-[#F87171] py-8">載入失敗，請稍後再試</div>';
+				});
+		}
+
+		function renderMyBookingsList(items) {
+			const container = document.getElementById('my-bookings-list');
+			container.innerHTML = '';
+
+			if (!items || items.length === 0) {
+				container.innerHTML = '<div class="text-center text-[#8E8E93] py-8">無預約紀錄</div>';
+				return;
+			}
+
+			items.forEach(item => {
+				const itemDiv = document.createElement('div');
+				itemDiv.className = "bg-[#000000] p-3 rounded-lg border border-[#27272A]";
+				
+				let tagsHtml = '';
+				item.attendees.forEach(p => {
+					let btnClass = "text-xs px-2 py-1 rounded transition-colors ";
+					let displayText = p.name;
+					let onclickAttr = "";
+
+					if (p.status === 'Booked') {
+						btnClass += "bg-[#60A5FA] text-white";
+						if (currentTab === 'upcoming') onclickAttr = `onclick="handleMyBookingTagClick(this, '${p.name}', '${p.status}', '${p.booking_time}', '${p.booking_id}')"`;
+					} else if (p.status === 'Leave') {
+						btnClass += "border border-[#F87171] text-[#F87171]";
+						displayText += " (請假)";
+						if (currentTab === 'upcoming') onclickAttr = `onclick="handleMyBookingTagClick(this, '${p.name}', '${p.status}', '${p.booking_time}', '${p.booking_id}')"`;
+					} else if (p.status === 'CheckedIn') {
+						btnClass += "text-[#34D399]";
+						displayText += " (已簽到)";
+					} else {
+						btnClass += "text-[#8E8E93]";
+						if(p.status === 'Absent') displayText += " (缺席)";
+					}
+					
+					tagsHtml += `<button class="${btnClass}" ${onclickAttr}>${displayText}</button>`;
+				});
+
+				itemDiv.innerHTML = `
+					<div class="flex justify-between items-start mb-2">
+						<div>
+							<div class="text-white font-bold">${item.date_display}</div>
+							<div class="text-xs text-[#8E8E93]">${item.title}</div>
+						</div>
+					</div>
+					<div class="flex flex-wrap gap-2">${tagsHtml}</div>
+				`;
+				container.appendChild(itemDiv);
+			});
+		}
+
+		function handleMyBookingTagClick(btn, name, status, bookingTimeStr, bookingID) {
+			handleTagAction("my-booking", name, status, bookingTimeStr, bookingID, (newStatus) => {
+				if (newStatus === "Remove") {
+					btn.remove();
+				} else {
+					if (newStatus === "Booked") {
+						btn.className = "text-xs px-2 py-1 rounded transition-colors bg-[#60A5FA] text-white";
+						btn.innerText = name;
+					} else if (newStatus === "Leave") {
+						btn.className = "text-xs px-2 py-1 rounded transition-colors border border-[#F87171] text-[#F87171]";
+						btn.innerText = name + " (請假)";
+					}
+					btn.setAttribute('onclick', `handleMyBookingTagClick(this, '${name}', '${newStatus}', '${bookingTimeStr}', '${bookingID}')`);
+				}
+			});
+		}
+
+		async function handleTagAction(idPrefix, name, currentStatus, bookingTimeStr, bookingID, callback) {
+			if (currentStatus === "Booked") {
+				const bookingTime = new Date(bookingTimeStr);
+				const now = new Date();
+				const diffHours = (now - bookingTime) / (1000 * 60 * 60);
+
+				if (diffHours < 24) {
+					if (await showInlineConfirm(idPrefix, "取消預約", `預約建立於 ${diffHours.toFixed(1)}h ago. Cancel directly?`)) {
+						try {
+							await fetchApi(`/api/v2/bookings/${bookingID}`, { method: 'DELETE' });
+							callback("Remove");
+						} catch (err) { alert(err.message); }
+					}
+				} else {
+					if (idPrefix === 'my-booking') {
+						closeMyBookings();
+						document.getElementById('booking-popup').classList.remove('hidden');
+					}
+					openLeaveRequest(bookingID, name);
+				}
+			} else if (currentStatus === "Leave") {
+				if (await showInlineConfirm(idPrefix, "恢復預約", `取消 ${name} 的請假並恢復預約？`)) {
+					try {
+						await fetchApi(`/api/v2/bookings/${bookingID}/leave`, { method: 'DELETE' });
+						callback("Booked");
+					} catch (err) { alert(err.message); }
+				}
+			}
+		}
+
+		function shareBookingStatus() {
+			if (liff.isInClient()) {
+				liff.sendMessages([{ type: 'text', text: "Booking Summary..." }]).then(() => liff.closeWindow()).catch(console.error);
+			} else {
+				alert("Share function requires LINE App.");
+			}
+		}
+
+		function cond(condition, trueVal, falseVal) {
+			return condition ? trueVal : falseVal;
+		}
+	</script>
+}
+// Helper for conditional strings in templ
+func cond(condition bool, trueVal, falseVal string) string {
+	if condition {
+		return trueVal
+	}
+	return falseVal
+}

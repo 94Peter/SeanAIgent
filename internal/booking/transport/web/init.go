@@ -20,23 +20,31 @@ func getApis(
 	enableCSRF bool,
 	bookingUseCaseSet handler.BookingUseCaseSet,
 	trainingUseCaseSet handler.TrainingUseCaseSet,
+	v2BookingUseCaseSet handler.V2BookingUseCaseSet,
 ) []handler.WebAPI {
 	return []handler.WebAPI{
 		handler.NewBookingApi(enableCSRF, bookingUseCaseSet),
 		handler.NewTrainingApi(enableCSRF, trainingUseCaseSet),
 		handler.NewHealthApi(),
 		handler.NewComponentApi(),
+		handler.NewV2BookingApi(enableCSRF, v2BookingUseCaseSet),
 	}
 }
 
 func InitWeb(
 	bookingUseCaseSet handler.BookingUseCaseSet,
 	trainingUseCaseSet handler.TrainingUseCaseSet,
+	v2BookingUseCaseSet handler.V2BookingUseCaseSet,
 	cfg Config,
 ) WebService {
 	router := ezapi.NewRouterGroup()
 	// v2Router := router.Group("v2")
-	apis := getApis(cfg.csrf.Enable, bookingUseCaseSet, trainingUseCaseSet)
+	apis := getApis(
+		cfg.csrf.Enable,
+		bookingUseCaseSet,
+		trainingUseCaseSet,
+		v2BookingUseCaseSet,
+	)
 	for _, api := range apis {
 		api.InitRouter(router)
 	}

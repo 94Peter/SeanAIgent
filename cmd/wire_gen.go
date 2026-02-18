@@ -62,8 +62,9 @@ func InitializeWeb() web.WebService {
 	}
 	bookingUseCaseSet := handler.NewBookingUseCaseSet(registry)
 	trainingUseCaseSet := handler.NewTrainingUseCaseSet(registry)
+	v2BookingUseCaseSet := handler.NewV2BookingUseCaseSet(registry)
 	config := ProvideWebConfig()
-	webService := web.InitWeb(bookingUseCaseSet, trainingUseCaseSet, config)
+	webService := web.InitWeb(bookingUseCaseSet, trainingUseCaseSet, v2BookingUseCaseSet, config)
 	return webService
 }
 

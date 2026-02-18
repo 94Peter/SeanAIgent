@@ -40,6 +40,7 @@ func initBookingApi(r ezapi.Router, service service.Service, enableCSRF bool) {
 
 		// 建立活動表單
 		r.GET("/training/booking", api.getBookingForm)
+
 		r.GET("/:lang/training/booking", api.getBookingForm)
 		r.GET("/my-bookings", api.getMyBookingsPage)
 		r.GET("/:lang/my-bookings", api.getMyBookingsPage)

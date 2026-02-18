@@ -14,13 +14,15 @@ type ReqCreateAppt struct {
 	ChildNames  []string
 }
 
+type CreateApptUseCase core.WriteUseCase[ReqCreateAppt, []*entity.Appointment]
+
 type createApptUseCaseRepo interface {
 	repository.IdentityGenerator
 	repository.TrainRepository
 	repository.AppointmentRepository
 }
 
-func NewCreateApptUseCase(repo createApptUseCaseRepo) core.WriteUseCase[ReqCreateAppt, []*entity.Appointment] {
+func NewCreateApptUseCase(repo createApptUseCaseRepo) CreateApptUseCase {
 	return &createApptUseCase{repo: repo}
 }
 
