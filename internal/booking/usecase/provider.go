@@ -8,6 +8,7 @@ import (
 	writeAppt "seanAIgent/internal/booking/usecase/appointment/write"
 	"seanAIgent/internal/booking/usecase/core"
 	migrationv1tov2 "seanAIgent/internal/booking/usecase/migration/v1tov2"
+	readStats "seanAIgent/internal/booking/usecase/stats/read"
 	readTrain "seanAIgent/internal/booking/usecase/traindate/read"
 	writeTrain "seanAIgent/internal/booking/usecase/traindate/write"
 
@@ -18,6 +19,7 @@ type Repository interface {
 	repository.IdentityGenerator
 	repository.TrainRepository
 	repository.AppointmentRepository
+	repository.StatsRepository
 }
 
 type ServiceAggregator struct {
@@ -111,6 +113,18 @@ func ProvideFindTrainHasApptsByIdUC(
 	return core.WithReadOTel(readTrain.NewFindTrainHasApptsByIdUseCase(repo))
 }
 
+func ProvideGetUserMonthlyStatsUC(
+	repo Repository,
+) readStats.GetUserMonthlyStatsUseCase {
+	return core.WithReadOTel(readStats.NewGetUserMonthlyStatsUseCase(repo))
+}
+
+func ProvideQueryTwoWeeksScheduleUC(
+	repo Repository,
+) readTrain.QueryTwoWeeksScheduleUseCase {
+	return core.WithReadOTel(readTrain.NewQueryTwoWeeksScheduleUseCase(repo))
+}
+
 var UseCaseSet = wire.NewSet(
 	ProvideCreateTrainDateUC,
 	ProvideBatchCreateTrainDateUC,
@@ -127,6 +141,9 @@ var UseCaseSet = wire.NewSet(
 	ProvideQueryUserBookingsUC,
 	ProvideCancelLeaveUC,
 	ProvideCreateLeaveUC,
+
+	ProvideGetUserMonthlyStatsUC,
+	ProvideQueryTwoWeeksScheduleUC,
 
 	wire.Struct(new(ServiceAggregator), "*"),
 	wire.Struct(new(Registry), "*"),

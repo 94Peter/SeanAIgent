@@ -11,7 +11,12 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-func getPipeline(q bson.M) mongo.Pipeline {
+func getPipeline(q bson.M, userID string) mongo.Pipeline {
+	matchAppt := bson.M{}
+	if userID != "" {
+		matchAppt["appointments.user_id"] = userID
+	}
+
 	pipe := mongo.Pipeline{
 		{{"$match", q}},
 		{{"$lookup", bson.D{
@@ -21,6 +26,11 @@ func getPipeline(q bson.M) mongo.Pipeline {
 			{"as", "appointments"},
 		}}},
 		{{"$unwind", "$appointments"}},
+	}
+	if userID != "" {
+		pipe = append(pipe, bson.D{{"$match", matchAppt}})
+	}
+	pipe = append(pipe, mongo.Pipeline{
 		{{"$sort", bson.D{{"start_date", 1}}}},
 		{{"$group", bson.D{
 			{"_id", bson.M{
@@ -81,7 +91,7 @@ func getPipeline(q bson.M) mongo.Pipeline {
 			{"totalAppointment", "$total_appointment"},
 			{"childState", "$child_state"},
 		}}},
-	}
+	}...)
 	return pipe
 }
 
@@ -94,7 +104,7 @@ func (*statsRepoImpl) GetAllUserApptStats(
 	}
 	const op = "get_all_user_appt_stats"
 	result, err := mgo.PipeFindByPipeline[*entity.UserApptStats](
-		ctx, "training_date", getPipeline(q), core.DefaultLimit,
+		ctx, "training_date", getPipeline(q, ""), core.DefaultLimit,
 	)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -103,4 +113,27 @@ func (*statsRepoImpl) GetAllUserApptStats(
 		return nil, newInternalError(op, err)
 	}
 	return result, nil
+}
+
+func (*statsRepoImpl) GetUserApptStats(
+	ctx context.Context, userID string, filter repository.FilterUserApptStats,
+) (*entity.UserApptStats, repository.RepoError) {
+	q, repoErr := getQueryByFilterUserApptStats(filter)
+	if repoErr != nil {
+		return nil, repoErr
+	}
+	const op = "get_user_appt_stats"
+	result, err := mgo.PipeFindByPipeline[*entity.UserApptStats](
+		ctx, "training_date", getPipeline(q, userID), 1,
+	)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, newNotFoundError(op, err)
+		}
+		return nil, newInternalError(op, err)
+	}
+	if len(result) == 0 {
+		return nil, newNotFoundError(op, mongo.ErrNoDocuments)
+	}
+	return result[0], nil
 }

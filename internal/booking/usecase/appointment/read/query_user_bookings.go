@@ -24,9 +24,11 @@ type RespQueryUserBookings struct {
 	Cursor string
 }
 
+type QueryUserBookingsUseCase core.ReadUseCase[ReqQueryUserBookings, *RespQueryUserBookings]
+
 func NewQueryUserBookingsUseCase(
 	repo repository.AppointmentRepository,
-) core.ReadUseCase[ReqQueryUserBookings, *RespQueryUserBookings] {
+) QueryUserBookingsUseCase {
 	return &queryUserBookingsUseCase{repo: repo}
 }
 

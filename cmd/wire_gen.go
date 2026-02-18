@@ -44,6 +44,8 @@ func InitializeWeb() web.WebService {
 	writeUseCase6 := usecase.ProvideCreateLeaveUC(dbRepository)
 	writeUseCase7 := usecase.ProvideCancelLeaveUC(dbRepository)
 	readUseCase5 := usecase.ProvideQueryUserBookingsUC(dbRepository)
+	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
+	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
 	registry := &usecase.Registry{
 		CreateTrainDate:        writeUseCase,
 		BatchCreateTrainDate:   coreWriteUseCase,
@@ -59,6 +61,8 @@ func InitializeWeb() web.WebService {
 		CreateLeave:            writeUseCase6,
 		CancelLeave:            writeUseCase7,
 		QueryUserBookings:      readUseCase5,
+		GetUserMonthlyStats:    getUserMonthlyStatsUseCase,
+		QueryTwoWeeksSchedule:  queryTwoWeeksScheduleUseCase,
 	}
 	bookingUseCaseSet := handler.NewBookingUseCaseSet(registry)
 	trainingUseCaseSet := handler.NewTrainingUseCaseSet(registry)
@@ -88,6 +92,8 @@ func InitializeMCP(svc service2.TrainingDateService) mcp.Server {
 	writeUseCase6 := usecase.ProvideCreateLeaveUC(dbRepository)
 	writeUseCase7 := usecase.ProvideCancelLeaveUC(dbRepository)
 	readUseCase5 := usecase.ProvideQueryUserBookingsUC(dbRepository)
+	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
+	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
 	registry := &usecase.Registry{
 		CreateTrainDate:        writeUseCase,
 		BatchCreateTrainDate:   coreWriteUseCase,
@@ -103,6 +109,8 @@ func InitializeMCP(svc service2.TrainingDateService) mcp.Server {
 		CreateLeave:            writeUseCase6,
 		CancelLeave:            writeUseCase7,
 		QueryUserBookings:      readUseCase5,
+		GetUserMonthlyStats:    getUserMonthlyStatsUseCase,
+		QueryTwoWeeksSchedule:  queryTwoWeeksScheduleUseCase,
 	}
 	v := toolSet()
 	server := mcp.InitMcpServer(svc, registry, v)

@@ -25,63 +25,63 @@ type UserContext struct {
 
 // MyBookingItem represents a booking entry in the "My Bookings" list.
 type MyBookingItem struct {
-	ID          string
-	DateDisplay string // e.g. "02/14 (六) 14:30"
-	Title       string // e.g. "師大班 @ 師大附中"
-	Attendees   []*Attendee
+	ID          string `json:"id"`
+	DateDisplay string `json:"date_display"` // e.g. "02/14 (六) 14:30"
+	Title       string `json:"title"` // e.g. "師大班 @ 師大附中"
+	Attendees   []*Attendee `json:"attendees"`
 }
 
 // StatsSummary represents the 90-day statistics.
 type StatsSummary struct {
-	TotalSessions int
-	TotalLeave    int
-	Children      []*ChildStat
+	TotalSessions int `json:"total_sessions"`
+	TotalLeave    int `json:"total_leave"`
+	Children      []*ChildStat `json:"children"`
 }
 
 // ChildStat represents statistics for a single child.
 type ChildStat struct {
-	Name      string
-	Completed int
-	Leave     int
-	Absent    int
-	AvgWeek   float64
+	Name      string `json:"name"`
+	Completed int `json:"completed"`
+	Leave     int 	`json:"leave"`
+	Absent    int `json:"absent"`
+	AvgWeek   float64 `json:"avg_week"`
 }
 
 // WeekData represents a week in the calendar.
 type WeekData struct {
-	ID        string // e.g. "2026-W07"
-	Days      []*DayData
-	IsCurrent bool
+	ID        string `json:"id"` // e.g. "2026-W07"
+	Days      []*DayData `json:"days"`
+	IsCurrent bool `json:"is_current"`
 }
 
 // DayData represents a day in the calendar.
 type DayData struct {
-	DateDisplay string // e.g. "13"
-	DayOfWeek   string // e.g. "Fri"
-	FullDate    string // e.g. "2026-02-13"
-	IsToday     bool
-	Slots       []*SlotData
+	DateDisplay string 	`json:"date_display"` // e.g. "13"
+	DayOfWeek   string 	`json:"day_of_week"` // e.g. "Fri"
+	FullDate    string  `json:"full_date"` // e.g. "2026-02-13"
+	IsToday     bool `json:"is_today"`
+	Slots       []*SlotData `json:"slots"`
 }
 
 // SlotData represents a time slot.
 type SlotData struct {
-	ID          string
-	TimeDisplay string // e.g. "16:30"
-	CourseName  string // e.g. "足球"
-	Location    string
-	Capacity    int
-	BookedCount int
-	Attendees   []*Attendee
-	IsFull      bool
-	IsEmpty     bool // If true, this is an empty slot (no course)
+	ID          string `json:"id"`
+	TimeDisplay string 	`json:"time_display"` // e.g. "16:30"
+	CourseName  string 	`json:"course_name"` // e.g. "足球"
+	Location    string	`json:"location"`
+	Capacity    int	`json:"capacity"`
+	BookedCount int	`json:"booked_count"`
+	Attendees   []*Attendee 	`json:"attendees"`
+	IsFull      bool	`json:"is_full"`
+	IsEmpty     bool 	`json:"is_empty"` // If true, this is an empty slot (no course)
 }
 
 // Attendee represents a child in a slot.
 type Attendee struct {
-	Name        string
-	Status      string // "Booked", "Leave", "CheckedIn", "Absent"
-	BookingTime time.Time
-	BookingID   string
+	Name        string	`json:"name"`
+	Status      string 	`json:"status"` // "Booked", "Leave", "CheckedIn", "Absent"
+	BookingTime time.Time	`json:"booking_time"`
+	BookingID   string	`json:"booking_id"`
 }
 
 // --- Colors ---

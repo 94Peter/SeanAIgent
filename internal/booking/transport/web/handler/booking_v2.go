@@ -8,7 +8,10 @@ import (
 
 	"seanAIgent/internal/booking/domain/entity"
 	"seanAIgent/internal/booking/usecase"
+	readappt "seanAIgent/internal/booking/usecase/appointment/read"
 	writeappt "seanAIgent/internal/booking/usecase/appointment/write"
+	readstats "seanAIgent/internal/booking/usecase/stats/read"
+	readtrain "seanAIgent/internal/booking/usecase/traindate/read"
 	"seanAIgent/internal/service/lineliff"
 	"seanAIgent/templates"
 	"seanAIgent/templates/forms/booking_v2"
@@ -19,14 +22,20 @@ import (
 
 func NewV2BookingUseCaseSet(registry *usecase.Registry) V2BookingUseCaseSet {
 	return V2BookingUseCaseSet{
-		createApptUC: registry.CreateAppt,
-		cancelApptUC: registry.CancelAppt,
+		createApptUC:            registry.CreateAppt,
+		cancelApptUC:            registry.CancelAppt,
+		getUserMonthlyStatsUC:   registry.GetUserMonthlyStats,
+		queryTwoWeeksScheduleUC: registry.QueryTwoWeeksSchedule,
+		queryUserBookingsUC:     registry.QueryUserBookings,
 	}
 }
 
 type V2BookingUseCaseSet struct {
-	createApptUC writeappt.CreateApptUseCase
-	cancelApptUC writeappt.CancelApptUseCase
+	createApptUC            writeappt.CreateApptUseCase
+	cancelApptUC            writeappt.CancelApptUseCase
+	getUserMonthlyStatsUC   readstats.GetUserMonthlyStatsUseCase
+	queryTwoWeeksScheduleUC readtrain.QueryTwoWeeksScheduleUseCase
+	queryUserBookingsUC     readappt.QueryUserBookingsUseCase
 }
 
 func NewV2BookingApi(enableCSRF bool, bookingUseCaseSet V2BookingUseCaseSet) WebAPI {
@@ -59,121 +68,91 @@ func (api *v2BookingAPI) InitRouter(r ezapi.Router) {
 }
 
 func (api *v2BookingAPI) getCalendarStatsV2(c *gin.Context) {
-	year := c.Query("year")
-	month := c.Query("month")
+	yearStr := c.Query("year")
+	monthStr := c.Query("month")
 
-	// Mock data based on the provided year/month
-	// In a real application, you would calculate stats for the specific month.
-	c.JSON(http.StatusOK, gin.H{
-		"total_sessions": 10, // Dummy monthly value
-		"total_leave":    1,
-		"children": []gin.H{
-			{"name": "小明", "completed": 6, "leave": 0, "absent": 0, "avg_week": 1.5},
-			{"name": "小華", "completed": 4, "leave": 1, "absent": 0, "avg_week": 1.0},
-			{"name": "小東", "completed": 2, "leave": 0, "absent": 0, "avg_week": 0.5},
-		},
-		"year":  year,
-		"month": month,
-	})
-}
+	var year, month int
+	fmt.Sscanf(yearStr, "%d", &year)
+	fmt.Sscanf(monthStr, "%d", &month)
 
-// getBookingV2Form renders the V2 Booking Page with mock data
-func (api *v2BookingAPI) getBookingV2Form(c *gin.Context) {
-	lineliffid := lineliff.GetBookingLiffId()
-	displayName := getUserDisplayName(c)
-	if displayName == "" {
-		displayName = "測試家長"
+	userID := getUserID(c)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "message": "User not logged in"})
+		return
 	}
 
-	// --- Generate Dummy Data for V2 ---
+	stats, err := api.getUserMonthlyStatsUC.Execute(c.Request.Context(), readstats.ReqGetUserMonthlyStats{
+		UserID: userID,
+		Year:   year,
+		Month:  month,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, stats)
+}
+
+// getBookingV2Form renders the V2 Booking Page with real data
+func (api *v2BookingAPI) getBookingV2Form(c *gin.Context) {
+	lineliffid := lineliff.GetBookingLiffId()
+	userID := getUserID(c)
+	if userID == "" {
+		userID = "test-user-id"
+	}
+
+	ctx := c.Request.Context()
+	now := time.Now()
+
+	// 1. Fetch current month stats
+	stats, err := api.getUserMonthlyStatsUC.Execute(ctx, readstats.ReqGetUserMonthlyStats{
+		UserID: userID,
+		Year:   now.Year(),
+		Month:  int(now.Month()),
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	// 2. Fetch initial 2 weeks schedule (starting from this Monday)
+	// Calculate this week's Monday, then subtract 1 day to get last Sunday as ReferenceDate
+	offset := (int(now.Weekday()) + 6) % 7
+	thisMonday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).AddDate(0, 0, -offset)
+	lastSunday := thisMonday.AddDate(0, 0, -1)
+
+	weeks, err := api.queryTwoWeeksScheduleUC.Execute(ctx, readtrain.ReqQueryTwoWeeksSchedule{
+		UserID:        userID,
+		ReferenceDate: lastSunday,
+		Direction:     "next",
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	// 3. Fetch current user bookings
+	userBookings, err := api.queryUserBookingsUC.Execute(ctx, readappt.ReqQueryUserBookings{
+		UserID:         userID,
+		TrainDateAfter: now,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	// Transform data to ViewModel
 	modelV2 := &booking_v2.BookingV2Model{
 		LiffID: lineliffid,
 		CurrentUser: &booking_v2.UserContext{
-			DisplayName:      displayName,
-			UserID:           getUserID(c),
-			FrequentChildren: []string{"小明", "小華", "小東"},
+			DisplayName:      getUserDisplayName(c),
+			UserID:           userID,
+			FrequentChildren: statsToFrequentChildren(stats),
 		},
-		Stats: &booking_v2.StatsSummary{
-			TotalSessions: 48,
-			TotalLeave:    5,
-			Children: []*booking_v2.ChildStat{
-				{Name: "小明", Completed: 24, Leave: 2, Absent: 1, AvgWeek: 1.9},
-				{Name: "小華", Completed: 18, Leave: 4, Absent: 0, AvgWeek: 1.4},
-				{Name: "小東", Completed: 6, Leave: 0, Absent: 1, AvgWeek: 0.5},
-			},
-		},
-		MyBookings: []*booking_v2.MyBookingItem{
-			{
-				ID:          "booking-1",
-				DateDisplay: "02/14 (六) 14:30",
-				Title:       "師大班 @ 師大附中",
-				Attendees: []*booking_v2.Attendee{
-					{Name: "小明", Status: "Booked", BookingTime: time.Now(), BookingID: "101"},
-					{Name: "小華", Status: "Leave", BookingTime: time.Now().Add(-48 * time.Hour), BookingID: "102"},
-				},
-			},
-		},
-		Weeks: []*booking_v2.WeekData{
-			{
-				ID:        "2026-W07",
-				IsCurrent: true,
-				Days: []*booking_v2.DayData{
-					{DateDisplay: "8", DayOfWeek: "Sun", IsToday: false, FullDate: "2026-02-08", Slots: []*booking_v2.SlotData{{IsEmpty: true}}},
-					{DateDisplay: "9", DayOfWeek: "Mon", IsToday: false, FullDate: "2026-02-09", Slots: []*booking_v2.SlotData{{IsEmpty: true}}},
-					{DateDisplay: "10", DayOfWeek: "Tue", IsToday: false, FullDate: "2026-02-10", Slots: []*booking_v2.SlotData{{IsEmpty: true}}},
-					{DateDisplay: "11", DayOfWeek: "Wed", IsToday: false, FullDate: "2026-02-11", Slots: []*booking_v2.SlotData{{IsEmpty: true}}},
-					{DateDisplay: "12", DayOfWeek: "Thu", IsToday: false, FullDate: "2026-02-12", Slots: []*booking_v2.SlotData{{IsEmpty: true}}},
-					{
-						DateDisplay: "13",
-						DayOfWeek:   "Fri",
-						FullDate:    "2026-02-13",
-						IsToday:     true,
-						Slots: []*booking_v2.SlotData{
-							{
-								ID:          "slot-1",
-								TimeDisplay: "16:30",
-								CourseName:  "足球進階班",
-								Location:    "北安球場",
-								BookedCount: 12,
-								Capacity:    20,
-								Attendees: []*booking_v2.Attendee{
-									{Name: "小明", Status: "Booked",
-										BookingTime: time.Now(), BookingID: "1"},
-									{Name: "小華", Status: "Booked",
-										BookingTime: time.Now().Add(-time.Hour * 48), BookingID: "2"},
-								},
-							},
-							{
-								ID:          "slot-2",
-								TimeDisplay: "18:30",
-								CourseName:  "體能開發",
-								Location:    "北安球場",
-								IsEmpty:     false,
-								BookedCount: 5,
-								Capacity:    10,
-								Attendees: []*booking_v2.Attendee{
-									{Name: "小明", Status: "Leave"},
-								},
-							},
-						},
-					},
-					{DateDisplay: "14", DayOfWeek: "Sat", IsToday: false, FullDate: "2026-02-14", Slots: []*booking_v2.SlotData{{IsEmpty: true}}},
-				},
-			},
-			{
-				ID:        "2026-W08",
-				IsCurrent: false,
-				Days: []*booking_v2.DayData{
-					{DateDisplay: "15", DayOfWeek: "Sun", IsToday: false, FullDate: "2026-02-15", Slots: []*booking_v2.SlotData{{IsEmpty: true}}},
-					{DateDisplay: "16", DayOfWeek: "Mon", IsToday: false, FullDate: "2026-02-16", Slots: []*booking_v2.SlotData{{IsEmpty: true}}},
-					{DateDisplay: "17", DayOfWeek: "Tue", IsToday: false, FullDate: "2026-02-17", Slots: []*booking_v2.SlotData{{IsEmpty: true}}},
-					{DateDisplay: "18", DayOfWeek: "Wed", IsToday: false, FullDate: "2026-02-18", Slots: []*booking_v2.SlotData{{IsEmpty: true}}},
-					{DateDisplay: "19", DayOfWeek: "Thu", IsToday: false, FullDate: "2026-02-19", Slots: []*booking_v2.SlotData{{IsEmpty: true}}},
-					{DateDisplay: "20", DayOfWeek: "Fri", IsToday: false, FullDate: "2026-02-20", Slots: []*booking_v2.SlotData{{IsEmpty: true}}},
-					{DateDisplay: "21", DayOfWeek: "Sat", IsToday: false, FullDate: "2026-02-21", Slots: []*booking_v2.SlotData{{IsEmpty: true}}},
-				},
-			},
-		},
+		Stats:      statsToStatsSummary(stats),
+		MyBookings: apptsToMyBookingsV2(userBookings.Appts),
+		Weeks:      transformToWeeksVO(weeks),
 	}
 
 	com := templates.Layout(
@@ -185,11 +164,117 @@ func (api *v2BookingAPI) getBookingV2Form(c *gin.Context) {
 			Image:       "https://storage.94peter.dev/cdn-cgi/image/width=1200,height=630,quality=80,format=auto/https://storage.94peter.dev/images/UAC.png",
 		},
 	)
-	r := newTemplRenderer(c.Request.Context(), http.StatusOK, com)
+	r := newTemplRenderer(ctx, http.StatusOK, com)
 	c.Render(http.StatusOK, r)
 }
 
-// API V2 Mock Handlers
+func statsToFrequentChildren(stats *readstats.UserMonthlyStatsVO) []string {
+	res := make([]string, 0)
+	for _, child := range stats.Children {
+		res = append(res, child.Name)
+	}
+	return res
+}
+
+func statsToStatsSummary(stats *readstats.UserMonthlyStatsVO) *booking_v2.StatsSummary {
+	children := make([]*booking_v2.ChildStat, 0)
+	for _, child := range stats.Children {
+		children = append(children, &booking_v2.ChildStat{
+			Name:      child.Name,
+			Completed: child.Completed,
+			Leave:     child.Leave,
+			Absent:    child.Absent,
+			AvgWeek:   child.AvgWeek,
+		})
+	}
+	return &booking_v2.StatsSummary{
+		TotalSessions: stats.TotalSessions,
+		TotalLeave:    stats.TotalLeave,
+		Children:      children,
+	}
+}
+
+func apptsToMyBookingsV2(appts []*entity.AppointmentWithTrainDate) []*booking_v2.MyBookingItem {
+	groups := make(map[string]*booking_v2.MyBookingItem)
+	order := make([]string, 0)
+
+	for _, appt := range appts {
+		key := appt.TrainingDateId
+		if _, ok := groups[key]; !ok {
+			groups[key] = &booking_v2.MyBookingItem{
+				ID:          key,
+				DateDisplay: fmt.Sprintf("%s (%s) %s", appt.TrainDate.StartDate.Format("01/02"), appt.TrainDate.StartDate.Format("Mon"), appt.TrainDate.StartDate.Format("15:04")),
+				Title:       appt.TrainDate.Location,
+				Attendees:   make([]*booking_v2.Attendee, 0),
+			}
+			order = append(order, key)
+		}
+		groups[key].Attendees = append(groups[key].Attendees, &booking_v2.Attendee{
+			Name:        appt.ChildName,
+			Status:      uiApptStatusTransform(appt),
+			BookingTime: appt.CreatedAt,
+			BookingID:   appt.ID,
+		})
+	}
+
+	res := make([]*booking_v2.MyBookingItem, 0)
+	for _, key := range order {
+		res = append(res, groups[key])
+	}
+	return res
+}
+
+func uiApptStatusTransform(appt *entity.AppointmentWithTrainDate) string {
+	if appt.IsOnLeave {
+		return "Leave"
+	}
+	return "Booked"
+}
+
+func transformToWeeksVO(weeks []*readtrain.WeekVO) []*booking_v2.WeekData {
+	res := make([]*booking_v2.WeekData, 0, len(weeks))
+	for _, w := range weeks {
+		days := make([]*booking_v2.DayData, 0, len(w.Days))
+		for _, d := range w.Days {
+			slots := make([]*booking_v2.SlotData, 0, len(d.Slots))
+			for _, s := range d.Slots {
+				attendees := make([]*booking_v2.Attendee, 0, len(s.Attendees))
+				for _, a := range s.Attendees {
+					attendees = append(attendees, &booking_v2.Attendee{
+						Name:        a.Name,
+						Status:      a.Status,
+						BookingID:   a.BookingID,
+						BookingTime: a.BookingTime,
+					})
+				}
+				slots = append(slots, &booking_v2.SlotData{
+					ID:          s.ID,
+					TimeDisplay: s.TimeDisplay,
+					CourseName:  s.CourseName,
+					Location:    s.Location,
+					Capacity:    s.Capacity,
+					BookedCount: s.BookedCount,
+					Attendees:   attendees,
+					IsFull:      s.IsFull,
+					IsEmpty:     s.IsEmpty,
+				})
+			}
+			days = append(days, &booking_v2.DayData{
+				DateDisplay: d.DateDisplay,
+				DayOfWeek:   d.DayOfWeek,
+				FullDate:    d.FullDate,
+				IsToday:     d.IsToday,
+				Slots:       slots,
+			})
+		}
+		res = append(res, &booking_v2.WeekData{
+			ID:        w.ID,
+			Days:      days,
+			IsCurrent: w.IsCurrent,
+		})
+	}
+	return res
+}
 
 func (api *v2BookingAPI) createBookingV2(c *gin.Context) {
 	var req struct {
@@ -357,6 +442,8 @@ func (api *v2BookingAPI) getMyBookingsV2(c *gin.Context) {
 	})
 }
 
+var taipeiLoc = time.FixedZone("Asia/Taipei", 8*60*60)
+
 func (api *v2BookingAPI) getCalendarWeeksV2(c *gin.Context) {
 	startDateStr := c.Query("start_date")
 	direction := c.Query("direction") // "next" or "prev"
@@ -365,68 +452,23 @@ func (api *v2BookingAPI) getCalendarWeeksV2(c *gin.Context) {
 	if err != nil {
 		refDate = time.Now()
 	}
+	refDate = time.Date(refDate.Year(), refDate.Month(), refDate.Day(), 0, 0, 0, 0, taipeiLoc)
 
-	var startGenerationDate time.Time
-	// We want to load 2 weeks
-	weeksToLoad := 2
-
-	if direction == "prev" {
-		// If refDate is the first day of current view, we want the 2 weeks BEFORE it.
-		// e.g. ref is Feb 15. We want Jan 31 - Feb 14 (approx).
-		// Actually, we usually align to weeks (Sunday/Monday).
-		// For simplicity in mock: just subtract 14 days from refDate.
-		startGenerationDate = refDate.AddDate(0, 0, -7*weeksToLoad)
-	} else {
-		// If refDate is the last day of current view, we want the 2 weeks AFTER it.
-		// e.g. ref is Feb 28. We want Mar 1 - Mar 14.
-		startGenerationDate = refDate.AddDate(0, 0, 1)
-	}
-
-	weeks := make([]gin.H, 0, weeksToLoad)
-
-	// Helper to generate a mock day
-	generateMockDay := func(date time.Time) gin.H {
-		dayName := date.Format("Mon")
-		return gin.H{
-			"date_display": fmt.Sprintf("%d", date.Day()),
-			"day_of_week":  dayName,
-			"is_today":     date.Format("2006-01-02") == time.Now().Format("2006-01-02"),
-			"full_date":    date.Format("2006-01-02"),
-			"slots": []gin.H{
-				{
-					"id":           fmt.Sprintf("slot-mock-%d", date.Unix()),
-					"time_display": "16:30",
-					"course_name":  "足球練習",
-					"location":     "球場",
-					"capacity":     20,
-					"booked_count": 0,
-					"is_empty":     false,
-					"attendees":    []gin.H{},
-				},
-			},
-		}
-	}
-
-	currentDate := startGenerationDate
-	for w := 0; w < weeksToLoad; w++ {
-		weekDays := make([]gin.H, 0, 7)
-		// Assuming we want to align slightly or just give 7 days chunks
-		// Let's just generate 7 consecutive days for each week
-		for d := 0; d < 7; d++ {
-			weekDays = append(weekDays, generateMockDay(currentDate))
-			currentDate = currentDate.AddDate(0, 0, 1)
-		}
-
-		_, weekIso := currentDate.AddDate(0, 0, -7).ISOWeek()
-
-		weeks = append(weeks, gin.H{
-			"id":         fmt.Sprintf("%d-W%d", currentDate.Year(), weekIso),
-			"is_current": false,
-			"days":       weekDays,
-		})
+	ctx := c.Request.Context()
+	userID := getUserID(c)
+	fmt.Println("getCalendarWeeksV2", startDateStr, direction, refDate)
+	weeks, errUC := api.queryTwoWeeksScheduleUC.Execute(ctx, readtrain.ReqQueryTwoWeeksSchedule{
+		UserID:        userID,
+		ReferenceDate: refDate,
+		Direction:     direction,
+	})
+	fmt.Println("getCalendarWeeksV2", weeks)
+	if errUC != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": errUC.Error()})
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"weeks": weeks,
+		"weeks": transformToWeeksVO(weeks),
 	})
 }

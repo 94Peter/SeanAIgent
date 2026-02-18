@@ -29,4 +29,7 @@ type StatsRepository interface {
 	GetAllUserApptStats(
 		ctx context.Context, filter FilterUserApptStats,
 	) ([]*entity.UserApptStats, RepoError)
+	GetUserApptStats(
+		ctx context.Context, userID string, filter FilterUserApptStats,
+	) (*entity.UserApptStats, RepoError)
 }
