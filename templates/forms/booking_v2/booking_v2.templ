@@ -121,7 +121,7 @@ const (
 
 templ AttendeeTag(p *Attendee, isMini bool) {
 	if isMini {
-		<span class={ "text-[9px] px-1.5 py-0.5 rounded-[4px] truncate " + getStatusClasses(p.Status) }>
+		<span class={ "text-[9px] px-1.5 py-0.5 rounded-[4px] whitespace-nowrap " + getStatusClasses(p.Status) }>
 			{ p.Name }
 		</span>
 	} else {
@@ -236,14 +236,14 @@ templ StickyHeader(stats *StatsSummary, liffV1Url string) {
 
 templ WeekRow(week *WeekData, user *UserContext) {
 	<div class="snap-start pt-4 pb-2 border-b border-[#27272A] min-h-[50vh]" data-week-id={ week.ID }>
-		<div class="grid grid-cols-7 gap-[2px] px-[2px]">
+		<div class="grid grid-cols-7 gap-[2px] px-1">
 			for _, day := range week.Days {
 				<div class="flex flex-col items-center gap-2 min-h-[120px]" data-date={ day.FullDate }>
 					<div class={ "flex flex-col items-center justify-center w-10 h-10 rounded-full text-sm font-medium " + cond(day.IsToday, "bg-white text-black", "text-[#8E8E93]") }>
 						<span class="text-xs uppercase leading-none">{ day.DayOfWeek }</span>
 						<span class="text-lg leading-none font-bold">{ day.DateDisplay }</span>
 					</div>
-					<div class="w-full flex flex-col gap-2 px-0.5">
+					<div class="w-full flex flex-col gap-2 px-0">
 						for _, slot := range day.Slots {
 							if slot.IsEmpty {
 								<div class="w-full rounded-[8px] p-2 border border-dashed border-[#3A3A3C] flex items-center justify-center text-left min-h-[40px] opacity-50 cursor-default">
@@ -264,7 +264,7 @@ templ CourseCapsule(slot *SlotData, user *UserContext) {
 	{{ attendeesJson, _ := json.Marshal(slot.Attendees) }}
 	<button 
 		id={ "slot-" + slot.ID }
-		class={ "w-full rounded-[8px] p-1.5 flex flex-col gap-1 text-left transition-transform " + BgSurface + cond(slot.IsPast, " opacity-50 cursor-not-allowed", " active:scale-95") }
+		class={ "w-full rounded-[8px] py-2 px-1.5 flex flex-col gap-1 text-left transition-transform " + BgSurface + cond(slot.IsPast, " opacity-50 cursor-not-allowed", " active:scale-95") }
 		if !slot.IsPast {
 			if user != nil && user.UserID != "" {
 				{ templ.Attributes{"onclick": fmt.Sprintf("openBookingPopup('%s', '%s', '%s', '%s', %d, %d, %s)", slot.ID, slot.TimeDisplay, slot.EndTimeDisplay, slot.CourseName, slot.BookedCount, slot.Capacity, string(attendeesJson))}... }
@@ -282,7 +282,7 @@ templ SlotContent(slot *SlotData) {
 		<span class="text-xs text-[#8E8E93] font-mono">{ slot.TimeDisplay }</span>
 		<span class="text-xs font-bold text-white break-all leading-tight line-clamp-3 overflow-hidden">{ slot.CourseName }</span>
 	</div>
-	<div class="flex flex-col gap-1 mt-1">
+	<div class="flex flex-col gap-1 mt-1 pl-1">
 		for _, p := range slot.Attendees {
 			@AttendeeTag(p, true)
 		}
@@ -402,7 +402,7 @@ templ Script(liffId string) {
 
 		const jsRenderTag = (p, mini) => {
 			const s = p.status || p.Status, n = p.name || p.Name, classes = "rounded transition-colors " + getStatusClasses(s);
-			if (mini) return ("<span class=\"text-[9px] px-1.5 py-0.5 truncate " + classes + "\">" + n + "<\/span>");
+			if (mini) return ("<span class=\"text-[9px] px-1.5 py-0.5 whitespace-nowrap " + classes + "\">" + n + "<\/span>");
 			const suffix = s === 'Leave' ? ' (請假)' : (s === 'CheckedIn' ? ' (已簽到)' : (s === 'Absent' ? ' (缺席)' : ''));
 			const slotId = p.slot_id || p.SlotID;
 			const bookingTime = p.booking_time || p.BookingTime;
@@ -427,10 +427,10 @@ templ Script(liffId string) {
 					
 					// Update class for past slots
 					if (s.is_past) {
-						btn.className = "w-full rounded-[8px] p-1.5 flex flex-col gap-1 text-left transition-transform bg-[#1C1C1E] opacity-50 cursor-not-allowed";
+						btn.className = "w-full rounded-[8px] py-2 px-1.5 flex flex-col gap-1 text-left transition-transform bg-[#1C1C1E] opacity-50 cursor-not-allowed";
 						btn.removeAttribute('onclick');
 					} else {
-						btn.className = "w-full rounded-[8px] p-1.5 flex flex-col gap-1 text-left transition-transform bg-[#1C1C1E] active:scale-95";
+						btn.className = "w-full rounded-[8px] py-2 px-1.5 flex flex-col gap-1 text-left transition-transform bg-[#1C1C1E] active:scale-95";
 						
 						// Use properly escaped arguments for the onclick handler
 						btn.onclick = () => {
@@ -487,14 +487,14 @@ templ Script(liffId string) {
 		const renderWeekRow = (w) => {
 			const days = w.days.map(d => {
 				const slots = d.slots.map(s => {
-					if (s.is_empty) return ("<div class=\"w-full rounded-[8px] p-2 border border-dashed border-[#3A3A3C] flex items-center justify-center text-left min-h-[40px] opacity-50 cursor-default\"><span class=\"text-xs text-[#8E8E93]\">[未排課]<\/span><\/div>");
+					if (s.is_empty) return ("<div class=\"w-full rounded-[8px] py-2 px-1.5 border border-dashed border-[#3A3A3C] flex items-center justify-center text-left min-h-[40px] opacity-50 cursor-default\"><span class=\"text-xs text-[#8E8E93]\">[未排課]<\/span><\/div>");
 					const state = s.is_past ? 'opacity-50 cursor-not-allowed' : 'active:scale-95';
 					const onclick = s.is_past ? '' : ("onclick=\"openBookingPopup('" + s.id + "', '" + s.time_display + "', '" + s.end_time_display + "', '" + s.course_name + "', " + s.booked_count + ", " + s.capacity + ", " + JSON.stringify(s.attendees).replace(/\"/g, '&quot;') + ")\"");
-					return ("<button id=\"slot-" + s.id + "\" class=\"w-full rounded-[8px] p-1.5 flex flex-col gap-1 text-left transition-transform bg-[#1C1C1E] " + state + "\" " + onclick + ">" + jsRenderSlotContent(s) + "<\/button>");
+					return ("<button id=\"slot-" + s.id + "\" class=\"w-full rounded-[8px] py-2 px-1.5 flex flex-col gap-1 text-left transition-transform bg-[#1C1C1E] " + state + "\" " + onclick + ">" + jsRenderSlotContent(s) + "<\/button>");
 				}).join('');
-				return ("<div class=\"flex flex-col items-center gap-2 min-h-[120px]\" data-date=\"" + d.full_date + "\"><div class=\"flex flex-col items-center justify-center w-10 h-10 rounded-full text-sm font-medium " + (d.is_today ? "bg-white text-black" : "text-[#8E8E93]") + "\"><span class=\"text-xs uppercase leading-none\">" + d.day_of_week + "<\/span><span class=\"text-lg leading-none font-bold\">" + d.date_display + "<\/span><\/div><div class=\"w-full flex flex-col gap-2 px-0.5\">" + slots + "<\/div><\/div>");
+				return ("<div class=\"flex flex-col items-center gap-2 min-h-[120px]\" data-date=\"" + d.full_date + "\"><div class=\"flex flex-col items-center justify-center w-10 h-10 rounded-full text-sm font-medium " + (d.is_today ? "bg-white text-black" : "text-[#8E8E93]") + "\"><span class=\"text-xs uppercase leading-none\">" + d.day_of_week + "<\/span><span class=\"text-lg leading-none font-bold\">" + d.date_display + "<\/span><\/div><div class=\"w-full flex flex-col gap-2 px-0\">" + slots + "<\/div><\/div>");
 			}).join('');
-			return ("<div class=\"snap-start pt-4 pb-2 border-b border-[#27272A] min-h-[50vh]\" data-week-id=\"" + w.id + "\"><div class=\"grid grid-cols-7 gap-[2px] px-[2px]\">" + days + "<\/div><\/div>");
+			return ("<div class=\"snap-start pt-4 pb-2 border-b border-[#27272A] min-h-[50vh]\" data-week-id=\"" + w.id + "\"><div class=\"grid grid-cols-7 gap-[2px] px-1\">" + days + "<\/div><\/div>");
 		};
 
 		async function loadWeeks(dir) {
