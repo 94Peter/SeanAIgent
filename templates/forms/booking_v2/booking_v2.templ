@@ -74,6 +74,7 @@ type SlotData struct {
 	Attendees   []*Attendee 	`json:"attendees"`
 	IsFull      bool	`json:"is_full"`
 	IsEmpty     bool 	`json:"is_empty"` // If true, this is an empty slot (no course)
+	IsPast      bool    `json:"is_past"`
 }
 
 // Attendee represents a child in a slot.
@@ -203,12 +204,12 @@ templ StickyHeader(stats *StatsSummary) {
 templ WeekRow(week *WeekData, user *UserContext) {
 	<div class="snap-start pt-4 pb-2 border-b border-[#27272A] min-h-[50vh]" data-week-id={ week.ID }>
 		<!-- Days Grid -->
-		<div class="grid grid-cols-7 gap-1 px-1">
+		<div class="grid grid-cols-7 gap-[2px] px-[2px]">
 			for _, day := range week.Days {
 				<div class="flex flex-col items-center gap-2 min-h-[120px]" data-date={ day.FullDate }>
 					<!-- Date Circle -->
 					<div class={ "flex flex-col items-center justify-center w-10 h-10 rounded-full text-sm font-medium " + cond(day.IsToday, "bg-white text-black", "text-[#8E8E93]") }>
-						<span class="text-[10px] uppercase leading-none">{ day.DayOfWeek }</span>
+						<span class="text-xs uppercase leading-none">{ day.DayOfWeek }</span>
 						<span class="text-lg leading-none font-bold">{ day.DateDisplay }</span>
 					</div>
 
@@ -234,17 +235,19 @@ templ CourseCapsule(slot *SlotData, user *UserContext) {
 		attendeesJson, _ := json.Marshal(slot.Attendees)
 	}}
 	<button 
-		class={ "w-full rounded-[8px] p-1.5 flex flex-col gap-1 text-left transition-transform active:scale-95 " + BgSurface }
-		if user != nil && user.UserID != "" {
-			{ templ.Attributes{"onclick": fmt.Sprintf("openBookingPopup('%s', '%s', '%s', %s)", slot.ID, slot.TimeDisplay, slot.CourseName, string(attendeesJson))}... }
-		} else {
-			{ templ.Attributes{"onclick": "alert('請先登入以進行預約')"}... }
+		class={ "w-full rounded-[8px] p-1.5 flex flex-col gap-1 text-left transition-transform " + BgSurface + cond(slot.IsPast, " opacity-50 cursor-not-allowed", " active:scale-95") }
+		if !slot.IsPast {
+			if user != nil && user.UserID != "" {
+				{ templ.Attributes{"onclick": fmt.Sprintf("openBookingPopup('%s', '%s', '%s', %s)", slot.ID, slot.TimeDisplay, slot.CourseName, string(attendeesJson))}... }
+			} else {
+				{ templ.Attributes{"onclick": "alert('請先登入以進行預約')"}... }
+			}
 		}
 	>
 		<!-- Header: Time & Title -->
 		<div class="flex flex-col leading-tight">
-			<span class="text-[10px] text-[#8E8E93] font-mono">{ slot.TimeDisplay }</span>
-			<span class="text-xs font-bold text-white truncate">{ slot.CourseName }</span>
+			<span class="text-xs text-[#8E8E93] font-mono">{ slot.TimeDisplay }</span>
+			<span class="text-xs font-bold text-white break-all leading-tight line-clamp-3 overflow-hidden">{ slot.CourseName }</span>
 		</div>
 
 		<!-- Name Tag Stack (Only Booked/Leave) -->
@@ -269,7 +272,7 @@ templ EmptyCapsule(slot *SlotData) {
 	<div 
 		class="w-full rounded-[8px] p-2 border border-dashed border-[#3A3A3C] flex items-center justify-center text-left min-h-[40px] opacity-50 cursor-default"
 	>
-		<span class="text-[10px] text-[#8E8E93]">[未排課]</span>
+		<span class="text-xs text-[#8E8E93]">[未排課]</span>
 	</div>
 }
 
@@ -848,7 +851,7 @@ templ Script(liffId string) {
 				let slotsHtml = '';
 				day.slots.forEach(slot => {
 					if (slot.is_empty) {
-						slotsHtml += `<div class="w-full rounded-[8px] p-2 border border-dashed border-[#3A3A3C] flex items-center justify-center text-left min-h-[40px] opacity-50 cursor-default"><span class="text-[10px] text-[#8E8E93]">[未排課]</span></div>`;
+						slotsHtml += `<div class="w-full rounded-[8px] p-2 border border-dashed border-[#3A3A3C] flex items-center justify-center text-left min-h-[40px] opacity-50 cursor-default"><span class="text-xs text-[#8E8E93]">[未排課]</span></div>`;
 					} else {
 						const attendeesJson = JSON.stringify(slot.attendees || []);
 						let nameTagsHtml = '';
@@ -860,12 +863,15 @@ templ Script(liffId string) {
 							}
 						});
 
+						const btnClass = slot.is_past ? 'opacity-50 cursor-not-allowed' : 'active:scale-95';
+						const onclickAttr = slot.is_past ? '' : `onclick="openBookingPopup('${slot.id}', '${slot.time_display}', '${slot.course_name}', ${attendeesJson.replace(/"/g, '&quot;')})"`;
+
 						slotsHtml += `
-							<button class="w-full rounded-[8px] p-1.5 flex flex-col gap-1 text-left transition-transform active:scale-95 bg-[#1C1C1E]" 
-								onclick="openBookingPopup('${slot.id}', '${slot.time_display}', '${slot.course_name}', ${attendeesJson.replace(/"/g, '&quot;')})">
+							<button class="w-full rounded-[8px] p-1.5 flex flex-col gap-1 text-left transition-transform bg-[#1C1C1E] ${btnClass}" 
+								${onclickAttr}>
 								<div class="flex flex-col leading-tight">
-									<span class="text-[10px] text-[#8E8E93] font-mono">${slot.time_display}</span>
-									<span class="text-xs font-bold text-white truncate">${slot.course_name}</span>
+									<span class="text-xs text-[#8E8E93] font-mono">${slot.time_display}</span>
+									<span class="text-xs font-bold text-white break-words leading-tight line-clamp-3 overflow-hidden">${slot.course_name}</span>
 								</div>
 								<div class="flex flex-col gap-1 mt-1">${nameTagsHtml}</div>
 							</button>`;
@@ -876,14 +882,14 @@ templ Script(liffId string) {
 				daysHtml += `
 					<div class="flex flex-col items-center gap-2 min-h-[120px]" data-date="${day.full_date}">
 						<div class="flex flex-col items-center justify-center w-10 h-10 rounded-full text-sm font-medium ${todayClass}">
-							<span class="text-[10px] uppercase leading-none">${day.day_of_week}</span>
+							<span class="text-xs uppercase leading-none">${day.day_of_week}</span>
 							<span class="text-lg leading-none font-bold">${day.date_display}</span>
 						</div>
 						<div class="w-full flex flex-col gap-2 px-0.5">${slotsHtml}</div>
 					</div>`;
 			});
 
-			return `<div class="snap-start pt-4 pb-2 border-b border-[#27272A] min-h-[50vh]" data-week-id="${week.id}"><div class="grid grid-cols-7 gap-1 px-1">${daysHtml}</div></div>`;
+			return `<div class="snap-start pt-4 pb-2 border-b border-[#27272A] min-h-[50vh]" data-week-id="${week.id}"><div class="grid grid-cols-7 gap-[2px] px-[2px]">${daysHtml}</div></div>`;
 		}
 
 		// --- Popup Logic ---

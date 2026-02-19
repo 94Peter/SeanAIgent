@@ -203,11 +203,15 @@ func apptsToMyBookingsV2(appts []*entity.AppointmentWithTrainDate) []*booking_v2
 	for _, appt := range appts {
 		key := appt.TrainingDateId
 		if _, ok := groups[key]; !ok {
+			startDate := appt.TrainDate.StartDate.In(taipeiLoc)
 			groups[key] = &booking_v2.MyBookingItem{
-				ID:          key,
-				DateDisplay: fmt.Sprintf("%s (%s) %s", appt.TrainDate.StartDate.Format("01/02"), appt.TrainDate.StartDate.Format("Mon"), appt.TrainDate.StartDate.Format("15:04")),
-				Title:       appt.TrainDate.Location,
-				Attendees:   make([]*booking_v2.Attendee, 0),
+				ID: key,
+				DateDisplay: fmt.Sprintf("%s (%s) %s",
+					startDate.Format("01/02"),
+					startDate.Format("Mon"),
+					startDate.Format("15:04")),
+				Title:     appt.TrainDate.Location,
+				Attendees: make([]*booking_v2.Attendee, 0),
 			}
 			order = append(order, key)
 		}
@@ -229,6 +233,16 @@ func apptsToMyBookingsV2(appts []*entity.AppointmentWithTrainDate) []*booking_v2
 func uiApptStatusTransform(appt *entity.AppointmentWithTrainDate) string {
 	if appt.IsOnLeave {
 		return "Leave"
+	}
+	if appt.IsCheckedIn {
+		return "CheckedIn"
+	}
+	if appt.Status == string(entity.StatusAttended) {
+		return "CheckedIn"
+	}
+	// If the course has ended and user didn't check in or leave, it's Absent
+	if time.Now().After(appt.TrainDate.EndDate) {
+		return "Absent"
 	}
 	return "Booked"
 }
@@ -259,6 +273,7 @@ func transformToWeeksVO(weeks []*readtrain.WeekVO) []*booking_v2.WeekData {
 					Attendees:   attendees,
 					IsFull:      s.IsFull,
 					IsEmpty:     s.IsEmpty,
+					IsPast:      time.Now().After(s.EndDate),
 				})
 			}
 			days = append(days, &booking_v2.DayData{
@@ -401,46 +416,51 @@ func (api *v2BookingAPI) cancelLeaveV2(c *gin.Context) {
 
 func (api *v2BookingAPI) getMyBookingsV2(c *gin.Context) {
 	listType := c.Query("type") // "upcoming" or "history"
+	userID := getUserID(c)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "message": "User not logged in"})
+		return
+	}
 
-	var items []gin.H
+	var trainDateAfter time.Time
 	if listType == "history" {
-		items = []gin.H{
-			{
-				"booking_id":   "b_hist_1",
-				"date_display": "02/07 (六) 14:30",
-				"title":        "師大班 @ 師大附中",
-				"attendees": []gin.H{
-					{"name": "小明", "status": "CheckedIn", "booking_time": "2026-02-07T14:30:00Z", "booking_id": "h1"},
-				},
-			},
-			{
-				"booking_id":   "b_hist_2",
-				"date_display": "01/31 (六) 14:30",
-				"title":        "師大班 @ 師大附中",
-				"attendees": []gin.H{
-					{"name": "小明", "status": "Absent", "booking_time": "2026-01-31T14:30:00Z", "booking_id": "h2"},
-				},
-			},
-		}
+		trainDateAfter = time.Time{} // All time, but we'll need to filter for past dates in a real repo query if needed
 	} else {
-		// Upcoming (Mock same as initial load for consistency)
-		items = []gin.H{
-			{
-				"booking_id":   "b_up_1",
-				"date_display": "02/14 (六) 14:30",
-				"title":        "師大班 @ 師大附中",
-				"attendees": []gin.H{
-					{"name": "小明", "status": "Booked", "booking_time": time.Now().Format(time.RFC3339), "booking_id": "101"},
-					{"name": "小華", "status": "Leave", "booking_time": time.Now().Format(time.RFC3339), "booking_id": "102"},
-				},
-			},
+		trainDateAfter = time.Now()
+	}
+
+	resp, errUC := api.queryUserBookingsUC.Execute(c.Request.Context(), readappt.ReqQueryUserBookings{
+		UserID:         userID,
+		TrainDateAfter: trainDateAfter,
+	})
+	if errUC != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": errUC.Error()})
+		return
+	}
+
+	// For history, we only want past courses. For upcoming, we only want future courses.
+	// The UC currently only supports TrainDateAfter.
+	// We might need to filter manually here for "history".
+	now := time.Now()
+	filteredAppts := make([]*entity.AppointmentWithTrainDate, 0)
+	for _, appt := range resp.Appts {
+		if listType == "history" {
+			if appt.TrainDate.EndDate.Before(now) {
+				filteredAppts = append(filteredAppts, appt)
+			}
+		} else {
+			if appt.TrainDate.EndDate.After(now) {
+				filteredAppts = append(filteredAppts, appt)
+			}
 		}
 	}
 
+	items := apptsToMyBookingsV2(filteredAppts)
+
 	c.JSON(http.StatusOK, gin.H{
 		"items":       items,
-		"next_cursor": "",
-		"has_more":    false,
+		"next_cursor": resp.Cursor,
+		"has_more":    resp.Cursor != "",
 	})
 }
 

@@ -11,7 +11,9 @@ type AppointmentWithTrainDate struct {
 	ChildName      string      `json:"child_name,omitempty"`
 	TrainingDateId string      `json:"training_date_id"`
 	TrainDate      TrainDateUI `json:"training_date_info"`
+	Status         string      `json:"status"`
 	IsOnLeave      bool        `json:"is_on_leave"`
+	IsCheckedIn    bool        `json:"is_checked_in"`
 }
 
 type TrainDateUI struct {

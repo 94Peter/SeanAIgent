@@ -37,6 +37,7 @@ type SlotVO struct {
 	Capacity    int           `json:"capacity"`
 	BookedCount int           `json:"booked_count"`
 	Attendees   []*AttendeeVO `json:"attendees"`
+	EndDate     time.Time     `json:"end_date"`
 	IsFull      bool          `json:"is_full"`
 	IsEmpty     bool          `json:"is_empty"`
 }
@@ -123,6 +124,7 @@ func groupToWeeks(data []*entity.TrainDateHasUserApptState, start, end time.Time
 						BookedCount: td.Capacity - td.AvailableCapacity,
 						IsFull:      td.AvailableCapacity <= 0,
 						Attendees:   transformAttendees(td.UserAppointments),
+						EndDate:     td.EndDate,
 					})
 				}
 			}

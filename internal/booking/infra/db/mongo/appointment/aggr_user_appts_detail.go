@@ -33,6 +33,8 @@ func getProject() bson.D {
 			{"createdAt", "$created_at"},
 			{"trainingDateId", bson.D{{"$toString", "$training_date_id"}}},
 			{"isOnLeave", "$is_on_leave"},
+			{"isCheckedIn", "$is_checked_in"},
+			{"status", "$status"},
 
 			// 映射 TrainDateUI 結構
 			{"trainDate", bson.D{
