@@ -288,7 +288,7 @@ templ FixedFABs(user *UserContext) {
 				<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
 				我的預約
 			</button>
-			<button onclick="shareBookingStatus()" class="pointer-events-auto bg-[#06C755] text-white shadow-lg rounded-full px-5 py-3 font-semibold text-sm flex items-center gap-2 active:bg-[#05B04B] transition-colors">
+			<button id="share-booking-btn" onclick="shareBookingStatus()" class="pointer-events-auto bg-[#06C755] text-white shadow-lg rounded-full px-5 py-3 font-semibold text-sm flex items-center gap-2 active:bg-[#05B04B] transition-colors">
 				<span>分享預約</span>
 				<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
 			</button>
@@ -496,6 +496,8 @@ templ Script(liffId string) {
 			if (today) today.parentElement.scrollIntoView({ block: 'center' });
 			c.addEventListener('scroll', () => { updateHeaderTitle(); checkSentinels(); });
 			updateHeaderTitle();
+
+			liff.init({ liffId: '{{ liffId }}' }).catch(err => console.error("LIFF init failed", err));
 		});
 
 		function openBookingPopup(id, time, endTime, title, bookedCount, capacity, attendees) {
@@ -575,7 +577,30 @@ templ Script(liffId string) {
 		function openLeaveRequest(id, name) { document.getElementById('leave-booking-id').value = id; document.getElementById('leave-student-name').innerText = name; document.getElementById('booking-main-view').classList.add('hidden'); document.getElementById('booking-leave-view').classList.remove('hidden'); }
 		function cancelLeaveRequest() { document.getElementById('booking-leave-view').classList.add('hidden'); document.getElementById('booking-main-view').classList.remove('hidden'); }
 		async function submitLeaveRequest(e) { e.preventDefault(); const slotId = document.getElementById('popup-slot-id').value; try { await fetchApi("/api/v2/bookings/" + document.getElementById('leave-booking-id').value + "/leave", { method: 'POST', body: JSON.stringify({ reason: document.getElementById('leaveReason').value }) }); alert("請假申請已送出"); cancelLeaveRequest(); closeBookingPopup(); refreshSlot(slotId); refreshStats(); } catch(err) { alert(err.message); } }
-		function shareBookingStatus() { if (liff.isInClient()) liff.sendMessages([{ type: 'text', text: "預約成功！" }]).then(() => liff.closeWindow()); else alert("請在 LINE 中執行"); }
+		async function shareBookingStatus() {
+			const btn = document.getElementById('share-booking-btn');
+			const originalContent = btn.innerHTML;
+			try {
+				if (!liff.isInClient()) {
+					alert("請在 LINE 中執行");
+					return;
+				}
+				btn.disabled = true;
+				btn.innerHTML = '<span>正在準備...</span>';
+				const data = await fetchApi('/booking/summary/line-liff');
+				if (data.message) {
+					await liff.sendMessages([{ type: 'text', text: data.message }]);
+					liff.closeWindow();
+				} else {
+					throw new Error("無法取得分享訊息");
+				}
+			} catch (e) {
+				console.error(e);
+				alert(e.message || "分享失敗");
+				btn.disabled = false;
+				btn.innerHTML = originalContent;
+			}
+		}
 	</script>
 }
 
