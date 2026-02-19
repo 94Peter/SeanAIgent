@@ -30,16 +30,17 @@ type DayVO struct {
 }
 
 type SlotVO struct {
-	ID          string        `json:"id"`
-	TimeDisplay string        `json:"time_display"`
-	CourseName  string        `json:"course_name"`
-	Location    string        `json:"location"`
-	Capacity    int           `json:"capacity"`
-	BookedCount int           `json:"booked_count"`
-	Attendees   []*AttendeeVO `json:"attendees"`
-	EndDate     time.Time     `json:"end_date"`
-	IsFull      bool          `json:"is_full"`
-	IsEmpty     bool          `json:"is_empty"`
+	ID             string        `json:"id"`
+	TimeDisplay    string        `json:"time_display"`
+	EndTimeDisplay string        `json:"end_time_display"`
+	CourseName     string        `json:"course_name"`
+	Location       string        `json:"location"`
+	Capacity       int           `json:"capacity"`
+	BookedCount    int           `json:"booked_count"`
+	Attendees      []*AttendeeVO `json:"attendees"`
+	EndDate        time.Time     `json:"end_date"`
+	IsFull         bool          `json:"is_full"`
+	IsEmpty        bool          `json:"is_empty"`
 }
 
 type AttendeeVO struct {
@@ -115,16 +116,18 @@ func groupToWeeks(data []*entity.TrainDateHasUserApptState, start, end time.Time
 				loc := getLocation(td.Timezone)
 				startDate := td.StartDate.In(loc)
 				if day.FullDate == td.StartDate.Format("2006-01-02") {
+					endDate := td.EndDate.In(loc)
 					day.Slots = append(day.Slots, &SlotVO{
-						ID:          td.ID,
-						TimeDisplay: startDate.Format("15:04"),
-						CourseName:  "@" + td.Location, // 暫用 Date 欄位
-						Location:    td.Location,
-						Capacity:    td.Capacity,
-						BookedCount: td.Capacity - td.AvailableCapacity,
-						IsFull:      td.AvailableCapacity <= 0,
-						Attendees:   transformAttendees(td.UserAppointments, td.EndDate),
-						EndDate:     td.EndDate,
+						ID:             td.ID,
+						TimeDisplay:    startDate.Format("15:04"),
+						EndTimeDisplay: endDate.Format("15:04"),
+						CourseName:     "@" + td.Location, // 暫用 Date 欄位
+						Location:       td.Location,
+						Capacity:       td.Capacity,
+						BookedCount:    td.Capacity - td.AvailableCapacity,
+						IsFull:         td.AvailableCapacity <= 0,
+						Attendees:      transformAttendees(td.UserAppointments, td.EndDate),
+						EndDate:        td.EndDate,
 					})
 				}
 			}

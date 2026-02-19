@@ -264,16 +264,17 @@ func transformToWeeksVO(weeks []*readtrain.WeekVO) []*booking_v2.WeekData {
 					})
 				}
 				slots = append(slots, &booking_v2.SlotData{
-					ID:          s.ID,
-					TimeDisplay: s.TimeDisplay,
-					CourseName:  s.CourseName,
-					Location:    s.Location,
-					Capacity:    s.Capacity,
-					BookedCount: s.BookedCount,
-					Attendees:   attendees,
-					IsFull:      s.IsFull,
-					IsEmpty:     s.IsEmpty,
-					IsPast:      time.Now().After(s.EndDate),
+					ID:             s.ID,
+					TimeDisplay:    s.TimeDisplay,
+					EndTimeDisplay: s.EndTimeDisplay,
+					CourseName:     s.CourseName,
+					Location:       s.Location,
+					Capacity:       s.Capacity,
+					BookedCount:    s.BookedCount,
+					Attendees:      attendees,
+					IsFull:         s.IsFull,
+					IsEmpty:        s.IsEmpty,
+					IsPast:         time.Now().After(s.EndDate),
 				})
 			}
 			days = append(days, &booking_v2.DayData{

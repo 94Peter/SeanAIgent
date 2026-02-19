@@ -811,6 +811,9 @@
   .border-\[\#FFD700\] {
     border-color: #FFD700;
   }
+  .border-\[\#FFD700\]\/30 {
+    border-color: color-mix(in oklab, #FFD700 30%, transparent);
+  }
   .border-border {
     border-color: var(--border);
   }
