@@ -31,7 +31,7 @@ templ Layout(content templ.Component, liffId string, ogMeta *OgMeta) {
         <title>{ i18n.T(ctx, "layout.title") }</title>
         <script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.7/dist/htmx.min.js"></script>
-        <link rel="stylesheet" href="/assets/css/output.css">
+        <link rel="stylesheet" href="/assets/css/output.css?v=2">
         @datepicker.Script()
         @calendar.Script()
         @popover.Script()
