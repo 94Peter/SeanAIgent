@@ -54,6 +54,7 @@ type MyBookingItem struct {
 }
 
 type StatsSummary struct {
+	TotalUpcoming int `json:"total_upcoming"`
 	TotalSessions int `json:"total_sessions"`
 	TotalLeave    int `json:"total_leave"`
 	Children      []*ChildStat `json:"children"`
@@ -61,6 +62,7 @@ type StatsSummary struct {
 
 type ChildStat struct {
 	Name      string `json:"name"`
+	Upcoming  int `json:"upcoming"`
 	Completed int `json:"completed"`
 	Leave     int 	`json:"leave"`
 	Absent    int `json:"absent"`
@@ -184,6 +186,7 @@ templ StickyHeader(stats *StatsSummary) {
 					<h2 id="current-month-title" class="text-xl font-bold text-[#FFD700] leading-none mb-1">載入中...</h2>
 					<div class="flex items-baseline gap-2 text-xs text-[#8E8E93]">
 						<span id="stats-label" class="font-medium">90天統計:</span>
+						<span id="total-upcoming" class="text-[#60A5FA] font-bold text-sm">{ fmt.Sprintf("%d", stats.TotalUpcoming) } 預約</span>
 						<span id="total-sessions" class="text-white font-bold text-sm">{ fmt.Sprintf("%d", stats.TotalSessions) } 堂</span>
 						<span>(請假 <span id="total-leave">{ fmt.Sprintf("%d", stats.TotalLeave) }</span>)</span>
 					</div>
@@ -200,6 +203,7 @@ templ StickyHeader(stats *StatsSummary) {
 					<thead>
 						<tr class="text-[#8E8E93] border-b border-[#27272A]">
 							<th class="pb-2 text-left font-medium">姓名</th>
+							<th class="pb-2 font-medium">預約</th>
 							<th class="pb-2 font-medium">上課</th><th class="pb-2 font-medium">請假</th><th class="pb-2 font-medium">缺席</th><th class="pb-2 font-medium">週均</th>
 						</tr>
 					</thead>
@@ -207,6 +211,7 @@ templ StickyHeader(stats *StatsSummary) {
 						for _, child := range stats.Children {
 							<tr class="border-b border-[#27272A]/50 last:border-0">
 								<td class="py-2 text-left">{ child.Name }</td>
+								<td class="py-2 text-[#60A5FA]">{ fmt.Sprintf("%d", child.Upcoming) }</td>
 								<td class="py-2 text-[#34D399]">{ fmt.Sprintf("%d", child.Completed) }</td>
 								<td class="py-2 text-[#8E8E93]">{ fmt.Sprintf("%d", child.Leave) }</td>
 								<td class={ "py-2 " + cond(child.Absent > 0, "text-[#F87171]", "text-[#8E8E93]") }>{ fmt.Sprintf("%d", child.Absent) }</td>
@@ -411,7 +416,10 @@ templ Script(liffId string) {
 			try {
 				const stats = await fetchApi("/api/v2/calendar/stats?year=" + y + "&month=" + m);
 				const body = document.getElementById('stats-children-body');
-				if (body) body.innerHTML = stats.children.map(c => ("<tr class=\"border-b border-[#27272A]/50 last:border-0\"><td class=\"py-2 text-left\">" + c.name + "<\/td><td class=\"py-2 text-[#34D399]\">" + c.completed + "<\/td><td class=\"py-2 text-[#8E8E93]\">" + c.leave + "<\/td><td class=\"py-2 " + (c.absent > 0 ? 'text-[#F87171]' : 'text-[#8E8E93]') + "\">" + c.absent + "<\/td><td class=\"py-2 text-[#8E8E93]\">" + c.avg_week.toFixed(1) + "<\/td><\/tr>")).join('');
+				if (body) body.innerHTML = stats.children.map(c => ("<tr class=\"border-b border-[#27272A]/50 last:border-0\"><td class=\"py-2 text-left\">" + c.name + "<\/td><td class=\"py-2 text-[#60A5FA]\">" + c.upcoming + "<\/td><td class=\"py-2 text-[#34D399]\">" + c.completed + "<\/td><td class=\"py-2 text-[#8E8E93]\">" + c.leave + "<\/td><td class=\"py-2 " + (c.absent > 0 ? 'text-[#F87171]' : 'text-[#8E8E93]') + "\">" + c.absent + "<\/td><td class=\"py-2 text-[#8E8E93]\">" + c.avg_week.toFixed(1) + "<\/td><\/tr>")).join('');
+				const tu = document.getElementById('total-upcoming'); if (tu) tu.innerText = stats.total_upcoming + " 預約";
+				const ts = document.getElementById('total-sessions'); if (ts) ts.innerText = stats.total_sessions + " 堂";
+				const tl = document.getElementById('total-leave'); if (tl) tl.innerText = stats.total_leave;
 			} catch (e) { console.error(e); }
 		}
 
