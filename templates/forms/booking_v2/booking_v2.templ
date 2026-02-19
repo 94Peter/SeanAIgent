@@ -20,13 +20,13 @@ func getStatusClasses(status string) string {
 	case "Booked":
 		return "bg-[#60A5FA] text-white border-transparent"
 	case "Leave":
-		return "border border-[#F87171] text-[#F87171] bg-transparent"
+		return "bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/30"
 	case "CheckedIn":
-		return "text-[#34D399] border-transparent bg-transparent"
+		return "bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30"
 	case "Absent":
-		return "text-[#F87171] border-transparent bg-transparent"
+		return "bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/30"
 	default:
-		return "text-[#8E8E93] border-transparent bg-transparent"
+		return "bg-[#3F3F46]/10 text-[#A1A1AA] border border-[#3F3F46]/30"
 	}
 }
 
@@ -116,11 +116,9 @@ const (
 
 templ AttendeeTag(p *Attendee, isMini bool) {
 	if isMini {
-		if p.Status == "Booked" || p.Status == "Leave" {
-			<span class={ "text-[9px] px-1.5 py-0.5 rounded-[4px] truncate " + getStatusClasses(p.Status) }>
-				{ p.Name }
-			</span>
-		}
+		<span class={ "text-[9px] px-1.5 py-0.5 rounded-[4px] truncate " + getStatusClasses(p.Status) }>
+			{ p.Name }
+		</span>
 	} else {
 		<button 
 			class={ "text-xs px-2 py-1 rounded transition-colors " + getStatusClasses(p.Status) }
@@ -368,13 +366,18 @@ templ Script(liffId string) {
 		};
 
 		const getStatusClasses = (s) => {
-			const m = { 'Booked': 'bg-[#60A5FA] text-white border-transparent', 'Leave': 'border border-[#F87171] text-[#F87171] bg-transparent', 'CheckedIn': 'text-[#34D399] border-transparent bg-transparent', 'Absent': 'text-[#F87171] border-transparent bg-transparent' };
-			return m[s] || 'text-[#8E8E93] border-transparent bg-transparent';
+			const m = {
+				'Booked': 'bg-[#60A5FA] text-white border-transparent',
+				'Leave': 'bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/30',
+				'CheckedIn': 'bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30',
+				'Absent': 'bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/30'
+			};
+			return m[s] || 'bg-[#3F3F46]/10 text-[#A1A1AA] border border-[#3F3F46]/30';
 		};
 
 		const jsRenderTag = (p, mini) => {
 			const s = p.status || p.Status, n = p.name || p.Name, classes = "rounded transition-colors " + getStatusClasses(s);
-			if (mini) return ['Booked', 'Leave'].includes(s) ? ("<span class=\"text-[9px] px-1.5 py-0.5 truncate " + classes + "\">" + n + "<\/span>") : "";
+			if (mini) return ("<span class=\"text-[9px] px-1.5 py-0.5 truncate " + classes + "\">" + n + "<\/span>");
 			const suffix = s === 'Leave' ? ' (請假)' : (s === 'CheckedIn' ? ' (已簽到)' : (s === 'Absent' ? ' (缺席)' : ''));
 			return "<button class=\"text-xs px-2 py-1 " + classes + "\" onclick=\"handleMyBookingTagClick(this, '" + n + "', '" + s + "', '" + (p.booking_time || p.BookingTime) + "', '" + (p.booking_id || p.BookingID) + "')\">" + n + suffix + "<\/button>";
 		};

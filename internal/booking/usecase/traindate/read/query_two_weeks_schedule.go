@@ -123,7 +123,7 @@ func groupToWeeks(data []*entity.TrainDateHasUserApptState, start, end time.Time
 						Capacity:    td.Capacity,
 						BookedCount: td.Capacity - td.AvailableCapacity,
 						IsFull:      td.AvailableCapacity <= 0,
-						Attendees:   transformAttendees(td.UserAppointments),
+						Attendees:   transformAttendees(td.UserAppointments, td.EndDate),
 						EndDate:     td.EndDate,
 					})
 				}
@@ -147,12 +147,17 @@ func groupToWeeks(data []*entity.TrainDateHasUserApptState, start, end time.Time
 	return res
 }
 
-func transformAttendees(appts []entity.UserAppointment) []*AttendeeVO {
+func transformAttendees(appts []entity.UserAppointment, courseEndDate time.Time) []*AttendeeVO {
 	res := make([]*AttendeeVO, 0)
+	now := time.Now()
 	for _, a := range appts {
 		status := "Booked"
 		if a.IsOnLeave {
 			status = "Leave"
+		} else if a.IsCheckedIn {
+			status = "CheckedIn"
+		} else if now.After(courseEndDate) {
+			status = "Absent"
 		}
 		res = append(res, &AttendeeVO{
 			Name: a.ChildName, Status: status, BookingID: a.ID, BookingTime: a.CreatedAt,
