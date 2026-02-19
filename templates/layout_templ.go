@@ -97,7 +97,7 @@ func Layout(content templ.Component, liffId string, ogMeta *OgMeta) templ.Compon
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</title><script src=\"https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js\"></script><script src=\"https://cdn.jsdelivr.net/npm/htmx.org@2.0.7/dist/htmx.min.js\"></script><link rel=\"stylesheet\" href=\"/assets/css/output.css\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</title><script src=\"https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js\"></script><script src=\"https://cdn.jsdelivr.net/npm/htmx.org@2.0.7/dist/htmx.min.js\"></script><link rel=\"stylesheet\" href=\"/assets/css/output.css?v=2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
