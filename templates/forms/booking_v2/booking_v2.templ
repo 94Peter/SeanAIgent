@@ -165,7 +165,7 @@ templ ModalLayout(id string, title string, onClose string, fullHeight bool) {
 templ Page(model *BookingV2Model) {
 	<div class={ "w-full h-[100dvh] flex flex-col font-sans overflow-hidden " + BgBase + " " + TextWhite }>
 		@StickyHeader(model.Stats)
-		<div id="calendar-container" class="flex-grow overflow-y-auto snap-y snap-mandatory scroll-smooth pb-24 relative">
+		<div id="calendar-container" class="flex-grow overflow-y-auto snap-y snap-mandatory scroll-smooth pb-24 relative" style="overflow-anchor: none;">
 			<div id="sentinel-top" class="h-1 w-full shrink-0"></div>
 			for _, week := range model.Weeks {
 				@WeekRow(week, model.CurrentUser)
@@ -496,10 +496,35 @@ templ Script(liffId string) {
 			try {
 				const data = await fetchApi("/api/v2/calendar/weeks?start_date=" + ref + "&direction=" + dir);
 				if (data.weeks && data.weeks.length) {
-					const oldH = c.scrollHeight, oldT = c.scrollTop, html = data.weeks.map(w => renderWeekRow(w)).join(''), topS = document.getElementById('sentinel-top'), botS = document.getElementById('sentinel-bottom');
+					// Prep for prepend
+					const oldH = c.scrollHeight, oldT = c.scrollTop;
+					
+					// Temporarily disable smooth scrolling and snapping to prevent jumping during position adjustment
+					if (dir === 'prev') {
+						c.style.scrollBehavior = 'auto';
+						c.style.scrollSnapType = 'none';
+					}
+
+					const html = data.weeks.map(w => renderWeekRow(w)).join(''), topS = document.getElementById('sentinel-top'), botS = document.getElementById('sentinel-bottom');
 					const temp = document.createElement('div'); temp.innerHTML = html; const nodes = Array.from(temp.children);
-					if (dir === 'next') { nodes.forEach(n => c.insertBefore(n, botS)); lastLoadedDate = data.weeks[data.weeks.length-1].days[6].full_date; }
-					else { nodes.reverse().forEach(n => c.insertBefore(n, topS.nextSibling)); c.scrollTop = c.scrollHeight - oldH + oldT; firstLoadedDate = data.weeks[0].days[0].full_date; }
+					
+					if (dir === 'next') { 
+						nodes.forEach(n => c.insertBefore(n, botS)); 
+						lastLoadedDate = data.weeks[data.weeks.length-1].days[6].full_date; 
+					} else { 
+						nodes.reverse().forEach(n => c.insertBefore(n, topS.nextSibling)); 
+						// Immediately adjust scroll position to stay at the same content
+						c.scrollTop = c.scrollHeight - oldH + oldT;
+						firstLoadedDate = data.weeks[0].days[0].full_date; 
+					}
+
+					// Restore styles after adjustment
+					if (dir === 'prev') {
+						requestAnimationFrame(() => {
+							c.style.scrollBehavior = '';
+							c.style.scrollSnapType = '';
+						});
+					}
 				} else dir === 'next' ? (isEndBottom = true, alert("最多只能查詢半年內")) : (isEndTop = true, alert("最多只能查詢三個月前"));
 			} catch (e) { console.error(e); }
 			finally { updateHeaderTitle(); setTimeout(() => { isLoading = false; checkSentinels(); }, 500); }
