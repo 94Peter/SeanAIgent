@@ -110,6 +110,7 @@ type Attendee struct {
 	Status      string    `json:"status"` // "Booked", "Leave", "CheckedIn", "Absent"
 	BookingTime time.Time `json:"booking_time"`
 	BookingID   string    `json:"booking_id"`
+	SlotID      string    `json:"slot_id"`
 }
 
 // --- Colors ---
@@ -171,7 +172,7 @@ func AttendeeTag(p *Attendee, isMini bool) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(p.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 123, Col: 11}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 124, Col: 11}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -204,7 +205,7 @@ func AttendeeTag(p *Attendee, isMini bool) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, templ.Attributes{"onclick": fmt.Sprintf("handleMyBookingTagClick(this, '%s', '%s', '%s', '%s')", p.Name, p.Status, p.BookingTime.Format(time.RFC3339), p.BookingID)})
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, templ.Attributes{"onclick": fmt.Sprintf("handleMyBookingTagClick(this, '%s', '%s', '%s', '%s', '%s')", p.Name, p.Status, p.BookingTime.Format(time.RFC3339), p.BookingID, p.SlotID)})
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -215,7 +216,7 @@ func AttendeeTag(p *Attendee, isMini bool) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(p.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 130, Col: 11}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 131, Col: 11}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -278,7 +279,7 @@ func ModalLayout(id string, title string, onClose string, fullHeight bool) templ
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 144, Col: 9}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 145, Col: 9}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -321,7 +322,7 @@ func ModalLayout(id string, title string, onClose string, fullHeight bool) templ
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 152, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 153, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -465,7 +466,7 @@ func StickyHeader(stats *StatsSummary) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", stats.TotalUpcoming))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 189, Col: 113}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 190, Col: 113}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -478,7 +479,7 @@ func StickyHeader(stats *StatsSummary) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", stats.TotalSessions))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 190, Col: 109}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 191, Col: 109}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -491,7 +492,7 @@ func StickyHeader(stats *StatsSummary) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", stats.TotalLeave))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 191, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 192, Col: 80}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -509,7 +510,7 @@ func StickyHeader(stats *StatsSummary) templ.Component {
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(child.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 213, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 214, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {
@@ -522,7 +523,7 @@ func StickyHeader(stats *StatsSummary) templ.Component {
 			var templ_7745c5c3_Var21 string
 			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", child.Upcoming))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 214, Col: 75}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 215, Col: 75}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 			if templ_7745c5c3_Err != nil {
@@ -535,7 +536,7 @@ func StickyHeader(stats *StatsSummary) templ.Component {
 			var templ_7745c5c3_Var22 string
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", child.Completed))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 215, Col: 76}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 216, Col: 76}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 			if templ_7745c5c3_Err != nil {
@@ -548,7 +549,7 @@ func StickyHeader(stats *StatsSummary) templ.Component {
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", child.Leave))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 216, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 217, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {
@@ -583,7 +584,7 @@ func StickyHeader(stats *StatsSummary) templ.Component {
 			var templ_7745c5c3_Var26 string
 			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", child.Absent))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 217, Col: 124}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 218, Col: 124}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 			if templ_7745c5c3_Err != nil {
@@ -596,7 +597,7 @@ func StickyHeader(stats *StatsSummary) templ.Component {
 			var templ_7745c5c3_Var27 string
 			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.1f", child.AvgWeek))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 218, Col: 76}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 219, Col: 76}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 			if templ_7745c5c3_Err != nil {
@@ -643,7 +644,7 @@ func WeekRow(week *WeekData, user *UserContext) templ.Component {
 		var templ_7745c5c3_Var29 string
 		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(week.ID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 229, Col: 96}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 230, Col: 96}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 		if templ_7745c5c3_Err != nil {
@@ -661,7 +662,7 @@ func WeekRow(week *WeekData, user *UserContext) templ.Component {
 			var templ_7745c5c3_Var30 string
 			templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(day.FullDate)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 232, Col: 88}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 233, Col: 88}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 			if templ_7745c5c3_Err != nil {
@@ -696,7 +697,7 @@ func WeekRow(week *WeekData, user *UserContext) templ.Component {
 			var templ_7745c5c3_Var33 string
 			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(day.DayOfWeek)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 234, Col: 66}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 235, Col: 66}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 			if templ_7745c5c3_Err != nil {
@@ -709,7 +710,7 @@ func WeekRow(week *WeekData, user *UserContext) templ.Component {
 			var templ_7745c5c3_Var34 string
 			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(day.DateDisplay)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 235, Col: 68}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 236, Col: 68}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 			if templ_7745c5c3_Err != nil {
@@ -772,20 +773,33 @@ func CourseCapsule(slot *SlotData, user *UserContext) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "<button class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "<button id=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var37 string
-		templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var36).String())
+		templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs("slot-" + slot.ID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 1, Col: 0}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 258, Col: 24}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "\" class=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var38 string
+		templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var36).String())
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 1, Col: 0}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -802,33 +816,70 @@ func CourseCapsule(slot *SlotData, user *UserContext) templ.Component {
 				}
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "><div class=\"flex flex-col leading-tight\"><span class=\"text-xs text-[#8E8E93] font-mono\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, ">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var38 string
-		templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(slot.TimeDisplay)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 267, Col: 68}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
+		templ_7745c5c3_Err = SlotContent(slot).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "</span> <span class=\"text-xs font-bold text-white break-all leading-tight line-clamp-3 overflow-hidden\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "</button>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var39 string
-		templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(slot.CourseName)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 268, Col: 116}
+		return nil
+	})
+}
+
+func SlotContent(slot *SlotData) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var39 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var39 == nil {
+			templ_7745c5c3_Var39 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "<div class=\"flex flex-col leading-tight\"><span class=\"text-xs text-[#8E8E93] font-mono\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "</span></div><div class=\"flex flex-col gap-1 mt-1\">")
+		var templ_7745c5c3_Var40 string
+		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(slot.TimeDisplay)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 274, Col: 67}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "</span> <span class=\"text-xs font-bold text-white break-all leading-tight line-clamp-3 overflow-hidden\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var41 string
+		templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(slot.CourseName)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 275, Col: 115}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "</span></div><div class=\"flex flex-col gap-1 mt-1\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -838,7 +889,7 @@ func CourseCapsule(slot *SlotData, user *UserContext) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "</div></button>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -862,13 +913,13 @@ func FixedFABs(user *UserContext) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var40 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var40 == nil {
-			templ_7745c5c3_Var40 = templ.NopComponent
+		templ_7745c5c3_Var42 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var42 == nil {
+			templ_7745c5c3_Var42 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		if user != nil && user.UserID != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "<div class=\"fixed bottom-6 left-4 right-4 flex justify-between items-end pointer-events-none z-50\"><button onclick=\"openMyBookings()\" class=\"pointer-events-auto bg-[#1C1C1E] text-white border border-[#3A3A3C] shadow-lg rounded-full px-5 py-3 font-semibold text-sm flex items-center gap-2 active:bg-[#2C2C2E] transition-colors\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2\"></path><circle cx=\"12\" cy=\"7\" r=\"4\"></circle></svg> 我的預約</button> <button onclick=\"shareBookingStatus()\" class=\"pointer-events-auto bg-[#06C755] text-white shadow-lg rounded-full px-5 py-3 font-semibold text-sm flex items-center gap-2 active:bg-[#05B04B] transition-colors\"><span>分享預約</span> <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"18\" cy=\"5\" r=\"3\"></circle><circle cx=\"6\" cy=\"12\" r=\"3\"></circle><circle cx=\"18\" cy=\"19\" r=\"3\"></circle><line x1=\"8.59\" y1=\"13.51\" x2=\"15.42\" y2=\"17.49\"></line><line x1=\"15.41\" y1=\"6.51\" x2=\"8.59\" y2=\"10.49\"></line></svg></button></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "<div class=\"fixed bottom-6 left-4 right-4 flex justify-between items-end pointer-events-none z-50\"><button onclick=\"openMyBookings()\" class=\"pointer-events-auto bg-[#1C1C1E] text-white border border-[#3A3A3C] shadow-lg rounded-full px-5 py-3 font-semibold text-sm flex items-center gap-2 active:bg-[#2C2C2E] transition-colors\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2\"></path><circle cx=\"12\" cy=\"7\" r=\"4\"></circle></svg> 我的預約</button> <button onclick=\"shareBookingStatus()\" class=\"pointer-events-auto bg-[#06C755] text-white shadow-lg rounded-full px-5 py-3 font-semibold text-sm flex items-center gap-2 active:bg-[#05B04B] transition-colors\"><span>分享預約</span> <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"18\" cy=\"5\" r=\"3\"></circle><circle cx=\"6\" cy=\"12\" r=\"3\"></circle><circle cx=\"18\" cy=\"19\" r=\"3\"></circle><line x1=\"8.59\" y1=\"13.51\" x2=\"15.42\" y2=\"17.49\"></line><line x1=\"15.41\" y1=\"6.51\" x2=\"8.59\" y2=\"10.49\"></line></svg></button></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -893,12 +944,12 @@ func BookingPopup(user *UserContext) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var41 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var41 == nil {
-			templ_7745c5c3_Var41 = templ.NopComponent
+		templ_7745c5c3_Var43 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var43 == nil {
+			templ_7745c5c3_Var43 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Var42 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Var44 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 			if !templ_7745c5c3_IsBuffer {
@@ -910,12 +961,12 @@ func BookingPopup(user *UserContext) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "<div class=\"p-5\"><div class=\"mb-4\"><div class=\"flex justify-between items-start\"><h3 id=\"popup-course-title\" class=\"text-xl font-bold text-white line-clamp-1\">Course Title</h3><div class=\"text-xs font-bold px-2 py-1 rounded bg-[#27272A] text-[#FFD700] border border-[#FFD700]/30\"><span id=\"popup-booked-count\">0</span> / <span id=\"popup-capacity\">0</span></div></div><p id=\"popup-time-info\" class=\"text-sm text-[#8E8E93] mt-1\">Date Time Location</p><input type=\"hidden\" id=\"popup-slot-id\"></div><div id=\"booking-main-view\"><div class=\"mb-4\" id=\"booked-list-wrapper\"><label class=\"block text-xs font-medium text-[#8E8E93] mb-2 uppercase\">已加入名單 (點擊可管理)</label><div id=\"booked-participants-list\" class=\"flex flex-wrap gap-2 min-h-[32px]\"></div></div><div class=\"mb-4\"><label class=\"block text-xs font-medium text-[#8E8E93] mb-2 uppercase\">新增參與者</label><div class=\"flex flex-wrap gap-2 p-3 bg-[#000000] border border-[#3A3A3C] rounded-lg min-h-[50px] items-center\" id=\"smart-input-container\"><input type=\"text\" id=\"smart-input\" class=\"bg-transparent border-none outline-none text-white text-base min-w-[100px] flex-grow placeholder-[#525252]\" placeholder=\"輸入名字...\" autocomplete=\"off\"></div></div><div class=\"mb-6\"><label class=\"block text-xs font-medium text-[#8E8E93] mb-2\">快速選擇</label><div class=\"flex flex-wrap gap-2\" id=\"frequent-names-list\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "<div class=\"p-5\"><div class=\"mb-4\"><div class=\"flex justify-between items-start\"><h3 id=\"popup-course-title\" class=\"text-xl font-bold text-white line-clamp-1\">Course Title</h3><div class=\"text-xs font-bold px-2 py-1 rounded bg-[#27272A] text-[#FFD700] border border-[#FFD700]/30\"><span id=\"popup-booked-count\">0</span> / <span id=\"popup-capacity\">0</span></div></div><p id=\"popup-time-info\" class=\"text-sm text-[#8E8E93] mt-1\">Date Time Location</p><input type=\"hidden\" id=\"popup-slot-id\"></div><div id=\"booking-main-view\"><div class=\"mb-4\" id=\"booked-list-wrapper\"><label class=\"block text-xs font-medium text-[#8E8E93] mb-2 uppercase\">已加入名單 (點擊可管理)</label><div id=\"booked-participants-list\" class=\"flex flex-wrap gap-2 min-h-[32px]\"></div></div><div class=\"mb-4\"><label class=\"block text-xs font-medium text-[#8E8E93] mb-2 uppercase\">新增參與者</label><div class=\"flex flex-wrap gap-2 p-3 bg-[#000000] border border-[#3A3A3C] rounded-lg min-h-[50px] items-center\" id=\"smart-input-container\"><input type=\"text\" id=\"smart-input\" class=\"bg-transparent border-none outline-none text-white text-base min-w-[100px] flex-grow placeholder-[#525252]\" placeholder=\"輸入名字...\" autocomplete=\"off\"></div></div><div class=\"mb-6\"><label class=\"block text-xs font-medium text-[#8E8E93] mb-2\">快速選擇</label><div class=\"flex flex-wrap gap-2\" id=\"frequent-names-list\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			for _, name := range user.FrequentChildren {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "<button")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "<button")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -923,25 +974,25 @@ func BookingPopup(user *UserContext) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, " class=\"px-3 py-1.5 rounded-full bg-[#27272A] text-white text-sm border border-[#3A3A3C] hover:bg-[#3A3A3C]\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, " class=\"px-3 py-1.5 rounded-full bg-[#27272A] text-white text-sm border border-[#3A3A3C] hover:bg-[#3A3A3C]\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var43 string
-				templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(name)
+				var templ_7745c5c3_Var45 string
+				templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 321, Col: 204}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 327, Col: 204}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "</button>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "</button>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "</div></div><button onclick=\"submitBooking()\" class=\"w-full bg-[#FFD700] text-black font-bold py-3 rounded-lg text-base hover:bg-[#E6C200] transition-colors\">完成</button></div><div id=\"booking-leave-view\" class=\"hidden\"><form id=\"leave-request-form\" onsubmit=\"submitLeaveRequest(event)\"><input type=\"hidden\" id=\"leave-booking-id\" name=\"bookingId\"><p class=\"text-white text-lg font-bold mb-4\"><span id=\"leave-student-name\" class=\"text-[#FFD700]\"></span> 要請假</p><textarea id=\"leaveReason\" name=\"reason\" rows=\"4\" class=\"w-full bg-[#000000] border border-[#3A3A3C] rounded-lg p-3 text-white text-sm mb-4 focus:border-[#FFD700] outline-none transition-colors resize-none\" placeholder=\"請輸入請假原因...\" required></textarea><div class=\"flex gap-3\"><button type=\"button\" onclick=\"cancelLeaveRequest()\" class=\"flex-1 px-4 py-2.5 rounded-lg border border-[#3A3A3C] text-white text-sm font-medium\">取消</button><button type=\"submit\" class=\"flex-1 px-4 py-2.5 rounded-lg bg-[#FFD700] text-black text-sm font-bold\">提交申請</button></div></form></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "</div></div><button onclick=\"submitBooking()\" class=\"w-full bg-[#FFD700] text-black font-bold py-3 rounded-lg text-base hover:bg-[#E6C200] transition-colors\">完成</button></div><div id=\"booking-leave-view\" class=\"hidden\"><form id=\"leave-request-form\" onsubmit=\"submitLeaveRequest(event)\"><input type=\"hidden\" id=\"leave-booking-id\" name=\"bookingId\"><p class=\"text-white text-lg font-bold mb-4\"><span id=\"leave-student-name\" class=\"text-[#FFD700]\"></span> 要請假</p><textarea id=\"leaveReason\" name=\"reason\" rows=\"4\" class=\"w-full bg-[#000000] border border-[#3A3A3C] rounded-lg p-3 text-white text-sm mb-4 focus:border-[#FFD700] outline-none transition-colors resize-none\" placeholder=\"請輸入請假原因...\" required></textarea><div class=\"flex gap-3\"><button type=\"button\" onclick=\"cancelLeaveRequest()\" class=\"flex-1 px-4 py-2.5 rounded-lg border border-[#3A3A3C] text-white text-sm font-medium\">取消</button><button type=\"submit\" class=\"flex-1 px-4 py-2.5 rounded-lg bg-[#FFD700] text-black text-sm font-bold\">提交申請</button></div></form></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -949,13 +1000,13 @@ func BookingPopup(user *UserContext) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ModalLayout("booking-popup", "預約課程", "closeBookingPopup", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var42), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ModalLayout("booking-popup", "預約課程", "closeBookingPopup", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var44), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -979,12 +1030,12 @@ func MyBookingsModal(bookings []*MyBookingItem) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var44 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var44 == nil {
-			templ_7745c5c3_Var44 = templ.NopComponent
+		templ_7745c5c3_Var46 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var46 == nil {
+			templ_7745c5c3_Var46 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Var45 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Var47 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 			if !templ_7745c5c3_IsBuffer {
@@ -996,38 +1047,38 @@ func MyBookingsModal(bookings []*MyBookingItem) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "<div class=\"flex-grow overflow-y-auto p-4 space-y-4\"><div class=\"flex gap-4 border-b border-[#27272A] mb-4\"><button id=\"tab-upcoming\" onclick=\"switchMyBookingsTab('upcoming')\" class=\"pb-2 text-[#FFD700] border-b-2 border-[#FFD700] font-medium\">即將到來</button> <button id=\"tab-history\" onclick=\"switchMyBookingsTab('history')\" class=\"pb-2 text-[#8E8E93] font-medium hover:text-white transition-colors border-b-2 border-transparent\">歷史紀錄</button></div><div id=\"my-bookings-list\" class=\"space-y-3\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "<div class=\"flex-grow overflow-y-auto p-4 space-y-4\"><div class=\"flex gap-4 border-b border-[#27272A] mb-4\"><button id=\"tab-upcoming\" onclick=\"switchMyBookingsTab('upcoming')\" class=\"pb-2 text-[#FFD700] border-b-2 border-[#FFD700] font-medium\">即將到來</button> <button id=\"tab-history\" onclick=\"switchMyBookingsTab('history')\" class=\"pb-2 text-[#8E8E93] font-medium hover:text-white transition-colors border-b-2 border-transparent\">歷史紀錄</button></div><div id=\"my-bookings-list\" class=\"space-y-3\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			for _, item := range bookings {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "<div class=\"bg-[#000000] p-3 rounded-lg border border-[#27272A]\"><div class=\"mb-2\"><div class=\"text-white font-bold\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "<div class=\"bg-[#000000] p-3 rounded-lg border border-[#27272A]\"><div class=\"mb-2\"><div class=\"text-white font-bold\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var46 string
-				templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(item.DateDisplay)
+				var templ_7745c5c3_Var48 string
+				templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(item.DateDisplay)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 350, Col: 76}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 356, Col: 76}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "</div><div class=\"text-xs text-[#8E8E93]\">")
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var47 string
-				templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(item.Title)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 350, Col: 132}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "</div><div class=\"text-xs text-[#8E8E93]\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "</div></div><div class=\"flex flex-wrap gap-2\">")
+				var templ_7745c5c3_Var49 string
+				templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(item.Title)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 356, Col: 132}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "</div></div><div class=\"flex flex-wrap gap-2\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1037,12 +1088,12 @@ func MyBookingsModal(bookings []*MyBookingItem) templ.Component {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "</div></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "</div></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "</div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "</div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1052,7 +1103,7 @@ func MyBookingsModal(bookings []*MyBookingItem) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ModalLayout("my-bookings-modal", "我的預約", "closeMyBookings", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var45), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ModalLayout("my-bookings-modal", "我的預約", "closeMyBookings", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var47), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1076,77 +1127,77 @@ func InlineConfirmation(idPrefix string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var48 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var48 == nil {
-			templ_7745c5c3_Var48 = templ.NopComponent
+		templ_7745c5c3_Var50 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var50 == nil {
+			templ_7745c5c3_Var50 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "<div id=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var49 string
-		templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-panel")
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 365, Col: 38}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "\" class=\"absolute bottom-0 left-0 right-0 bg-[#2C2C2E] p-5 pt-6 rounded-t-2xl sm:rounded-xl z-[70] flex flex-col gap-4 transform transition-transform duration-300 translate-y-full border-t border-[#3A3A3C] shadow-2xl\"><div class=\"text-center\"><h4 id=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var50 string
-		templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-title")
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 366, Col: 63}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "\" class=\"text-white font-bold text-lg mb-1\">Confirm Action</h4><p id=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, "<div id=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var51 string
-		templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-msg")
+		templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-panel")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 366, Col: 160}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 371, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, "\" class=\"text-[#8E8E93] text-sm\">Are you sure?</p></div><div class=\"flex gap-3\"><button id=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "\" class=\"absolute bottom-0 left-0 right-0 bg-[#2C2C2E] p-5 pt-6 rounded-t-2xl sm:rounded-xl z-[70] flex flex-col gap-4 transform transition-transform duration-300 translate-y-full border-t border-[#3A3A3C] shadow-2xl\"><div class=\"text-center\"><h4 id=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var52 string
-		templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-cancel")
+		templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-title")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 367, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 372, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "\" class=\"flex-1 py-3 rounded-xl border border-[#3A3A3C] text-white font-bold text-sm\">取消</button><button id=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "\" class=\"text-white font-bold text-lg mb-1\">Confirm Action</h4><p id=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var53 string
-		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-ok")
+		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-msg")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 367, Col: 206}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 372, Col: 160}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "\" class=\"flex-1 py-3 rounded-xl bg-[#FFD700] text-black font-bold text-sm\">確定</button></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "\" class=\"text-[#8E8E93] text-sm\">Are you sure?</p></div><div class=\"flex gap-3\"><button id=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var54 string
+		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-cancel")
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 373, Col: 67}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "\" class=\"flex-1 py-3 rounded-xl border border-[#3A3A3C] text-white font-bold text-sm\">取消</button><button id=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var55 string
+		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-ok")
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 373, Col: 206}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "\" class=\"flex-1 py-3 rounded-xl bg-[#FFD700] text-black font-bold text-sm\">確定</button></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1170,12 +1221,12 @@ func Script(liffId string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var54 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var54 == nil {
-			templ_7745c5c3_Var54 = templ.NopComponent
+		templ_7745c5c3_Var56 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var56 == nil {
+			templ_7745c5c3_Var56 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "<script src=\"https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js\" defer></script><script>\n\t\tconst fetchApi = async (u, o = {}) => {\n\t\t\tconst res = await fetch(u, { ...o, headers: { 'Content-Type': 'application/json', ...o.headers } });\n\t\t\tconst d = await res.json(); if (!res.ok) throw new Error(d.message || 'API failed'); return d;\n\t\t};\n\n\t\tconst getStatusClasses = (s) => {\n\t\t\tconst m = {\n\t\t\t\t'Booked': 'bg-[#60A5FA] text-white border-transparent',\n\t\t\t\t'Leave': 'bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/30',\n\t\t\t\t'CheckedIn': 'bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30',\n\t\t\t\t'Absent': 'bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/30'\n\t\t\t};\n\t\t\treturn m[s] || 'bg-[#3F3F46]/10 text-[#A1A1AA] border border-[#3F3F46]/30';\n\t\t};\n\n\t\tconst jsRenderTag = (p, mini) => {\n\t\t\tconst s = p.status || p.Status, n = p.name || p.Name, classes = \"rounded transition-colors \" + getStatusClasses(s);\n\t\t\tif (mini) return (\"<span class=\\\"text-[9px] px-1.5 py-0.5 truncate \" + classes + \"\\\">\" + n + \"<\\/span>\");\n\t\t\tconst suffix = s === 'Leave' ? ' (請假)' : (s === 'CheckedIn' ? ' (已簽到)' : (s === 'Absent' ? ' (缺席)' : ''));\n\t\t\treturn \"<button class=\\\"text-xs px-2 py-1 \" + classes + \"\\\" onclick=\\\"handleMyBookingTagClick(this, '\" + n + \"', '\" + s + \"', '\" + (p.booking_time || p.BookingTime) + \"', '\" + (p.booking_id || p.BookingID) + \"')\\\">\" + n + suffix + \"<\\/button>\";\n\t\t};\n\n\t\tlet currentYear, currentMonth, isLoading = false, isEndTop = false, isEndBottom = false, firstLoadedDate, lastLoadedDate;\n\n\t\tconst updateHeaderTitle = () => {\n\t\t\tconst c = document.getElementById('calendar-container'), t = document.getElementById('current-month-title');\n\t\t\tif (!c || !t) return;\n\t\t\tconst weeks = c.querySelectorAll('[data-week-id]'), cTop = c.getBoundingClientRect().top;\n\t\t\tfor (let w of weeks) {\n\t\t\t\tif (w.getBoundingClientRect().bottom > cTop + 100) {\n\t\t\t\t\tconst d = w.querySelector('[data-date]');\n\t\t\t\t\tif (d) {\n\t\t\t\t\t\tconst parts = d.dataset.date.split('-'), y = parts[0], m = parts[1], mi = parseInt(m, 10);\n\t\t\t\t\t\tif (y !== currentYear || mi !== currentMonth) { currentYear = y; currentMonth = mi; t.innerText = y + \"年\" + mi + \"月\"; fetchMonthlyStats(y, mi); }\n\t\t\t\t\t}\n\t\t\t\t\tbreak;\n\t\t\t\t}\n\t\t\t}\n\t\t};\n\n\t\tasync function fetchMonthlyStats(y, m) {\n\t\t\tconst label = document.getElementById('stats-label'); if (label) label.innerText = y + \"年\" + m + \"月統計:\";\n\t\t\ttry {\n\t\t\t\tconst stats = await fetchApi(\"/api/v2/calendar/stats?year=\" + y + \"&month=\" + m);\n\t\t\t\tconst body = document.getElementById('stats-children-body');\n\t\t\t\tif (body) body.innerHTML = stats.children.map(c => (\"<tr class=\\\"border-b border-[#27272A]/50 last:border-0\\\"><td class=\\\"py-2 text-left\\\">\" + c.name + \"<\\/td><td class=\\\"py-2 text-[#60A5FA]\\\">\" + c.upcoming + \"<\\/td><td class=\\\"py-2 text-[#34D399]\\\">\" + c.completed + \"<\\/td><td class=\\\"py-2 text-[#8E8E93]\\\">\" + c.leave + \"<\\/td><td class=\\\"py-2 \" + (c.absent > 0 ? 'text-[#F87171]' : 'text-[#8E8E93]') + \"\\\">\" + c.absent + \"<\\/td><td class=\\\"py-2 text-[#8E8E93]\\\">\" + c.avg_week.toFixed(1) + \"<\\/td><\\/tr>\")).join('');\n\t\t\t\tconst tu = document.getElementById('total-upcoming'); if (tu) tu.innerText = stats.total_upcoming + \" 預約\";\n\t\t\t\tconst ts = document.getElementById('total-sessions'); if (ts) ts.innerText = stats.total_sessions + \" 堂\";\n\t\t\t\tconst tl = document.getElementById('total-leave'); if (tl) tl.innerText = stats.total_leave;\n\t\t\t} catch (e) { console.error(e); }\n\t\t}\n\n\t\tconst renderWeekRow = (w) => {\n\t\t\tconst days = w.days.map(d => {\n\t\t\t\tconst slots = d.slots.map(s => {\n\t\t\t\t\tif (s.is_empty) return (\"<div class=\\\"w-full rounded-[8px] p-2 border border-dashed border-[#3A3A3C] flex items-center justify-center text-left min-h-[40px] opacity-50 cursor-default\\\"><span class=\\\"text-xs text-[#8E8E93]\\\">[未排課]<\\/span><\\/div>\");\n\t\t\t\t\tconst tags = (s.attendees || []).map(p => jsRenderTag(p, true)).join('');\n\t\t\t\t\tconst state = s.is_past ? 'opacity-50 cursor-not-allowed' : 'active:scale-95';\n\t\t\t\t\tconst onclick = s.is_past ? '' : (\"onclick=\\\"openBookingPopup('\" + s.id + \"', '\" + s.time_display + \"', '\" + s.end_time_display + \"', '\" + s.course_name + \"', \" + s.booked_count + \", \" + s.capacity + \", \" + JSON.stringify(s.attendees).replace(/\\\"/g, '&quot;') + \")\\\"\");\n\t\t\t\t\treturn (\"<button class=\\\"w-full rounded-[8px] p-1.5 flex flex-col gap-1 text-left transition-transform bg-[#1C1C1E] \" + state + \"\\\" \" + onclick + \"><div class=\\\"flex flex-col leading-tight\\\"><span class=\\\"text-xs text-[#8E8E93] font-mono\\\">\" + s.time_display + \"<\\/span><span class=\\\"text-xs font-bold text-white break-all leading-tight line-clamp-3 overflow-hidden\\\">\" + s.course_name + \"<\\/span><\\/div><div class=\\\"flex flex-col gap-1 mt-1\\\">\" + tags + \"<\\/div><\\/button>\");\n\t\t\t\t}).join('');\n\t\t\t\treturn (\"<div class=\\\"flex flex-col items-center gap-2 min-h-[120px]\\\" data-date=\\\"\" + d.full_date + \"\\\"><div class=\\\"flex flex-col items-center justify-center w-10 h-10 rounded-full text-sm font-medium \" + (d.is_today ? \"bg-white text-black\" : \"text-[#8E8E93]\") + \"\\\"><span class=\\\"text-xs uppercase leading-none\\\">\" + d.day_of_week + \"<\\/span><span class=\\\"text-lg leading-none font-bold\\\">\" + d.date_display + \"<\\/span><\\/div><div class=\\\"w-full flex flex-col gap-2 px-0.5\\\">\" + slots + \"<\\/div><\\/div>\");\n\t\t\t}).join('');\n\t\t\treturn (\"<div class=\\\"snap-start pt-4 pb-2 border-b border-[#27272A] min-h-[50vh]\\\" data-week-id=\\\"\" + w.id + \"\\\"><div class=\\\"grid grid-cols-7 gap-[2px] px-[2px]\\\">\" + days + \"<\\/div><\\/div>\");\n\t\t};\n\n\t\tasync function loadWeeks(dir) {\n\t\t\tif (isLoading || (dir === 'prev' && isEndTop) || (dir === 'next' && isEndBottom)) return;\n\t\t\tconst c = document.getElementById('calendar-container'), ref = dir === 'next' ? lastLoadedDate : firstLoadedDate;\n\t\t\tif (!ref) return; isLoading = true;\n\t\t\ttry {\n\t\t\t\tconst data = await fetchApi(\"/api/v2/calendar/weeks?start_date=\" + ref + \"&direction=\" + dir);\n\t\t\t\tif (data.weeks && data.weeks.length) {\n\t\t\t\t\tconst oldH = c.scrollHeight, oldT = c.scrollTop, html = data.weeks.map(w => renderWeekRow(w)).join(''), topS = document.getElementById('sentinel-top'), botS = document.getElementById('sentinel-bottom');\n\t\t\t\t\tconst temp = document.createElement('div'); temp.innerHTML = html; const nodes = Array.from(temp.children);\n\t\t\t\t\tif (dir === 'next') { nodes.forEach(n => c.insertBefore(n, botS)); lastLoadedDate = data.weeks[data.weeks.length-1].days[6].full_date; }\n\t\t\t\t\telse { nodes.reverse().forEach(n => c.insertBefore(n, topS.nextSibling)); c.scrollTop = c.scrollHeight - oldH + oldT; firstLoadedDate = data.weeks[0].days[0].full_date; }\n\t\t\t\t} else dir === 'next' ? (isEndBottom = true, alert(\"最多只能查詢半年內\")) : (isEndTop = true, alert(\"最多只能查詢三個月前\"));\n\t\t\t} catch (e) { console.error(e); }\n\t\t\tfinally { updateHeaderTitle(); setTimeout(() => { isLoading = false; checkSentinels(); }, 500); }\n\t\t}\n\n\t\tconst checkSentinels = () => {\n\t\t\tconst c = document.getElementById('calendar-container'), cRect = c.getBoundingClientRect();\n\t\t\tconst isV = el => { if (!el) return false; const r = el.getBoundingClientRect(); return r.bottom >= cRect.top - 10 && r.top <= cRect.bottom + 10; };\n\t\t\tif (!isLoading) {\n\t\t\t\tif (!isEndBottom && isV(document.getElementById('sentinel-bottom'))) loadWeeks('next');\n\t\t\t\telse if (!isEndTop && isV(document.getElementById('sentinel-top'))) loadWeeks('prev');\n\t\t\t}\n\t\t};\n\n\t\tdocument.addEventListener('DOMContentLoaded', () => {\n\t\t\tconst days = document.querySelectorAll('[data-date]');\n\t\t\tif (days.length) { firstLoadedDate = days[0].dataset.date; lastLoadedDate = days[days.length-1].dataset.date; }\n\t\t\tconst c = document.getElementById('calendar-container'), today = c.querySelector('.bg-white.text-black');\n\t\t\tif (today) today.parentElement.scrollIntoView({ block: 'center' });\n\t\t\tc.addEventListener('scroll', () => { updateHeaderTitle(); checkSentinels(); });\n\t\t\tupdateHeaderTitle();\n\t\t});\n\n\t\tfunction openBookingPopup(id, time, endTime, title, bookedCount, capacity, attendees) {\n\t\t\tdocument.getElementById('popup-course-title').innerText = title; \n\t\t\tdocument.getElementById('popup-time-info').innerText = time + ' ~ ' + endTime; \n\t\t\tdocument.getElementById('popup-slot-id').value = id;\n\t\t\tdocument.getElementById('popup-booked-count').innerText = bookedCount;\n\t\t\tdocument.getElementById('popup-capacity').innerText = capacity;\n\t\t\tconst bookedList = document.getElementById('booked-participants-list'), draftC = document.getElementById('smart-input-container'), input = document.getElementById('smart-input');\n\t\t\tbookedList.innerHTML = ''; input.value = ''; Array.from(draftC.children).forEach(c => c !== input && c.remove());\n\t\t\tif (attendees && attendees.length) { document.getElementById('booked-list-wrapper').classList.remove('hidden'); attendees.forEach(p => addBookedTag(p.name || p.Name, p.status || p.Status, p.booking_time || p.BookingTime, p.booking_id || p.BookingID)); }\n\t\t\telse document.getElementById('booked-list-wrapper').classList.add('hidden');\n\t\t\tdocument.getElementById('booking-popup').classList.remove('hidden');\n\t\t}\n\n\t\tfunction closeBookingPopup() { document.getElementById('booking-popup').classList.add('hidden'); document.getElementById('booking-leave-view').classList.add('hidden'); document.getElementById('booking-main-view').classList.remove('hidden'); }\n\t\tfunction openMyBookings() { document.getElementById('my-bookings-modal').classList.remove('hidden'); switchMyBookingsTab('upcoming'); }\n\t\tfunction closeMyBookings() { document.getElementById('my-bookings-modal').classList.add('hidden'); }\n\n\t\tconst addBookedTag = (n, s, t, id) => {\n\t\t\tconst tag = document.createElement('div'); tag.className = \"flex items-center gap-1 px-3 py-1 rounded-full cursor-pointer transition-all \" + getStatusClasses(s);\n\t\t\ttag.innerHTML = (\"<span>\" + n + \"<\\/span>\"); tag.onclick = () => handleTagAction(\"booking\", n, s, t, id, (ns) => { if (ns === \"Remove\") tag.remove(); else tag.className = \"flex items-center gap-1 px-3 py-1 rounded-full cursor-pointer transition-all \" + getStatusClasses(ns); });\n\t\t\tdocument.getElementById('booked-participants-list').appendChild(tag); document.getElementById('booked-list-wrapper').classList.remove('hidden');\n\t\t};\n\n\t\tlet currentTab = 'upcoming';\n\t\tasync function switchMyBookingsTab(type) {\n\t\t\tcurrentTab = type; const u = document.getElementById('tab-upcoming'), h = document.getElementById('tab-history'), l = document.getElementById('my-bookings-list');\n\t\t\tconst active = \"pb-2 text-[#FFD700] border-b-2 border-[#FFD700] font-medium\", inactive = \"pb-2 text-[#8E8E93] font-medium hover:text-white transition-colors border-b-2 border-transparent\";\n\t\t\tu.className = type === 'upcoming' ? active : inactive; h.className = type === 'history' ? active : inactive;\n\t\t\tl.innerHTML = '<div class=\"text-center text-[#8E8E93] py-8\">載入中...<\\/div>';\n\t\t\ttry {\n\t\t\t\tconst data = await fetchApi(\"/api/v2/my-bookings?type=\" + type);\n\t\t\t\tl.innerHTML = data.items.length ? data.items.map(item => (\"<div class=\\\"bg-[#000000] p-3 rounded-lg border border-[#27272A]\\\"><div class=\\\"mb-2\\\"><div class=\\\"text-white font-bold\\\">\" + item.date_display + \"<\\/div><div class=\\\"text-xs text-[#8E8E93]\\\">\" + item.title + \"<\\/div><\\/div><div class=\\\"flex flex-wrap gap-2\\\">\" + item.attendees.map(p => jsRenderTag(p, false)).join('') + \"<\\/div><\\/div>\")).join('') : '<div class=\"text-center text-[#8E8E93] py-8\">無預約紀錄<\\/div>';\n\t\t\t} catch(e) { l.innerHTML = '<div class=\"text-center text-[#F87171] py-8\">載入失敗<\\/div>'; }\n\t\t}\n\n\t\tasync function handleMyBookingTagClick(btn, n, s, t, id) { handleTagAction(\"my-booking\", n, s, t, id, (ns) => { if (ns === \"Remove\") btn.remove(); else switchMyBookingsTab(currentTab); }); }\n\t\tasync function handleTagAction(prefix, n, s, t, id, callback) {\n\t\t\tif (s === \"Booked\") {\n\t\t\t\tconst diff = (new Date() - new Date(t)) / 36e5;\n\t\t\t\tif (diff < 24) { if (await showInlineConfirm(prefix, \"取消預約\", \"建立未滿 24 小時，確定取消？\")) { try { await fetchApi(\"/api/v2/bookings/\" + id, { method: 'DELETE' }); callback(\"Remove\"); } catch(e) { alert(e.message); } } }\n\t\t\t\telse { if (prefix === 'my-booking') closeMyBookings(); openLeaveRequest(id, n); }\n\t\t\t} else if (s === \"Leave\") { if (await showInlineConfirm(prefix, \"恢復預約\", \"取消 \" + n + \" 的請假？\")) { try { await fetchApi(\"/api/v2/bookings/\" + id + \"/leave\", { method: 'DELETE' }); callback(\"Booked\"); } catch(e) { alert(e.message); } } }\n\t\t}\n\n\t\tfunction showInlineConfirm(prefix, title, msg) {\n\t\t\treturn new Promise(resolve => {\n\t\t\t\tconst p = document.getElementById(prefix + '-confirm-panel'), t = document.getElementById(prefix + '-confirm-title'), m = document.getElementById(prefix + '-confirm-msg');\n\t\t\t\tconst c = document.getElementById(prefix + '-confirm-cancel'), o = document.getElementById(prefix + '-confirm-ok');\n\t\t\t\tt.innerText = title; m.innerText = msg; p.classList.remove('hidden'); requestAnimationFrame(() => p.classList.remove('translate-y-full'));\n\t\t\t\tconst done = r => { p.classList.add('translate-y-full'); setTimeout(() => p.classList.add('hidden'), 300); resolve(r); };\n\t\t\t\tc.onclick = () => done(false); o.onclick = () => done(true);\n\t\t\t});\n\t\t}\n\n\t\tfunction addDraftTag(name) {\n\t\t\tconst input = document.getElementById('smart-input'), container = document.getElementById('smart-input-container');\n\t\t\tif ([...container.querySelectorAll('[data-name]')].some(t => t.dataset.name === name)) return;\n\t\t\tconst tag = document.createElement('div'); tag.className = \"flex items-center gap-1 px-3 py-1 rounded-full bg-[#27272A] text-white text-sm cursor-pointer border border-[#3A3A3C]\";\n\t\t\ttag.innerHTML = (\"<span>\" + name + \"<\\/span><span class=\\\"text-[#8E8E93] text-xs ml-1\\\">×<\\/span>\");\n\t\t\ttag.dataset.name = name; tag.dataset.draft = \"true\"; tag.onclick = () => tag.remove();\n\t\t\tcontainer.insertBefore(tag, input);\n\t\t}\n\n\t\tconst submitBooking = async () => {\n\t\t\tconst id = document.getElementById('popup-slot-id').value, tags = document.querySelectorAll('[data-draft=\"true\"]'), names = [...tags].map(t => t.dataset.name);\n\t\t\tif (!names.length) { closeBookingPopup(); return; }\n\t\t\ttry {\n\t\t\t\tconst res = await fetchApi('/api/v2/bookings', { method: 'POST', body: JSON.stringify({ slot_id: id, student_names: names }) });\n\t\t\t\tres.new_bookings.forEach(b => addBookedTag(b.name, b.status, b.booking_time, b.booking_id));\n\t\t\t\ttags.forEach(t => t.remove()); alert(\"預約成功！\"); closeBookingPopup();\n\t\t\t} catch(e) { alert(e.message); }\n\t\t};\n\n\t\tfunction openLeaveRequest(id, name) { document.getElementById('leave-booking-id').value = id; document.getElementById('leave-student-name').innerText = name; document.getElementById('booking-main-view').classList.add('hidden'); document.getElementById('booking-leave-view').classList.remove('hidden'); }\n\t\tfunction cancelLeaveRequest() { document.getElementById('booking-leave-view').classList.add('hidden'); document.getElementById('booking-main-view').classList.remove('hidden'); }\n\t\tasync function submitLeaveRequest(e) { e.preventDefault(); try { await fetchApi(\"/api/v2/bookings/\" + document.getElementById('leave-booking-id').value + \"/leave\", { method: 'POST', body: JSON.stringify({ reason: document.getElementById('leaveReason').value }) }); alert(\"請假申請已送出\"); cancelLeaveRequest(); closeBookingPopup(); } catch(err) { alert(err.message); } }\n\t\tfunction shareBookingStatus() { if (liff.isInClient()) liff.sendMessages([{ type: 'text', text: \"預約成功！\" }]).then(() => liff.closeWindow()); else alert(\"請在 LINE 中執行\"); }\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 78, "<script src=\"https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js\" defer></script><script>\n\t\tconst fetchApi = async (u, o = {}) => {\n\t\t\tconst res = await fetch(u, { ...o, headers: { 'Content-Type': 'application/json', ...o.headers } });\n\t\t\tconst d = await res.json(); if (!res.ok) throw new Error(d.message || 'API failed'); return d;\n\t\t};\n\n\t\tconst getStatusClasses = (s) => {\n\t\t\tconst m = {\n\t\t\t\t'Booked': 'bg-[#60A5FA] text-white border-transparent',\n\t\t\t\t'Leave': 'bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/30',\n\t\t\t\t'CheckedIn': 'bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30',\n\t\t\t\t'Absent': 'bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/30'\n\t\t\t};\n\t\t\treturn m[s] || 'bg-[#3F3F46]/10 text-[#A1A1AA] border border-[#3F3F46]/30';\n\t\t};\n\n\t\tconst jsRenderTag = (p, mini) => {\n\t\t\tconst s = p.status || p.Status, n = p.name || p.Name, classes = \"rounded transition-colors \" + getStatusClasses(s);\n\t\t\tif (mini) return (\"<span class=\\\"text-[9px] px-1.5 py-0.5 truncate \" + classes + \"\\\">\" + n + \"<\\/span>\");\n\t\t\tconst suffix = s === 'Leave' ? ' (請假)' : (s === 'CheckedIn' ? ' (已簽到)' : (s === 'Absent' ? ' (缺席)' : ''));\n\t\t\tconst slotId = p.slot_id || p.SlotID;\n\t\t\treturn \"<button class=\\\"text-xs px-2 py-1 \" + classes + \"\\\" onclick=\\\"handleMyBookingTagClick(this, '\" + n + \"', '\" + s + \"', '\" + (p.booking_time || p.BookingTime) + \"', '\" + (p.booking_id || p.BookingID) + \"', '\" + slotId + \"')\\\">\" + n + suffix + \"<\\/button>\";\n\t\t};\n\n\t\tconst jsRenderSlotContent = (s) => {\n\t\t\tconst tags = (s.attendees || []).map(p => jsRenderTag(p, true)).join('');\n\t\t\treturn (\"<div class=\\\"flex flex-col leading-tight\\\"><span class=\\\"text-xs text-[#8E8E93] font-mono\\\">\" + s.time_display + \"<\\/span><span class=\\\"text-xs font-bold text-white break-all leading-tight line-clamp-3 overflow-hidden\\\">\" + s.course_name + \"<\\/span><\\/div><div class=\\\"flex flex-col gap-1 mt-1\\\">\" + tags + \"<\\/div>\");\n\t\t};\n\n\t\tasync function refreshSlot(slotId) {\n\t\t\tif (!slotId) return;\n\t\t\ttry {\n\t\t\t\tconst s = await fetchApi(\"/api/v2/calendar/slots/\" + slotId);\n\t\t\t\tconst btn = document.getElementById('slot-' + slotId);\n\t\t\t\tif (btn) {\n\t\t\t\t\tbtn.innerHTML = jsRenderSlotContent(s);\n\t\t\t\t\tbtn.setAttribute('onclick', \"openBookingPopup('\" + s.id + \"', '\" + s.time_display + \"', '\" + s.end_time_display + \"', '\" + s.course_name + \"', \" + s.booked_count + \", \" + s.capacity + \", \" + JSON.stringify(s.attendees).replace(/\\\"/g, '&quot;') + \")\");\n\t\t\t\t}\n\t\t\t} catch (e) { console.error(\"Refresh slot failed:\", e); }\n\t\t}\n\n\t\tfunction refreshStats() {\n\t\t\tif (currentYear && currentMonth) fetchMonthlyStats(currentYear, currentMonth);\n\t\t}\n\n\t\tlet currentYear, currentMonth, isLoading = false, isEndTop = false, isEndBottom = false, firstLoadedDate, lastLoadedDate;\n\n\t\tconst updateHeaderTitle = () => {\n\t\t\tconst c = document.getElementById('calendar-container'), t = document.getElementById('current-month-title');\n\t\t\tif (!c || !t) return;\n\t\t\tconst weeks = c.querySelectorAll('[data-week-id]'), cTop = c.getBoundingClientRect().top;\n\t\t\tfor (let w of weeks) {\n\t\t\t\tif (w.getBoundingClientRect().bottom > cTop + 100) {\n\t\t\t\t\tconst d = w.querySelector('[data-date]');\n\t\t\t\t\tif (d) {\n\t\t\t\t\t\tconst parts = d.dataset.date.split('-'), y = parts[0], m = parts[1], mi = parseInt(m, 10);\n\t\t\t\t\t\tif (y !== currentYear || mi !== currentMonth) { currentYear = y; currentMonth = mi; t.innerText = y + \"年\" + mi + \"月\"; fetchMonthlyStats(y, mi); }\n\t\t\t\t\t}\n\t\t\t\t\tbreak;\n\t\t\t\t}\n\t\t\t}\n\t\t};\n\n\t\tasync function fetchMonthlyStats(y, m) {\n\t\t\tconst label = document.getElementById('stats-label'); if (label) label.innerText = y + \"年\" + m + \"月統計:\";\n\t\t\ttry {\n\t\t\t\tconst stats = await fetchApi(\"/api/v2/calendar/stats?year=\" + y + \"&month=\" + m);\n\t\t\t\tconst body = document.getElementById('stats-children-body');\n\t\t\t\tif (body) body.innerHTML = stats.children.map(c => (\"<tr class=\\\"border-b border-[#27272A]/50 last:border-0\\\"><td class=\\\"py-2 text-left\\\">\" + c.name + \"<\\/td><td class=\\\"py-2 text-[#60A5FA]\\\">\" + c.upcoming + \"<\\/td><td class=\\\"py-2 text-[#34D399]\\\">\" + c.completed + \"<\\/td><td class=\\\"py-2 text-[#8E8E93]\\\">\" + c.leave + \"<\\/td><td class=\\\"py-2 \" + (c.absent > 0 ? 'text-[#F87171]' : 'text-[#8E8E93]') + \"\\\">\" + c.absent + \"<\\/td><td class=\\\"py-2 text-[#8E8E93]\\\">\" + c.avg_week.toFixed(1) + \"<\\/td><\\/tr>\")).join('');\n\t\t\t\tconst tu = document.getElementById('total-upcoming'); if (tu) tu.innerText = stats.total_upcoming + \" 預約\";\n\t\t\t\tconst ts = document.getElementById('total-sessions'); if (ts) ts.innerText = stats.total_sessions + \" 堂\";\n\t\t\t\tconst tl = document.getElementById('total-leave'); if (tl) tl.innerText = stats.total_leave;\n\t\t\t} catch (e) { console.error(e); }\n\t\t}\n\n\t\tconst renderWeekRow = (w) => {\n\t\t\tconst days = w.days.map(d => {\n\t\t\t\tconst slots = d.slots.map(s => {\n\t\t\t\t\tif (s.is_empty) return (\"<div class=\\\"w-full rounded-[8px] p-2 border border-dashed border-[#3A3A3C] flex items-center justify-center text-left min-h-[40px] opacity-50 cursor-default\\\"><span class=\\\"text-xs text-[#8E8E93]\\\">[未排課]<\\/span><\\/div>\");\n\t\t\t\t\tconst state = s.is_past ? 'opacity-50 cursor-not-allowed' : 'active:scale-95';\n\t\t\t\t\tconst onclick = s.is_past ? '' : (\"onclick=\\\"openBookingPopup('\" + s.id + \"', '\" + s.time_display + \"', '\" + s.end_time_display + \"', '\" + s.course_name + \"', \" + s.booked_count + \", \" + s.capacity + \", \" + JSON.stringify(s.attendees).replace(/\\\"/g, '&quot;') + \")\\\"\");\n\t\t\t\t\treturn (\"<button id=\\\"slot-\" + s.id + \"\\\" class=\\\"w-full rounded-[8px] p-1.5 flex flex-col gap-1 text-left transition-transform bg-[#1C1C1E] \" + state + \"\\\" \" + onclick + \">\" + jsRenderSlotContent(s) + \"<\\/button>\");\n\t\t\t\t}).join('');\n\t\t\t\treturn (\"<div class=\\\"flex flex-col items-center gap-2 min-h-[120px]\\\" data-date=\\\"\" + d.full_date + \"\\\"><div class=\\\"flex flex-col items-center justify-center w-10 h-10 rounded-full text-sm font-medium \" + (d.is_today ? \"bg-white text-black\" : \"text-[#8E8E93]\") + \"\\\"><span class=\\\"text-xs uppercase leading-none\\\">\" + d.day_of_week + \"<\\/span><span class=\\\"text-lg leading-none font-bold\\\">\" + d.date_display + \"<\\/span><\\/div><div class=\\\"w-full flex flex-col gap-2 px-0.5\\\">\" + slots + \"<\\/div><\\/div>\");\n\t\t\t}).join('');\n\t\t\treturn (\"<div class=\\\"snap-start pt-4 pb-2 border-b border-[#27272A] min-h-[50vh]\\\" data-week-id=\\\"\" + w.id + \"\\\"><div class=\\\"grid grid-cols-7 gap-[2px] px-[2px]\\\">\" + days + \"<\\/div><\\/div>\");\n\t\t};\n\n\t\tasync function loadWeeks(dir) {\n\t\t\tif (isLoading || (dir === 'prev' && isEndTop) || (dir === 'next' && isEndBottom)) return;\n\t\t\tconst c = document.getElementById('calendar-container'), ref = dir === 'next' ? lastLoadedDate : firstLoadedDate;\n\t\t\tif (!ref) return; isLoading = true;\n\t\t\ttry {\n\t\t\t\tconst data = await fetchApi(\"/api/v2/calendar/weeks?start_date=\" + ref + \"&direction=\" + dir);\n\t\t\t\tif (data.weeks && data.weeks.length) {\n\t\t\t\t\tconst oldH = c.scrollHeight, oldT = c.scrollTop, html = data.weeks.map(w => renderWeekRow(w)).join(''), topS = document.getElementById('sentinel-top'), botS = document.getElementById('sentinel-bottom');\n\t\t\t\t\tconst temp = document.createElement('div'); temp.innerHTML = html; const nodes = Array.from(temp.children);\n\t\t\t\t\tif (dir === 'next') { nodes.forEach(n => c.insertBefore(n, botS)); lastLoadedDate = data.weeks[data.weeks.length-1].days[6].full_date; }\n\t\t\t\t\telse { nodes.reverse().forEach(n => c.insertBefore(n, topS.nextSibling)); c.scrollTop = c.scrollHeight - oldH + oldT; firstLoadedDate = data.weeks[0].days[0].full_date; }\n\t\t\t\t} else dir === 'next' ? (isEndBottom = true, alert(\"最多只能查詢半年內\")) : (isEndTop = true, alert(\"最多只能查詢三個月前\"));\n\t\t\t} catch (e) { console.error(e); }\n\t\t\tfinally { updateHeaderTitle(); setTimeout(() => { isLoading = false; checkSentinels(); }, 500); }\n\t\t}\n\n\t\tconst checkSentinels = () => {\n\t\t\tconst c = document.getElementById('calendar-container'), cRect = c.getBoundingClientRect();\n\t\t\tconst isV = el => { if (!el) return false; const r = el.getBoundingClientRect(); return r.bottom >= cRect.top - 10 && r.top <= cRect.bottom + 10; };\n\t\t\tif (!isLoading) {\n\t\t\t\tif (!isEndBottom && isV(document.getElementById('sentinel-bottom'))) loadWeeks('next');\n\t\t\t\telse if (!isEndTop && isV(document.getElementById('sentinel-top'))) loadWeeks('prev');\n\t\t\t}\n\t\t};\n\n\t\tdocument.addEventListener('DOMContentLoaded', () => {\n\t\t\tconst days = document.querySelectorAll('[data-date]');\n\t\t\tif (days.length) { firstLoadedDate = days[0].dataset.date; lastLoadedDate = days[days.length-1].dataset.date; }\n\t\t\tconst c = document.getElementById('calendar-container'), today = c.querySelector('.bg-white.text-black');\n\t\t\tif (today) today.parentElement.scrollIntoView({ block: 'center' });\n\t\t\tc.addEventListener('scroll', () => { updateHeaderTitle(); checkSentinels(); });\n\t\t\tupdateHeaderTitle();\n\t\t});\n\n\t\tfunction openBookingPopup(id, time, endTime, title, bookedCount, capacity, attendees) {\n\t\t\tdocument.getElementById('popup-course-title').innerText = title; \n\t\t\tdocument.getElementById('popup-time-info').innerText = time + ' ~ ' + endTime; \n\t\t\tdocument.getElementById('popup-slot-id').value = id;\n\t\t\tdocument.getElementById('popup-booked-count').innerText = bookedCount;\n\t\t\tdocument.getElementById('popup-capacity').innerText = capacity;\n\t\t\tconst bookedList = document.getElementById('booked-participants-list'), draftC = document.getElementById('smart-input-container'), input = document.getElementById('smart-input');\n\t\t\tbookedList.innerHTML = ''; input.value = ''; Array.from(draftC.children).forEach(c => c !== input && c.remove());\n\t\t\tif (attendees && attendees.length) { document.getElementById('booked-list-wrapper').classList.remove('hidden'); attendees.forEach(p => addBookedTag(p.name || p.Name, p.status || p.Status, p.booking_time || p.BookingTime, p.booking_id || p.BookingID)); }\n\t\t\telse document.getElementById('booked-list-wrapper').classList.add('hidden');\n\t\t\tdocument.getElementById('booking-popup').classList.remove('hidden');\n\t\t}\n\n\t\tfunction closeBookingPopup() { document.getElementById('booking-popup').classList.add('hidden'); document.getElementById('booking-leave-view').classList.add('hidden'); document.getElementById('booking-main-view').classList.remove('hidden'); }\n\t\tfunction openMyBookings() { document.getElementById('my-bookings-modal').classList.remove('hidden'); switchMyBookingsTab('upcoming'); }\n\t\tfunction closeMyBookings() { document.getElementById('my-bookings-modal').classList.add('hidden'); }\n\n\t\tconst addBookedTag = (n, s, t, id) => {\n\t\t\tconst tag = document.createElement('div'); tag.className = \"flex items-center gap-1 px-3 py-1 rounded-full cursor-pointer transition-all \" + getStatusClasses(s);\n\t\t\ttag.innerHTML = (\"<span>\" + n + \"<\\/span>\"); tag.onclick = () => handleTagAction(\"booking\", n, s, t, id, (ns) => { if (ns === \"Remove\") tag.remove(); else tag.className = \"flex items-center gap-1 px-3 py-1 rounded-full cursor-pointer transition-all \" + getStatusClasses(ns); });\n\t\t\tdocument.getElementById('booked-participants-list').appendChild(tag); document.getElementById('booked-list-wrapper').classList.remove('hidden');\n\t\t};\n\n\t\tlet currentTab = 'upcoming';\n\t\tasync function switchMyBookingsTab(type) {\n\t\t\tcurrentTab = type; const u = document.getElementById('tab-upcoming'), h = document.getElementById('tab-history'), l = document.getElementById('my-bookings-list');\n\t\t\tconst active = \"pb-2 text-[#FFD700] border-b-2 border-[#FFD700] font-medium\", inactive = \"pb-2 text-[#8E8E93] font-medium hover:text-white transition-colors border-b-2 border-transparent\";\n\t\t\tu.className = type === 'upcoming' ? active : inactive; h.className = type === 'history' ? active : inactive;\n\t\t\tl.innerHTML = '<div class=\"text-center text-[#8E8E93] py-8\">載入中...<\\/div>';\n\t\t\ttry {\n\t\t\t\tconst data = await fetchApi(\"/api/v2/my-bookings?type=\" + type);\n\t\t\t\tl.innerHTML = data.items.length ? data.items.map(item => (\"<div class=\\\"bg-[#000000] p-3 rounded-lg border border-[#27272A]\\\"><div class=\\\"mb-2\\\"><div class=\\\"text-white font-bold\\\">\" + item.date_display + \"<\\/div><div class=\\\"text-xs text-[#8E8E93]\\\">\" + item.title + \"<\\/div><\\/div><div class=\\\"flex flex-wrap gap-2\\\">\" + item.attendees.map(p => jsRenderTag(p, false)).join('') + \"<\\/div><\\/div>\")).join('') : '<div class=\"text-center text-[#8E8E93] py-8\">無預約紀錄<\\/div>';\n\t\t\t} catch(e) { l.innerHTML = '<div class=\"text-center text-[#F87171] py-8\">載入失敗<\\/div>'; }\n\t\t}\n\n\t\tasync function handleMyBookingTagClick(btn, n, s, t, id, slotId) { handleTagAction(\"my-booking\", n, s, t, id, (ns) => { if (ns === \"Remove\") btn.remove(); else switchMyBookingsTab(currentTab); }, slotId); }\n\t\tasync function handleTagAction(prefix, n, s, t, id, callback, slotId) {\n\t\t\tconst currentSlotId = slotId || document.getElementById('popup-slot-id').value;\n\t\t\tif (s === \"Booked\") {\n\t\t\t\tconst diff = (new Date() - new Date(t)) / 36e5;\n\t\t\t\tif (diff < 24) { if (await showInlineConfirm(prefix, \"取消預約\", \"建立未滿 24 小時，確定取消？\")) { try { await fetchApi(\"/api/v2/bookings/\" + id, { method: 'DELETE' }); callback(\"Remove\"); refreshSlot(currentSlotId); refreshStats(); } catch(e) { alert(e.message); } } }\n\t\t\t\telse { if (prefix === 'my-booking') closeMyBookings(); openLeaveRequest(id, n); }\n\t\t\t} else if (s === \"Leave\") { if (await showInlineConfirm(prefix, \"恢復預約\", \"取消 \" + n + \" 的請假？\")) { try { await fetchApi(\"/api/v2/bookings/\" + id + \"/leave\", { method: 'DELETE' }); callback(\"Booked\"); refreshSlot(currentSlotId); refreshStats(); } catch(e) { alert(e.message); } } }\n\t\t}\n\n\t\tfunction showInlineConfirm(prefix, title, msg) {\n\t\t\treturn new Promise(resolve => {\n\t\t\t\tconst p = document.getElementById(prefix + '-confirm-panel'), t = document.getElementById(prefix + '-confirm-title'), m = document.getElementById(prefix + '-confirm-msg');\n\t\t\t\tconst c = document.getElementById(prefix + '-confirm-cancel'), o = document.getElementById(prefix + '-confirm-ok');\n\t\t\t\tt.innerText = title; m.innerText = msg; p.classList.remove('hidden'); requestAnimationFrame(() => p.classList.remove('translate-y-full'));\n\t\t\t\tconst done = r => { p.classList.add('translate-y-full'); setTimeout(() => p.classList.add('hidden'), 300); resolve(r); };\n\t\t\t\tc.onclick = () => done(false); o.onclick = () => done(true);\n\t\t\t});\n\t\t}\n\n\t\tfunction addDraftTag(name) {\n\t\t\tconst input = document.getElementById('smart-input'), container = document.getElementById('smart-input-container');\n\t\t\tif ([...container.querySelectorAll('[data-name]')].some(t => t.dataset.name === name)) return;\n\t\t\tconst tag = document.createElement('div'); tag.className = \"flex items-center gap-1 px-3 py-1 rounded-full bg-[#27272A] text-white text-sm cursor-pointer border border-[#3A3A3C]\";\n\t\t\ttag.innerHTML = (\"<span>\" + name + \"<\\/span><span class=\\\"text-[#8E8E93] text-xs ml-1\\\">×<\\/span>\");\n\t\t\ttag.dataset.name = name; tag.dataset.draft = \"true\"; tag.onclick = () => tag.remove();\n\t\t\tcontainer.insertBefore(tag, input);\n\t\t}\n\n\t\tconst submitBooking = async () => {\n\t\t\tconst id = document.getElementById('popup-slot-id').value, tags = document.querySelectorAll('[data-draft=\"true\"]'), names = [...tags].map(t => t.dataset.name);\n\t\t\tif (!names.length) { closeBookingPopup(); return; }\n\t\t\ttry {\n\t\t\t\tconst res = await fetchApi('/api/v2/bookings', { method: 'POST', body: JSON.stringify({ slot_id: id, student_names: names }) });\n\t\t\t\tres.new_bookings.forEach(b => addBookedTag(b.name, b.status, b.booking_time, b.booking_id));\n\t\t\t\ttags.forEach(t => t.remove()); alert(\"預約成功！\"); closeBookingPopup(); refreshSlot(id); refreshStats();\n\t\t\t} catch(e) { alert(e.message); }\n\t\t};\n\n\t\tfunction openLeaveRequest(id, name) { document.getElementById('leave-booking-id').value = id; document.getElementById('leave-student-name').innerText = name; document.getElementById('booking-main-view').classList.add('hidden'); document.getElementById('booking-leave-view').classList.remove('hidden'); }\n\t\tfunction cancelLeaveRequest() { document.getElementById('booking-leave-view').classList.add('hidden'); document.getElementById('booking-main-view').classList.remove('hidden'); }\n\t\tasync function submitLeaveRequest(e) { e.preventDefault(); const slotId = document.getElementById('popup-slot-id').value; try { await fetchApi(\"/api/v2/bookings/\" + document.getElementById('leave-booking-id').value + \"/leave\", { method: 'POST', body: JSON.stringify({ reason: document.getElementById('leaveReason').value }) }); alert(\"請假申請已送出\"); cancelLeaveRequest(); closeBookingPopup(); refreshSlot(slotId); refreshStats(); } catch(err) { alert(err.message); } }\n\t\tfunction shareBookingStatus() { if (liff.isInClient()) liff.sendMessages([{ type: 'text', text: \"預約成功！\" }]).then(() => liff.closeWindow()); else alert(\"請在 LINE 中執行\"); }\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

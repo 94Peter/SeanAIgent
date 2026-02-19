@@ -12,13 +12,15 @@ type ReqUserQueryTrainByID struct {
 	TrainDateID string
 }
 
+type UserQueryTrainByIDUseCase core.ReadUseCase[ReqUserQueryTrainByID, *entity.TrainDateHasUserApptState]
+
 type userQueryTrainByIDUseCase struct {
 	repo repository.TrainRepository
 }
 
 func NewUserQueryTrainByIDUseCase(
 	repo repository.TrainRepository,
-) core.ReadUseCase[ReqUserQueryTrainByID, *entity.TrainDateHasUserApptState] {
+) UserQueryTrainByIDUseCase {
 	return &userQueryTrainByIDUseCase{repo: repo}
 }
 

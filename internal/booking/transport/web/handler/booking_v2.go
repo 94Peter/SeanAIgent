@@ -27,6 +27,7 @@ func NewV2BookingUseCaseSet(registry *usecase.Registry) V2BookingUseCaseSet {
 		getUserMonthlyStatsUC:   registry.GetUserMonthlyStats,
 		queryTwoWeeksScheduleUC: registry.QueryTwoWeeksSchedule,
 		queryUserBookingsUC:     registry.QueryUserBookings,
+		userQueryTrainByIDUC:    registry.UserQueryTrainByID,
 	}
 }
 
@@ -36,6 +37,7 @@ type V2BookingUseCaseSet struct {
 	getUserMonthlyStatsUC   readstats.GetUserMonthlyStatsUseCase
 	queryTwoWeeksScheduleUC readtrain.QueryTwoWeeksScheduleUseCase
 	queryUserBookingsUC     readappt.QueryUserBookingsUseCase
+	userQueryTrainByIDUC    readtrain.UserQueryTrainByIDUseCase
 }
 
 func NewV2BookingApi(enableCSRF bool, bookingUseCaseSet V2BookingUseCaseSet) WebAPI {
@@ -64,6 +66,64 @@ func (api *v2BookingAPI) InitRouter(r ezapi.Router) {
 		r.GET("/api/v2/my-bookings", api.getMyBookingsV2)
 		r.GET("/api/v2/calendar/weeks", api.getCalendarWeeksV2)
 		r.GET("/api/v2/calendar/stats", api.getCalendarStatsV2)
+		r.GET("/api/v2/calendar/slots/:slotId", api.getSlotInfoV2)
+	})
+}
+
+func (api *v2BookingAPI) getSlotInfoV2(c *gin.Context) {
+	slotID := c.Param("slotId")
+	userID := getUserID(c)
+
+	trainDate, err := api.userQueryTrainByIDUC.Execute(c.Request.Context(), readtrain.ReqUserQueryTrainByID{
+		UserID:      userID,
+		TrainDateID: slotID,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+
+	loc := taipeiLoc // default to taipei
+	if trainDate.Timezone != "" {
+		if l, err := time.LoadLocation(trainDate.Timezone); err == nil {
+			loc = l
+		}
+	}
+
+	startDate := trainDate.StartDate.In(loc)
+	endDate := trainDate.EndDate.In(loc)
+
+	attendees := make([]*booking_v2.Attendee, 0)
+	for _, appt := range trainDate.UserAppointments {
+		status := "Booked"
+		if appt.IsOnLeave {
+			status = "Leave"
+		} else if appt.IsCheckedIn {
+			status = "CheckedIn"
+		} else if time.Now().After(trainDate.EndDate) {
+			status = "Absent"
+		}
+		attendees = append(attendees, &booking_v2.Attendee{
+			Name:        appt.ChildName,
+			Status:      status,
+			BookingID:   appt.ID,
+			BookingTime: appt.CreatedAt,
+			SlotID:      slotID,
+		})
+	}
+
+	c.JSON(http.StatusOK, &booking_v2.SlotData{
+		ID:             trainDate.ID,
+		TimeDisplay:    startDate.Format("15:04"),
+		EndTimeDisplay: endDate.Format("15:04"),
+		CourseName:     "@" + trainDate.Location,
+		Location:       trainDate.Location,
+		Capacity:       trainDate.Capacity,
+		BookedCount:    trainDate.Capacity - trainDate.AvailableCapacity,
+		Attendees:      attendees,
+		IsFull:         trainDate.AvailableCapacity <= 0,
+		IsEmpty:        false,
+		IsPast:         time.Now().After(trainDate.EndDate),
 	})
 }
 
@@ -220,6 +280,7 @@ func apptsToMyBookingsV2(appts []*entity.AppointmentWithTrainDate) []*booking_v2
 			Status:      uiApptStatusTransform(appt),
 			BookingTime: appt.CreatedAt,
 			BookingID:   appt.ID,
+			SlotID:      key,
 		})
 	}
 
@@ -261,6 +322,7 @@ func transformToWeeksVO(weeks []*readtrain.WeekVO) []*booking_v2.WeekData {
 						Status:      a.Status,
 						BookingID:   a.BookingID,
 						BookingTime: a.BookingTime,
+						SlotID:      s.ID,
 					})
 				}
 				slots = append(slots, &booking_v2.SlotData{

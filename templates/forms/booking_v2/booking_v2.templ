@@ -102,6 +102,7 @@ type Attendee struct {
 	Status      string 	`json:"status"` // "Booked", "Leave", "CheckedIn", "Absent"
 	BookingTime time.Time	`json:"booking_time"`
 	BookingID   string	`json:"booking_id"`
+	SlotID      string  `json:"slot_id"`
 }
 
 // --- Colors ---
@@ -125,7 +126,7 @@ templ AttendeeTag(p *Attendee, isMini bool) {
 	} else {
 		<button 
 			class={ "text-xs px-2 py-1 rounded transition-colors " + getStatusClasses(p.Status) }
-			{ templ.Attributes{"onclick": fmt.Sprintf("handleMyBookingTagClick(this, '%s', '%s', '%s', '%s')", p.Name, p.Status, p.BookingTime.Format(time.RFC3339), p.BookingID)}... }
+			{ templ.Attributes{"onclick": fmt.Sprintf("handleMyBookingTagClick(this, '%s', '%s', '%s', '%s', '%s')", p.Name, p.Status, p.BookingTime.Format(time.RFC3339), p.BookingID, p.SlotID)}... }
 		>
 			{ p.Name } 
 			if p.Status == "Leave" {
@@ -254,6 +255,7 @@ templ WeekRow(week *WeekData, user *UserContext) {
 templ CourseCapsule(slot *SlotData, user *UserContext) {
 	{{ attendeesJson, _ := json.Marshal(slot.Attendees) }}
 	<button 
+		id={ "slot-" + slot.ID }
 		class={ "w-full rounded-[8px] p-1.5 flex flex-col gap-1 text-left transition-transform " + BgSurface + cond(slot.IsPast, " opacity-50 cursor-not-allowed", " active:scale-95") }
 		if !slot.IsPast {
 			if user != nil && user.UserID != "" {
@@ -263,16 +265,20 @@ templ CourseCapsule(slot *SlotData, user *UserContext) {
 			}
 		}
 	>
-		<div class="flex flex-col leading-tight">
-			<span class="text-xs text-[#8E8E93] font-mono">{ slot.TimeDisplay }</span>
-			<span class="text-xs font-bold text-white break-all leading-tight line-clamp-3 overflow-hidden">{ slot.CourseName }</span>
-		</div>
-		<div class="flex flex-col gap-1 mt-1">
-			for _, p := range slot.Attendees {
-				@AttendeeTag(p, true)
-			}
-		</div>
+		@SlotContent(slot)
 	</button>
+}
+
+templ SlotContent(slot *SlotData) {
+	<div class="flex flex-col leading-tight">
+		<span class="text-xs text-[#8E8E93] font-mono">{ slot.TimeDisplay }</span>
+		<span class="text-xs font-bold text-white break-all leading-tight line-clamp-3 overflow-hidden">{ slot.CourseName }</span>
+	</div>
+	<div class="flex flex-col gap-1 mt-1">
+		for _, p := range slot.Attendees {
+			@AttendeeTag(p, true)
+		}
+	</div>
 }
 
 templ FixedFABs(user *UserContext) {
@@ -390,8 +396,30 @@ templ Script(liffId string) {
 			const s = p.status || p.Status, n = p.name || p.Name, classes = "rounded transition-colors " + getStatusClasses(s);
 			if (mini) return ("<span class=\"text-[9px] px-1.5 py-0.5 truncate " + classes + "\">" + n + "<\/span>");
 			const suffix = s === 'Leave' ? ' (請假)' : (s === 'CheckedIn' ? ' (已簽到)' : (s === 'Absent' ? ' (缺席)' : ''));
-			return "<button class=\"text-xs px-2 py-1 " + classes + "\" onclick=\"handleMyBookingTagClick(this, '" + n + "', '" + s + "', '" + (p.booking_time || p.BookingTime) + "', '" + (p.booking_id || p.BookingID) + "')\">" + n + suffix + "<\/button>";
+			const slotId = p.slot_id || p.SlotID;
+			return "<button class=\"text-xs px-2 py-1 " + classes + "\" onclick=\"handleMyBookingTagClick(this, '" + n + "', '" + s + "', '" + (p.booking_time || p.BookingTime) + "', '" + (p.booking_id || p.BookingID) + "', '" + slotId + "')\">" + n + suffix + "<\/button>";
 		};
+
+		const jsRenderSlotContent = (s) => {
+			const tags = (s.attendees || []).map(p => jsRenderTag(p, true)).join('');
+			return ("<div class=\"flex flex-col leading-tight\"><span class=\"text-xs text-[#8E8E93] font-mono\">" + s.time_display + "<\/span><span class=\"text-xs font-bold text-white break-all leading-tight line-clamp-3 overflow-hidden\">" + s.course_name + "<\/span><\/div><div class=\"flex flex-col gap-1 mt-1\">" + tags + "<\/div>");
+		};
+
+		async function refreshSlot(slotId) {
+			if (!slotId) return;
+			try {
+				const s = await fetchApi("/api/v2/calendar/slots/" + slotId);
+				const btn = document.getElementById('slot-' + slotId);
+				if (btn) {
+					btn.innerHTML = jsRenderSlotContent(s);
+					btn.setAttribute('onclick', "openBookingPopup('" + s.id + "', '" + s.time_display + "', '" + s.end_time_display + "', '" + s.course_name + "', " + s.booked_count + ", " + s.capacity + ", " + JSON.stringify(s.attendees).replace(/\"/g, '&quot;') + ")");
+				}
+			} catch (e) { console.error("Refresh slot failed:", e); }
+		}
+
+		function refreshStats() {
+			if (currentYear && currentMonth) fetchMonthlyStats(currentYear, currentMonth);
+		}
 
 		let currentYear, currentMonth, isLoading = false, isEndTop = false, isEndBottom = false, firstLoadedDate, lastLoadedDate;
 
@@ -427,10 +455,9 @@ templ Script(liffId string) {
 			const days = w.days.map(d => {
 				const slots = d.slots.map(s => {
 					if (s.is_empty) return ("<div class=\"w-full rounded-[8px] p-2 border border-dashed border-[#3A3A3C] flex items-center justify-center text-left min-h-[40px] opacity-50 cursor-default\"><span class=\"text-xs text-[#8E8E93]\">[未排課]<\/span><\/div>");
-					const tags = (s.attendees || []).map(p => jsRenderTag(p, true)).join('');
 					const state = s.is_past ? 'opacity-50 cursor-not-allowed' : 'active:scale-95';
 					const onclick = s.is_past ? '' : ("onclick=\"openBookingPopup('" + s.id + "', '" + s.time_display + "', '" + s.end_time_display + "', '" + s.course_name + "', " + s.booked_count + ", " + s.capacity + ", " + JSON.stringify(s.attendees).replace(/\"/g, '&quot;') + ")\"");
-					return ("<button class=\"w-full rounded-[8px] p-1.5 flex flex-col gap-1 text-left transition-transform bg-[#1C1C1E] " + state + "\" " + onclick + "><div class=\"flex flex-col leading-tight\"><span class=\"text-xs text-[#8E8E93] font-mono\">" + s.time_display + "<\/span><span class=\"text-xs font-bold text-white break-all leading-tight line-clamp-3 overflow-hidden\">" + s.course_name + "<\/span><\/div><div class=\"flex flex-col gap-1 mt-1\">" + tags + "<\/div><\/button>");
+					return ("<button id=\"slot-" + s.id + "\" class=\"w-full rounded-[8px] p-1.5 flex flex-col gap-1 text-left transition-transform bg-[#1C1C1E] " + state + "\" " + onclick + ">" + jsRenderSlotContent(s) + "<\/button>");
 				}).join('');
 				return ("<div class=\"flex flex-col items-center gap-2 min-h-[120px]\" data-date=\"" + d.full_date + "\"><div class=\"flex flex-col items-center justify-center w-10 h-10 rounded-full text-sm font-medium " + (d.is_today ? "bg-white text-black" : "text-[#8E8E93]") + "\"><span class=\"text-xs uppercase leading-none\">" + d.day_of_week + "<\/span><span class=\"text-lg leading-none font-bold\">" + d.date_display + "<\/span><\/div><div class=\"w-full flex flex-col gap-2 px-0.5\">" + slots + "<\/div><\/div>");
 			}).join('');
@@ -506,13 +533,14 @@ templ Script(liffId string) {
 			} catch(e) { l.innerHTML = '<div class="text-center text-[#F87171] py-8">載入失敗<\/div>'; }
 		}
 
-		async function handleMyBookingTagClick(btn, n, s, t, id) { handleTagAction("my-booking", n, s, t, id, (ns) => { if (ns === "Remove") btn.remove(); else switchMyBookingsTab(currentTab); }); }
-		async function handleTagAction(prefix, n, s, t, id, callback) {
+		async function handleMyBookingTagClick(btn, n, s, t, id, slotId) { handleTagAction("my-booking", n, s, t, id, (ns) => { if (ns === "Remove") btn.remove(); else switchMyBookingsTab(currentTab); }, slotId); }
+		async function handleTagAction(prefix, n, s, t, id, callback, slotId) {
+			const currentSlotId = slotId || document.getElementById('popup-slot-id').value;
 			if (s === "Booked") {
 				const diff = (new Date() - new Date(t)) / 36e5;
-				if (diff < 24) { if (await showInlineConfirm(prefix, "取消預約", "建立未滿 24 小時，確定取消？")) { try { await fetchApi("/api/v2/bookings/" + id, { method: 'DELETE' }); callback("Remove"); } catch(e) { alert(e.message); } } }
+				if (diff < 24) { if (await showInlineConfirm(prefix, "取消預約", "建立未滿 24 小時，確定取消？")) { try { await fetchApi("/api/v2/bookings/" + id, { method: 'DELETE' }); callback("Remove"); refreshSlot(currentSlotId); refreshStats(); } catch(e) { alert(e.message); } } }
 				else { if (prefix === 'my-booking') closeMyBookings(); openLeaveRequest(id, n); }
-			} else if (s === "Leave") { if (await showInlineConfirm(prefix, "恢復預約", "取消 " + n + " 的請假？")) { try { await fetchApi("/api/v2/bookings/" + id + "/leave", { method: 'DELETE' }); callback("Booked"); } catch(e) { alert(e.message); } } }
+			} else if (s === "Leave") { if (await showInlineConfirm(prefix, "恢復預約", "取消 " + n + " 的請假？")) { try { await fetchApi("/api/v2/bookings/" + id + "/leave", { method: 'DELETE' }); callback("Booked"); refreshSlot(currentSlotId); refreshStats(); } catch(e) { alert(e.message); } } }
 		}
 
 		function showInlineConfirm(prefix, title, msg) {
@@ -540,13 +568,14 @@ templ Script(liffId string) {
 			try {
 				const res = await fetchApi('/api/v2/bookings', { method: 'POST', body: JSON.stringify({ slot_id: id, student_names: names }) });
 				res.new_bookings.forEach(b => addBookedTag(b.name, b.status, b.booking_time, b.booking_id));
-				tags.forEach(t => t.remove()); alert("預約成功！"); closeBookingPopup();
+				tags.forEach(t => t.remove()); alert("預約成功！"); closeBookingPopup(); refreshSlot(id); refreshStats();
 			} catch(e) { alert(e.message); }
 		};
 
 		function openLeaveRequest(id, name) { document.getElementById('leave-booking-id').value = id; document.getElementById('leave-student-name').innerText = name; document.getElementById('booking-main-view').classList.add('hidden'); document.getElementById('booking-leave-view').classList.remove('hidden'); }
 		function cancelLeaveRequest() { document.getElementById('booking-leave-view').classList.add('hidden'); document.getElementById('booking-main-view').classList.remove('hidden'); }
-		async function submitLeaveRequest(e) { e.preventDefault(); try { await fetchApi("/api/v2/bookings/" + document.getElementById('leave-booking-id').value + "/leave", { method: 'POST', body: JSON.stringify({ reason: document.getElementById('leaveReason').value }) }); alert("請假申請已送出"); cancelLeaveRequest(); closeBookingPopup(); } catch(err) { alert(err.message); } }
+		async function submitLeaveRequest(e) { e.preventDefault(); const slotId = document.getElementById('popup-slot-id').value; try { await fetchApi("/api/v2/bookings/" + document.getElementById('leave-booking-id').value + "/leave", { method: 'POST', body: JSON.stringify({ reason: document.getElementById('leaveReason').value }) }); alert("請假申請已送出"); cancelLeaveRequest(); closeBookingPopup(); refreshSlot(slotId); refreshStats(); } catch(err) { alert(err.message); } }
 		function shareBookingStatus() { if (liff.isInClient()) liff.sendMessages([{ type: 'text', text: "預約成功！" }]).then(() => liff.closeWindow()); else alert("請在 LINE 中執行"); }
 	</script>
 }
+
