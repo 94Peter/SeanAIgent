@@ -206,7 +206,8 @@ func (api *v2BookingAPI) getBookingV2Form(c *gin.Context) {
 
 	// Transform data to ViewModel
 	modelV2 := &booking_v2.BookingV2Model{
-		LiffID: lineliffid,
+		LiffID:    lineliffid,
+		LiffV1Url: lineliff.GetBookingLiffUrl(),
 		CurrentUser: &booking_v2.UserContext{
 			DisplayName:      getUserDisplayName(c),
 			UserID:           userID,

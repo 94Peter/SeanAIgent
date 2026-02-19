@@ -34,6 +34,7 @@ func getStatusClasses(status string) string {
 
 type BookingV2Model struct {
 	LiffID      string
+	LiffV1Url   string
 	Stats       *StatsSummary
 	Weeks       []*WeekData
 	CurrentUser *UserContext
@@ -164,7 +165,7 @@ templ ModalLayout(id string, title string, onClose string, fullHeight bool) {
 
 templ Page(model *BookingV2Model) {
 	<div class={ "w-full h-[100dvh] flex flex-col font-sans overflow-hidden " + BgBase + " " + TextWhite }>
-		@StickyHeader(model.Stats)
+		@StickyHeader(model.Stats, model.LiffV1Url)
 		<div id="calendar-container" class="flex-grow overflow-y-auto snap-y snap-mandatory scroll-smooth pb-24 relative" style="overflow-anchor: none;">
 			<div id="sentinel-top" class="h-1 w-full shrink-0"></div>
 			for _, week := range model.Weeks {
@@ -179,7 +180,7 @@ templ Page(model *BookingV2Model) {
 	</div>
 }
 
-templ StickyHeader(stats *StatsSummary) {
+templ StickyHeader(stats *StatsSummary, liffV1Url string) {
 	<div class="sticky top-0 z-40 w-full bg-[#121212] border-b border-[#27272A] shadow-md" x-data="{ expanded: false }">
 		<div class="px-4 py-3">
 			<div class="flex items-center justify-between">
@@ -192,12 +193,19 @@ templ StickyHeader(stats *StatsSummary) {
 						<span>(請假 <span id="total-leave">{ fmt.Sprintf("%d", stats.TotalLeave) }</span>)</span>
 					</div>
 				</div>
-				<button @click="expanded = !expanded" class="p-2 text-[#8E8E93] hover:text-white transition-colors focus:outline-none">
-					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
-						class="transform transition-transform duration-300" :class="expanded ? 'rotate-180' : ''">
-						<polyline points="6 9 12 15 18 9"></polyline>
-					</svg>
-				</button>
+				<div class="flex items-center gap-2">
+					if liffV1Url != "" {
+						<a href={ templ.URL(liffV1Url) } class="text-[10px] px-2 py-1 rounded border border-[#FFD700]/30 text-[#FFD700] hover:bg-[#FFD700]/10 transition-colors">
+							切換舊版
+						</a>
+					}
+					<button @click="expanded = !expanded" class="p-2 text-[#8E8E93] hover:text-white transition-colors focus:outline-none">
+						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
+							class="transform transition-transform duration-300" :class="expanded ? 'rotate-180' : ''">
+							<polyline points="6 9 12 15 18 9"></polyline>
+						</svg>
+					</button>
+				</div>
 			</div>
 			<div x-show="expanded" x-collapse class="mt-2 overflow-hidden" style="display: none;">
 				<table class="w-full text-sm text-right">

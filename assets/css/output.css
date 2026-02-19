@@ -1049,6 +1049,9 @@
   .text-\[9px\] {
     font-size: 9px;
   }
+  .text-\[10px\] {
+    font-size: 10px;
+  }
   .leading-none {
     --tw-leading: 1;
     line-height: 1;
@@ -1356,6 +1359,13 @@
     &:hover {
       @media (hover: hover) {
         background-color: #E6C200;
+      }
+    }
+  }
+  .hover\:bg-\[\#FFD700\]\/10 {
+    &:hover {
+      @media (hover: hover) {
+        background-color: color-mix(in oklab, #FFD700 10%, transparent);
       }
     }
   }
