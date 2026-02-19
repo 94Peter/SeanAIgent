@@ -397,7 +397,11 @@ templ Script(liffId string) {
 			if (mini) return ("<span class=\"text-[9px] px-1.5 py-0.5 truncate " + classes + "\">" + n + "<\/span>");
 			const suffix = s === 'Leave' ? ' (請假)' : (s === 'CheckedIn' ? ' (已簽到)' : (s === 'Absent' ? ' (缺席)' : ''));
 			const slotId = p.slot_id || p.SlotID;
-			return "<button class=\"text-xs px-2 py-1 " + classes + "\" onclick=\"handleMyBookingTagClick(this, '" + n + "', '" + s + "', '" + (p.booking_time || p.BookingTime) + "', '" + (p.booking_id || p.BookingID) + "', '" + slotId + "')\">" + n + suffix + "<\/button>";
+			const bookingTime = p.booking_time || p.BookingTime;
+			const bookingId = p.booking_id || p.BookingID;
+			// Escape single quotes for use in JS function call
+			const escapedName = n.replace(/'/g, "\\'");
+			return `<button class="text-xs px-2 py-1 ${classes}" onclick="handleMyBookingTagClick(this, '${escapedName}', '${s}', '${bookingTime}', '${bookingId}', '${slotId}')">${n}${suffix}</button>`;
 		};
 
 		const jsRenderSlotContent = (s) => {
@@ -412,7 +416,28 @@ templ Script(liffId string) {
 				const btn = document.getElementById('slot-' + slotId);
 				if (btn) {
 					btn.innerHTML = jsRenderSlotContent(s);
-					btn.setAttribute('onclick', "openBookingPopup('" + s.id + "', '" + s.time_display + "', '" + s.end_time_display + "', '" + s.course_name + "', " + s.booked_count + ", " + s.capacity + ", " + JSON.stringify(s.attendees).replace(/\"/g, '&quot;') + ")");
+					
+					// Update class for past slots
+					if (s.is_past) {
+						btn.className = "w-full rounded-[8px] p-1.5 flex flex-col gap-1 text-left transition-transform bg-[#1C1C1E] opacity-50 cursor-not-allowed";
+						btn.removeAttribute('onclick');
+					} else {
+						btn.className = "w-full rounded-[8px] p-1.5 flex flex-col gap-1 text-left transition-transform bg-[#1C1C1E] active:scale-95";
+						
+						// Use properly escaped arguments for the onclick handler
+						btn.onclick = () => {
+							openBookingPopup(s.id, s.time_display, s.end_time_display, s.course_name, s.booked_count, s.capacity, s.attendees);
+						};
+					}
+				}
+				
+				// Update popup numbers if it's currently displaying this slot
+				const popupSlotId = document.getElementById('popup-slot-id');
+				if (popupSlotId && popupSlotId.value === slotId) {
+					const countEl = document.getElementById('popup-booked-count');
+					const capEl = document.getElementById('popup-capacity');
+					if (countEl) countEl.innerText = s.booked_count;
+					if (capEl) capEl.innerText = s.capacity;
 				}
 			} catch (e) { console.error("Refresh slot failed:", e); }
 		}

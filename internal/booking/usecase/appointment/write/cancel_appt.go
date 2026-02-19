@@ -47,8 +47,16 @@ func (uc *cancelApptUseCase) Execute(
 	if err != nil {
 		return nil, ErrCancelApptCancelApptFail.Wrap(err)
 	}
+	// 2. 增加名額
+	err = uc.repo.IncreaseCapacity(ctx, appt.TrainingID(), 1)
+	if err != nil {
+		return nil, ErrCancelApptIncreaseCapacityFail.Wrap(err)
+	}
+	// 3. 刪除 appointment
 	err = uc.repo.DeleteAppointment(ctx, appt)
 	if err != nil {
+		// rollback
+		_ = uc.repo.DeductCapacity(ctx, appt.TrainingID(), 1)
 		return nil, ErrCancelApptDeleteApptFail.Wrap(err)
 	}
 	return appt, nil
@@ -63,4 +71,6 @@ var (
 		"CANCEL_APPT", "CANCEL_APPOINTMENT_FAIL", "cancel appointment fail", core.ErrInternal)
 	ErrCancelApptDeleteApptFail = core.NewDBError(
 		"CANCEL_APPT", "DELETE_APPOINTMENT_FAIL", "delete appointment fail", core.ErrInternal)
+	ErrCancelApptIncreaseCapacityFail = core.NewDBError(
+		"CANCEL_APPT", "INCREASE_CAPACITY_FAIL", "increase capacity fail", core.ErrConflict)
 )
