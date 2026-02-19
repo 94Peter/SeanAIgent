@@ -1,34 +1,34 @@
-name: Infrastructure Deployment (Pulumi)
+# name: Infrastructure Deployment (Pulumi)
 
-on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'deploy/**' 
+# on:
+#   push:
+#     branches: [ main ]
+#     paths:
+#       - 'deploy/**' 
 
-jobs:
-  up:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+# jobs:
+#   up:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout Code
+#         uses: actions/checkout@v4
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.24'
-          cache: true # 開啟快取，下次跑會快很多
+#       - name: Setup Go
+#         uses: actions/setup-go@v5
+#         with:
+#           go-version: '1.24'
+#           cache: true # 開啟快取，下次跑會快很多
 
-      - name: Install Dependencies
-        run: go mod download
-        working-directory: ./deploy
+#       - name: Install Dependencies
+#         run: go mod download
+#         working-directory: ./deploy
 
-      - name: Pulumi Up
-        uses: pulumi/actions@v6 # 建議使用最新版 v6
-        with:
-          command: up
-          stack-name: prod
-          work-dir: ./deploy
-        env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-          VULTR_API_KEY: ${{ secrets.VULTR_API_KEY }}
+#       - name: Pulumi Up
+#         uses: pulumi/actions@v6 # 建議使用最新版 v6
+#         with:
+#           command: up
+#           stack-name: prod
+#           work-dir: ./deploy
+#         env:
+#           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+#           VULTR_API_KEY: ${{ secrets.VULTR_API_KEY }}

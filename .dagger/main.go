@@ -76,6 +76,8 @@ func (m *Aigent) BuildWithGoSdk(
 		runtime := dag.Container(dagger.ContainerOpts{Platform: p}).
 			From("alpine:latest").
 			WithDirectory("/usr/share/zoneinfo", builder.Directory("/usr/share/zoneinfo")).
+			WithDirectory("/app/assets", src.Directory("assets")).
+			WithDirectory("/app/locales", src.Directory("locales")).
 			WithFile("/app/bot", builder.File("/src/bot")).
 			WithWorkdir("/app").
 			WithEntrypoint([]string{"/app/bot"})
