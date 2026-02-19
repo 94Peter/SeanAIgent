@@ -115,7 +115,7 @@ templ Page(model *BookingV2Model) {
 
 			<!-- Initial Weeks -->
 			for _, week := range model.Weeks {
-				@WeekRow(week)
+				@WeekRow(week, model.CurrentUser)
 			}
 
 			<!-- Sentinel Bottom -->
@@ -123,7 +123,7 @@ templ Page(model *BookingV2Model) {
 		</div>
 
 		<!-- 3. Fixed FABs -->
-		@FixedFABs()
+		@FixedFABs(model.CurrentUser)
 
 		<!-- 4. Modals / Popups (Initially Hidden) -->
 		@BookingPopup(model.CurrentUser)
@@ -200,7 +200,7 @@ templ StickyHeader(stats *StatsSummary) {
 }
 
 // WeekRow renders a single week (7 days).
-templ WeekRow(week *WeekData) {
+templ WeekRow(week *WeekData, user *UserContext) {
 	<div class="snap-start pt-4 pb-2 border-b border-[#27272A] min-h-[50vh]" data-week-id={ week.ID }>
 		<!-- Days Grid -->
 		<div class="grid grid-cols-7 gap-1 px-1">
@@ -218,7 +218,7 @@ templ WeekRow(week *WeekData) {
 							if slot.IsEmpty {
 								@EmptyCapsule(slot)
 							} else {
-								@CourseCapsule(slot)
+								@CourseCapsule(slot, user)
 							}
 						}
 					</div>
@@ -229,13 +229,17 @@ templ WeekRow(week *WeekData) {
 }
 
 // CourseCapsule renders a booked/available slot.
-templ CourseCapsule(slot *SlotData) {
+templ CourseCapsule(slot *SlotData, user *UserContext) {
 	{{
 		attendeesJson, _ := json.Marshal(slot.Attendees)
 	}}
 	<button 
 		class={ "w-full rounded-[8px] p-1.5 flex flex-col gap-1 text-left transition-transform active:scale-95 " + BgSurface }
-		{ templ.Attributes{"onclick": fmt.Sprintf("openBookingPopup('%s', '%s', '%s', %s)", slot.ID, slot.TimeDisplay, slot.CourseName, string(attendeesJson))}... }
+		if user != nil && user.UserID != "" {
+			{ templ.Attributes{"onclick": fmt.Sprintf("openBookingPopup('%s', '%s', '%s', %s)", slot.ID, slot.TimeDisplay, slot.CourseName, string(attendeesJson))}... }
+		} else {
+			{ templ.Attributes{"onclick": "alert('請先登入以進行預約')"}... }
+		}
 	>
 		<!-- Header: Time & Title -->
 		<div class="flex flex-col leading-tight">
@@ -270,26 +274,28 @@ templ EmptyCapsule(slot *SlotData) {
 }
 
 // FixedFABs renders the bottom floating buttons.
-templ FixedFABs() {
-	<div class="fixed bottom-6 left-4 right-4 flex justify-between items-end pointer-events-none z-50">
-		<!-- My Bookings (Left) -->
-		<button 
-			onclick="openMyBookings()"
-			class="pointer-events-auto bg-[#1C1C1E] text-white border border-[#3A3A3C] shadow-lg rounded-full px-5 py-3 font-semibold text-sm flex items-center gap-2 active:bg-[#2C2C2E] transition-colors"
-		>
-			<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-			我的預約
-		</button>
+templ FixedFABs(user *UserContext) {
+	if user != nil && user.UserID != "" {
+		<div class="fixed bottom-6 left-4 right-4 flex justify-between items-end pointer-events-none z-50">
+			<!-- My Bookings (Left) -->
+			<button 
+				onclick="openMyBookings()"
+				class="pointer-events-auto bg-[#1C1C1E] text-white border border-[#3A3A3C] shadow-lg rounded-full px-5 py-3 font-semibold text-sm flex items-center gap-2 active:bg-[#2C2C2E] transition-colors"
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+				我的預約
+			</button>
 
-		<!-- Share (Right) -->
-		<button 
-			onclick="shareBookingStatus()"
-			class="pointer-events-auto bg-[#06C755] text-white shadow-lg rounded-full px-5 py-3 font-semibold text-sm flex items-center gap-2 active:bg-[#05B04B] transition-colors"
-		>
-			<span>分享預約</span>
-			<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-		</button>
-	</div>
+			<!-- Share (Right) -->
+			<button 
+				onclick="shareBookingStatus()"
+				class="pointer-events-auto bg-[#06C755] text-white shadow-lg rounded-full px-5 py-3 font-semibold text-sm flex items-center gap-2 active:bg-[#05B04B] transition-colors"
+			>
+				<span>分享預約</span>
+				<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+			</button>
+		</div>
+	}
 }
 
 // BookingPopup renders the Smart Booking Input modal.
@@ -783,10 +789,10 @@ templ Script(liffId string) {
 				} else {
 					if (direction === 'next') {
 						isEndBottom = true;
-						alert("沒有更晚的課程了");
+						alert("最多只能查詢半年內的課程");
 					} else {
 						isEndTop = true;
-						alert("沒有更早的課程了");
+						alert("最多只能查詢三個月前的課程");
 					}
 				}
 			} catch (err) {

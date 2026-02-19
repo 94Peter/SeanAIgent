@@ -61,3 +61,11 @@ func GetCheckinLiffId() string {
 func GetCheckinLiffUrl() string {
 	return getLineLiff("checkin").LiffUrl
 }
+
+func GetBookingV2LiffId() string {
+	return getLineLiff("booking_v2").LiffId
+}
+
+func GetBookingV2LiffUrl() string {
+	return getLineLiff("booking_v2").LiffUrl
+}

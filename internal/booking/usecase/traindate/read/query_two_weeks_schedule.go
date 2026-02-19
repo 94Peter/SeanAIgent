@@ -107,14 +107,17 @@ func groupToWeeks(data []*entity.TrainDateHasUserApptState, start, end time.Time
 	// 填入實際課程
 	for _, td := range data {
 		year, week := td.StartDate.ISOWeek()
+
 		weekID := fmt.Sprintf("%d-W%02d", year, week)
 		if w, ok := weeksMap[weekID]; ok {
 			for _, day := range w.Days {
+				loc := getLocation(td.Timezone)
+				startDate := td.StartDate.In(loc)
 				if day.FullDate == td.StartDate.Format("2006-01-02") {
 					day.Slots = append(day.Slots, &SlotVO{
 						ID:          td.ID,
-						TimeDisplay: td.StartDate.Format("15:04"),
-						CourseName:  td.Date, // 暫用 Date 欄位
+						TimeDisplay: startDate.Format("15:04"),
+						CourseName:  "@" + td.Location, // 暫用 Date 欄位
 						Location:    td.Location,
 						Capacity:    td.Capacity,
 						BookedCount: td.Capacity - td.AvailableCapacity,
@@ -154,4 +157,18 @@ func transformAttendees(appts []entity.UserAppointment) []*AttendeeVO {
 		})
 	}
 	return res
+}
+
+var locationCache = make(map[string]*time.Location)
+
+func getLocation(location string) *time.Location {
+	if loc, ok := locationCache[location]; ok {
+		return loc
+	}
+	loc, err := time.LoadLocation(location)
+	if err != nil {
+		return time.UTC
+	}
+	locationCache[location] = loc
+	return loc
 }

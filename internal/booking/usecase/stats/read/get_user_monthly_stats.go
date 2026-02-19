@@ -44,6 +44,9 @@ func (uc *getUserMonthlyStatsUseCase) Name() string {
 }
 
 func (uc *getUserMonthlyStatsUseCase) Execute(ctx context.Context, req ReqGetUserMonthlyStats) (*UserMonthlyStatsVO, core.UseCaseError) {
+	if req.UserID == "" {
+		return nil, ErrGetUserMonthlyStatsFail.Wrap(errors.New("user id is empty"))
+	}
 	// 計算該月份的範圍
 	startOfMonth := time.Date(req.Year, time.Month(req.Month), 1, 0, 0, 0, 0, time.Local)
 	endOfMonth := startOfMonth.AddDate(0, 1, -1).Add(23*time.Hour + 59*time.Minute + 59*time.Second)

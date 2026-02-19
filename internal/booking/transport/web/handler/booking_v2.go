@@ -96,24 +96,26 @@ func (api *v2BookingAPI) getCalendarStatsV2(c *gin.Context) {
 
 // getBookingV2Form renders the V2 Booking Page with real data
 func (api *v2BookingAPI) getBookingV2Form(c *gin.Context) {
-	lineliffid := lineliff.GetBookingLiffId()
+	lineliffid := lineliff.GetBookingV2LiffId()
 	userID := getUserID(c)
-	if userID == "" {
-		userID = "test-user-id"
-	}
 
 	ctx := c.Request.Context()
 	now := time.Now()
-
+	var err error
+	var stats *readstats.UserMonthlyStatsVO
 	// 1. Fetch current month stats
-	stats, err := api.getUserMonthlyStatsUC.Execute(ctx, readstats.ReqGetUserMonthlyStats{
-		UserID: userID,
-		Year:   now.Year(),
-		Month:  int(now.Month()),
-	})
-	if err != nil {
-		c.Error(err)
-		return
+	if userID != "" {
+		stats, err = api.getUserMonthlyStatsUC.Execute(ctx, readstats.ReqGetUserMonthlyStats{
+			UserID: userID,
+			Year:   now.Year(),
+			Month:  int(now.Month()),
+		})
+		if err != nil {
+			c.Error(err)
+			return
+		}
+	} else {
+		stats = &readstats.UserMonthlyStatsVO{Children: []*readstats.ChildStatVO{}}
 	}
 
 	// 2. Fetch initial 2 weeks schedule (starting from this Monday)
@@ -453,6 +455,21 @@ func (api *v2BookingAPI) getCalendarWeeksV2(c *gin.Context) {
 		refDate = time.Now()
 	}
 	refDate = time.Date(refDate.Year(), refDate.Month(), refDate.Day(), 0, 0, 0, 0, taipeiLoc)
+
+	// Add date range restrictions
+	now := time.Now().In(taipeiLoc)
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, taipeiLoc)
+	limitPrev := today.AddDate(0, -3, 0) // 3 months ago
+	limitNext := today.AddDate(0, 6, 0)  // 6 months from now
+
+	if direction == "prev" && !refDate.After(limitPrev) {
+		c.JSON(http.StatusOK, gin.H{"weeks": []*booking_v2.WeekData{}})
+		return
+	}
+	if direction == "next" && !refDate.Before(limitNext) {
+		c.JSON(http.StatusOK, gin.H{"weeks": []*booking_v2.WeekData{}})
+		return
+	}
 
 	ctx := c.Request.Context()
 	userID := getUserID(c)
