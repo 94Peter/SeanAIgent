@@ -12,18 +12,20 @@
 
 ---
 
-## v2.0.1 - Stability & Housekeeping (Target)
+## v2.0.1 - Stability & Housekeeping (In Progress)
 *Focus: Performance, Cleanup, and UX Refinement*
 
-### 1. 🧹 Housekeeping (Legacy Code Removal)
-- [ ] **Remove V1 Templates**: Delete `templates/forms/bookTraining/` and associated assets.
-- [ ] **Cleanup Routes**: Remove legacy `/training/booking` GET/POST handlers.
-- [ ] **Domain Simplification**: Strip deprecated fields in `internal/booking/domain/entity` used only by V1.
-- [ ] **Archive Migration**: Move `v1tov2` utilities to a dedicated `maintenance` package.
+### 1. ✅ Housekeeping (Legacy Code Removal) - COMPLETED
+- [x] **Remove V1 Templates**: Deleted `templates/forms/bookTraining/` and associated assets.
+- [x] **Cleanup Routes**: Removed legacy 3-layer architecture routers (`internal/handler`).
+- [x] **Domain Simplification**: Stripped `internal/db/` and `internal/service/` legacy directories.
+- [x] **Archive Migration**: Removed `v1tov2` utilities and decoupled Repository from migration logic.
+- [x] **Architecture Alignment**: Migrated MCP and LINE messaging to the Transport layer.
+- [x] **Utility Consolidation**: Unified `timeutil` and `lineutil` for shared cross-layer functions.
 
-### 2. ⚡ Performance Optimization
+### 2. ⚡ Performance Optimization (Next Focus)
 - [ ] **Parallel Fetching**: Implement `errgroup` in `getBookingV2Form` to fetch stats, schedules, and bookings concurrently.
-- [ ] **Frontend Resource Separation**: Extract inline JavaScript from `booking_v2.templ` to `/assets/js/booking_v2.js` for browser caching.
+- [ ] **Frontend Resource Separation**: Extract inline JavaScript from `booking_v2.templ` to `/assets/js/booking_v2.js`.
 - [ ] **API Caching**: Add short-term caching for monthly statistics.
 
 ### 3. ✨ UX & Robustness
@@ -39,4 +41,4 @@
 - [ ] **Admin Dashboard**: Enhanced management view for class capacities and attendance tracking.
 
 ---
-*Roadmap last updated: 2026-02-19 by Gemini CLI*
+*Roadmap last updated: 2026-02-20 by Gemini CLI*
