@@ -133,10 +133,6 @@ to quickly create a Cobra application.`,
 		var userApptStatsNotify notification.UserApptStatsNotifier
 		var webService web.WebService
 		factory.InjectStore(func(stores *factory.Stores) {
-			_ = service.InitService(
-				service.WithTrainingStore(stores.TrainingDateStore),
-				service.WithAppointmentStore(stores.AppointmentStore),
-			)
 			webService = InitializeWeb()
 
 			// v2 handler
