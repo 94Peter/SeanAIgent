@@ -3,12 +3,13 @@ package tool
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/94peter/vulpes/log"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+
+	readTrain "seanAIgent/internal/booking/usecase/traindate/read"
 )
 
 func ProvideQueryLeaveByDateTool() server.ServerTool {
@@ -30,10 +31,6 @@ func ProvideQueryLeaveByDateTool() server.ServerTool {
 
 func queryLeaveByDateHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	log.Info("queryLeaveByDateHandler")
-	if trainingDateService == nil {
-		log.Error("trainingDateService is not initialized")
-		return nil, fmt.Errorf("trainingDateService is not initialized")
-	}
 
 	date, err := request.RequireString("date")
 	if err != nil {
@@ -57,7 +54,10 @@ func queryLeaveByDateHandler(ctx context.Context, request mcp.CallToolRequest) (
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	data, err := trainingDateService.QueryLeaveByTrainingDate(ctx, startDateTime)
+	data, err := adminQueryTrainRangeUC.Execute(ctx, readTrain.ReqAdminQueryTrainRange{
+		StartTime: startDateTime,
+		EndTime:   startDateTime.Add(24*time.Hour - time.Second),
+	})
 
 	if err != nil {
 		log.Err(err)

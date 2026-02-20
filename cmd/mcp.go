@@ -15,8 +15,7 @@ import (
 	"go.opentelemetry.io/otel"
 
 	"seanAIgent/internal/db/factory"
-	"seanAIgent/internal/mcp"
-	"seanAIgent/internal/service"
+	"seanAIgent/internal/booking/transport/mcp"
 )
 
 // parentCmd represents the parent command
@@ -66,11 +65,7 @@ to quickly create a Cobra application.`,
 
 		var mcpServer mcp.Server
 		factory.InjectStore(func(stores *factory.Stores) {
-			svc := service.InitService(
-				service.WithTrainingStore(stores.TrainingDateStore),
-				service.WithAppointmentStore(stores.AppointmentStore),
-			)
-			mcpServer = InitializeMCP(svc)
+			mcpServer = InitializeMCP()
 		})
 
 		mcpServer.Start()

@@ -30,13 +30,9 @@ func ProvideDeleteLeaveByIdTool() server.ServerTool {
 }
 
 func deleteLeaveByIdHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	log.Info("queryTrainingCoursesByRangeHandler")
-	if trainingDateService == nil {
-		log.Error("trainingDateService is not initialized")
-		return nil, fmt.Errorf("trainingDateService is not initialized")
-	}
+	log.Info("deleteLeaveByIdHandler")
 
-	id, err := request.RequireString("id")
+	id, err := request.RequireString("absence_id")
 	if err != nil {
 		err = fmt.Errorf("require id error: %w", err)
 		log.Err(err)

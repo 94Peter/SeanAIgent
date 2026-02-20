@@ -2,8 +2,7 @@ package mcp
 
 import (
 	"seanAIgent/internal/booking/usecase"
-	"seanAIgent/internal/mcp/tool"
-	"seanAIgent/internal/service"
+	"seanAIgent/internal/booking/transport/mcp/tool"
 
 	"github.com/94peter/vulpes/log"
 	"github.com/mark3labs/mcp-go/server"
@@ -22,14 +21,14 @@ func (s *mcpServer) Start() {
 	server.NewStreamableHTTPServer(s.s).Start(":9080")
 }
 
-func InitMcpServer(svc service.TrainingDateService, registry *usecase.Registry, tools []server.ServerTool) Server {
+func InitMcpServer(registry *usecase.Registry, tools []server.ServerTool) Server {
 	s := server.NewMCPServer(
 		"Calculator Demo",
 		"1.0.0",
 		server.WithToolCapabilities(false),
 		server.WithRecovery(),
 	)
-	tool.InitTool(svc, registry)
+	tool.InitTool(registry)
 	s.AddTools(tools...)
 	return &mcpServer{s: s}
 }

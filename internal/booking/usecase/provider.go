@@ -113,6 +113,12 @@ func ProvideFindTrainHasApptsByIdUC(
 	return core.WithReadOTel(readTrain.NewFindTrainHasApptsByIdUseCase(repo))
 }
 
+func ProvideAdminQueryTrainRangeUC(
+	repo Repository,
+) core.ReadUseCase[readTrain.ReqAdminQueryTrainRange, []*entity.TrainDateHasApptState] {
+	return core.WithReadOTel(readTrain.NewAdminQueryTrainRangeUseCase(repo))
+}
+
 func ProvideGetUserMonthlyStatsUC(
 	repo Repository,
 ) readStats.GetUserMonthlyStatsUseCase {
@@ -134,6 +140,7 @@ var UseCaseSet = wire.NewSet(
 	ProvideUserQueryTrainByIDUC,
 	ProvideFindNearestTrainByTimeUC,
 	ProvideFindTrainHasApptsByIdUC,
+	ProvideAdminQueryTrainRangeUC,
 
 	ProvideCreateApptUC,
 	ProvideCancelApptUC,

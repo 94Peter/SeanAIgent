@@ -3,12 +3,13 @@ package tool
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/94peter/vulpes/log"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+
+	readTrain "seanAIgent/internal/booking/usecase/traindate/read"
 )
 
 func ProvideQueryTrainingByRangeTool() server.ServerTool {
@@ -44,10 +45,6 @@ func ProvideQueryTrainingByRangeTool() server.ServerTool {
 
 func queryTrainingCoursesByRangeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	log.Info("queryTrainingCoursesByRangeHandler")
-	if trainingDateService == nil {
-		log.Error("trainingDateService is not initialized")
-		return nil, fmt.Errorf("trainingDateService is not initialized")
-	}
 
 	startDate, err := request.RequireString("start_date")
 	if err != nil {
@@ -85,7 +82,10 @@ func queryTrainingCoursesByRangeHandler(ctx context.Context, request mcp.CallToo
 	if endDateTime.Equal(startDateTime) {
 		endDateTime = startDateTime.Add(24*time.Hour - time.Second)
 	}
-	data, err := trainingDateService.QueryDateTimeRangeTrainingDate(ctx, startDateTime, endDateTime)
+	data, err := adminQueryTrainRangeUC.Execute(ctx, readTrain.ReqAdminQueryTrainRange{
+		StartTime: startDateTime,
+		EndTime:   endDateTime,
+	})
 
 	if err != nil {
 		log.Err(err)

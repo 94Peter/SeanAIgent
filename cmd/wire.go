@@ -10,9 +10,8 @@ import (
 	"seanAIgent/internal/booking/transport/web"
 	"seanAIgent/internal/booking/transport/web/handler"
 	"seanAIgent/internal/booking/usecase"
-	"seanAIgent/internal/mcp"
-	"seanAIgent/internal/mcp/tool"
-	v1service "seanAIgent/internal/service"
+	"seanAIgent/internal/booking/transport/mcp"
+	"seanAIgent/internal/booking/transport/mcp/tool"
 
 	"github.com/google/wire"
 	"github.com/mark3labs/mcp-go/server"
@@ -50,7 +49,7 @@ func toolSet() []server.ServerTool {
 	}
 }
 
-func InitializeMCP(svc v1service.TrainingDateService) mcp.Server {
+func InitializeMCP() mcp.Server {
 	wire.Build(
 		// 1. 提供資料庫與 Repo (內含 wire.Bind 介面綁定)
 		db.InfraSet,

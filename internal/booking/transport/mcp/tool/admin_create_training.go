@@ -91,9 +91,6 @@ func toTime(date, timeStr, timezone string) (time.Time, error) {
 }
 
 func createTrainingCoursesHandler(ctx context.Context, request mcp.CallToolRequest, args createTrainingCoursesArgs) (*mcp.CallToolResult, error) {
-	if trainingDateService == nil {
-		return nil, fmt.Errorf("trainingDateService is not initialized")
-	}
 	var startTime, endTime time.Time
 	var err error
 	reqs := make([]writeTrain.ReqCreateTrainDate, len(args.Schedule))

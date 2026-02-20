@@ -10,12 +10,11 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 	"seanAIgent/internal/booking/domain/service"
 	"seanAIgent/internal/booking/infra/db"
+	"seanAIgent/internal/booking/transport/mcp"
+	"seanAIgent/internal/booking/transport/mcp/tool"
 	"seanAIgent/internal/booking/transport/web"
 	"seanAIgent/internal/booking/transport/web/handler"
 	"seanAIgent/internal/booking/usecase"
-	"seanAIgent/internal/mcp"
-	"seanAIgent/internal/mcp/tool"
-	service2 "seanAIgent/internal/service"
 )
 
 import (
@@ -38,12 +37,13 @@ func InitializeWeb() web.WebService {
 	readUseCase2 := usecase.ProvideFindTrainHasApptsByIdUC(dbRepository)
 	readUseCase3 := usecase.ProvideUserQueryFutureTrainUC(dbRepository)
 	readUseCase4 := usecase.ProvideUserQueryTrainByIDUC(dbRepository)
+	readUseCase5 := usecase.ProvideAdminQueryTrainRangeUC(dbRepository)
 	writeUseCase3 := usecase.ProvideCreateApptUC(dbRepository)
 	writeUseCase4 := usecase.ProvideCheckInUC(dbRepository)
 	writeUseCase5 := usecase.ProvideCancelApptUC(dbRepository)
 	writeUseCase6 := usecase.ProvideCreateLeaveUC(dbRepository)
 	writeUseCase7 := usecase.ProvideCancelLeaveUC(dbRepository)
-	readUseCase5 := usecase.ProvideQueryUserBookingsUC(dbRepository)
+	readUseCase6 := usecase.ProvideQueryUserBookingsUC(dbRepository)
 	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
 	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
 	registry := &usecase.Registry{
@@ -55,12 +55,13 @@ func InitializeWeb() web.WebService {
 		FindTrainHasApptsById:  readUseCase2,
 		UserQueryFutureTrain:   readUseCase3,
 		UserQueryTrainByID:     readUseCase4,
+		AdminQueryTrainRange:   readUseCase5,
 		CreateAppt:             writeUseCase3,
 		CheckIn:                writeUseCase4,
 		CancelAppt:             writeUseCase5,
 		CreateLeave:            writeUseCase6,
 		CancelLeave:            writeUseCase7,
-		QueryUserBookings:      readUseCase5,
+		QueryUserBookings:      readUseCase6,
 		GetUserMonthlyStats:    getUserMonthlyStatsUseCase,
 		QueryTwoWeeksSchedule:  queryTwoWeeksScheduleUseCase,
 	}
@@ -72,7 +73,7 @@ func InitializeWeb() web.WebService {
 	return webService
 }
 
-func InitializeMCP(svc service2.TrainingDateService) mcp.Server {
+func InitializeMCP() mcp.Server {
 	dbRepository := db.NewDbRepoAndIdGenerate()
 	trainDateService := service.NewTrainDateService(dbRepository)
 	serviceAggregator := usecase.ServiceAggregator{
@@ -86,12 +87,13 @@ func InitializeMCP(svc service2.TrainingDateService) mcp.Server {
 	readUseCase2 := usecase.ProvideFindTrainHasApptsByIdUC(dbRepository)
 	readUseCase3 := usecase.ProvideUserQueryFutureTrainUC(dbRepository)
 	readUseCase4 := usecase.ProvideUserQueryTrainByIDUC(dbRepository)
+	readUseCase5 := usecase.ProvideAdminQueryTrainRangeUC(dbRepository)
 	writeUseCase3 := usecase.ProvideCreateApptUC(dbRepository)
 	writeUseCase4 := usecase.ProvideCheckInUC(dbRepository)
 	writeUseCase5 := usecase.ProvideCancelApptUC(dbRepository)
 	writeUseCase6 := usecase.ProvideCreateLeaveUC(dbRepository)
 	writeUseCase7 := usecase.ProvideCancelLeaveUC(dbRepository)
-	readUseCase5 := usecase.ProvideQueryUserBookingsUC(dbRepository)
+	readUseCase6 := usecase.ProvideQueryUserBookingsUC(dbRepository)
 	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
 	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
 	registry := &usecase.Registry{
@@ -103,17 +105,18 @@ func InitializeMCP(svc service2.TrainingDateService) mcp.Server {
 		FindTrainHasApptsById:  readUseCase2,
 		UserQueryFutureTrain:   readUseCase3,
 		UserQueryTrainByID:     readUseCase4,
+		AdminQueryTrainRange:   readUseCase5,
 		CreateAppt:             writeUseCase3,
 		CheckIn:                writeUseCase4,
 		CancelAppt:             writeUseCase5,
 		CreateLeave:            writeUseCase6,
 		CancelLeave:            writeUseCase7,
-		QueryUserBookings:      readUseCase5,
+		QueryUserBookings:      readUseCase6,
 		GetUserMonthlyStats:    getUserMonthlyStatsUseCase,
 		QueryTwoWeeksSchedule:  queryTwoWeeksScheduleUseCase,
 	}
 	v := toolSet()
-	server := mcp.InitMcpServer(svc, registry, v)
+	server := mcp.InitMcpServer(registry, v)
 	return server
 }
 

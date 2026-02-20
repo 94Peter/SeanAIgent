@@ -21,6 +21,7 @@ type Registry struct {
 	FindTrainHasApptsById  core.ReadUseCase[readTrain.ReqFindTrainHasApptsById, *entity.TrainDateHasApptState]
 	UserQueryFutureTrain   core.ReadUseCase[readTrain.ReqUserQueryFutureTrain, []*entity.TrainDateHasUserApptState]
 	UserQueryTrainByID     core.ReadUseCase[readTrain.ReqUserQueryTrainByID, *entity.TrainDateHasUserApptState]
+	AdminQueryTrainRange   core.ReadUseCase[readTrain.ReqAdminQueryTrainRange, []*entity.TrainDateHasApptState]
 
 	CreateAppt  core.WriteUseCase[writeAppt.ReqCreateAppt, []*entity.Appointment]
 	CheckIn     core.WriteUseCase[writeAppt.ReqCheckIn, []*entity.Appointment]
