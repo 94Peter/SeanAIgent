@@ -123,7 +123,7 @@ const (
 
 templ AttendeeTag(p *Attendee, isMini bool) {
 	if isMini {
-		<span class={ "text-[9px] px-1.5 py-0.5 rounded-[4px] overflow-hidden whitespace-nowrap block " + getStatusClasses(p.Status) }>
+		<span class={ "text-[9px] px-1.5 py-0.5 rounded-[4px] overflow-hidden whitespace-nowrap block transition-colors " + getStatusClasses(p.Status) }>
 			{ p.Name }
 		</span>
 	} else {
@@ -287,7 +287,7 @@ templ SlotContent(slot *SlotData) {
 		<span class="text-xs text-[#8E8E93] font-mono">{ slot.TimeDisplay }</span>
 		<span class="text-xs font-bold text-white break-all leading-tight line-clamp-3 overflow-hidden">{ slot.CourseName }</span>
 	</div>
-	<div class="flex flex-col gap-1 mt-1 pl-1">
+	<div class="flex flex-col gap-1 mt-1">
 		for _, p := range slot.Attendees {
 			@AttendeeTag(p, true)
 		}
@@ -494,6 +494,15 @@ templ Script(liffId string) {
 				const tu = document.getElementById('total-upcoming'); if (tu) tu.innerText = stats.total_upcoming + " 預約";
 				const ts = document.getElementById('total-sessions'); if (ts) ts.innerText = stats.total_sessions + " 堂";
 				const tl = document.getElementById('total-leave'); if (tl) tl.innerText = stats.total_leave;
+
+				// 更新快速選擇列表
+				const frequentList = document.getElementById('frequent-names-list');
+				if (frequentList && stats.children) {
+					frequentList.innerHTML = stats.children.map(c => {
+						const escapedName = c.name.replace(/'/g, "\\'");
+						return `<button onclick="addDraftTag('${escapedName}')" class="px-3 py-1.5 rounded-full bg-[#27272A] text-white text-sm border border-[#3A3A3C] hover:bg-[#3A3A3C]">${c.name}</button>`;
+					}).join('');
+				}
 			} catch (e) { console.error(e); }
 		}
 
@@ -652,12 +661,27 @@ templ Script(liffId string) {
 		}
 
 		const submitBooking = async () => {
-			const id = document.getElementById('popup-slot-id').value, tags = document.querySelectorAll('[data-draft="true"]'), names = [...tags].map(t => t.dataset.name);
+			const id = document.getElementById('popup-slot-id').value;
+			const input = document.getElementById('smart-input');
+			const tags = document.querySelectorAll('[data-draft="true"]');
+			let names = [...tags].map(t => t.dataset.name);
+			
+			// 自動包含輸入框中尚未轉換為標籤的文字
+			const pendingName = input.value.trim().replace(/,/g, '');
+			if (pendingName && !names.includes(pendingName)) {
+				names.push(pendingName);
+			}
+
 			if (!names.length) { closeBookingPopup(); return; }
 			try {
 				const res = await fetchApi('/api/v2/bookings', { method: 'POST', body: JSON.stringify({ slot_id: id, student_names: names }) });
 				res.new_bookings.forEach(b => addBookedTag(b.name, b.status, b.booking_time, b.booking_id));
-				tags.forEach(t => t.remove()); alert("預約成功！"); closeBookingPopup(); refreshSlot(id); refreshStats();
+				tags.forEach(t => t.remove()); 
+				input.value = ''; // 清空輸入框
+				alert("預約成功！"); 
+				closeBookingPopup(); 
+				refreshSlot(id); 
+				refreshStats();
 			} catch(e) { alert(e.message); }
 		};
 
