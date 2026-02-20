@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"encoding/json"
 	"time"
+	"seanAIgent/components/csrf"
 )
 
 // --- Helpers ---
@@ -39,6 +40,7 @@ type BookingV2Model struct {
 	Weeks       []*WeekData
 	CurrentUser *UserContext
 	MyBookings  []*MyBookingItem
+	EnableCSRF  bool
 }
 
 type UserContext struct {
@@ -165,6 +167,9 @@ templ ModalLayout(id string, title string, onClose string, fullHeight bool) {
 
 templ Page(model *BookingV2Model) {
 	<div class={ "w-full h-[100dvh] flex flex-col font-sans overflow-hidden " + BgBase + " " + TextWhite }>
+		if model.EnableCSRF {
+			@csrf.CSRF()
+		}
 		@StickyHeader(model.Stats, model.LiffV1Url)
 		<div id="calendar-container" class="flex-grow overflow-y-auto snap-y snap-mandatory scroll-smooth pb-24 relative" style="overflow-anchor: none;">
 			<div id="sentinel-top" class="h-1 w-full shrink-0"></div>
@@ -386,7 +391,15 @@ templ Script(liffId string) {
 	<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 	<script>
 		const fetchApi = async (u, o = {}) => {
-			const res = await fetch(u, { ...o, headers: { 'Content-Type': 'application/json', ...o.headers } });
+			const csrfInput = document.querySelector('input[name="_csrf"]');
+			const csrfToken = csrfInput ? csrfInput.value : '';
+			const headers = { 'Content-Type': 'application/json', ...o.headers };
+			
+			if (csrfToken && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(o.method?.toUpperCase())) {
+				headers['X-CSRF-Token'] = csrfToken;
+			}
+
+			const res = await fetch(u, { ...o, headers });
 			const d = await res.json(); if (!res.ok) throw new Error(d.message || 'API failed'); return d;
 		};
 

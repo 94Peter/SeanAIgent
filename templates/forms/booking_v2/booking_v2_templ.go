@@ -11,6 +11,7 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"encoding/json"
 	"fmt"
+	"seanAIgent/components/csrf"
 	"time"
 )
 
@@ -47,6 +48,7 @@ type BookingV2Model struct {
 	Weeks       []*WeekData
 	CurrentUser *UserContext
 	MyBookings  []*MyBookingItem
+	EnableCSRF  bool
 }
 
 type UserContext struct {
@@ -173,7 +175,7 @@ func AttendeeTag(p *Attendee, isMini bool) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(p.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 125, Col: 11}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 127, Col: 11}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -217,7 +219,7 @@ func AttendeeTag(p *Attendee, isMini bool) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(p.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 132, Col: 11}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 134, Col: 11}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -280,7 +282,7 @@ func ModalLayout(id string, title string, onClose string, fullHeight bool) templ
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 146, Col: 9}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 148, Col: 9}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -323,7 +325,7 @@ func ModalLayout(id string, title string, onClose string, fullHeight bool) templ
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 154, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 156, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -397,6 +399,12 @@ func Page(model *BookingV2Model) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
+		if model.EnableCSRF {
+			templ_7745c5c3_Err = csrf.CSRF().Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
 		templ_7745c5c3_Err = StickyHeader(model.Stats, model.LiffV1Url).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -467,7 +475,7 @@ func StickyHeader(stats *StatsSummary, liffV1Url string) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", stats.TotalUpcoming))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 191, Col: 113}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 196, Col: 113}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -480,7 +488,7 @@ func StickyHeader(stats *StatsSummary, liffV1Url string) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", stats.TotalSessions))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 192, Col: 109}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 197, Col: 109}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -493,7 +501,7 @@ func StickyHeader(stats *StatsSummary, liffV1Url string) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", stats.TotalLeave))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 193, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 198, Col: 80}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -511,7 +519,7 @@ func StickyHeader(stats *StatsSummary, liffV1Url string) templ.Component {
 			var templ_7745c5c3_Var20 templ.SafeURL
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(liffV1Url))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 198, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 203, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {
@@ -534,7 +542,7 @@ func StickyHeader(stats *StatsSummary, liffV1Url string) templ.Component {
 			var templ_7745c5c3_Var21 string
 			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(child.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 222, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 227, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 			if templ_7745c5c3_Err != nil {
@@ -547,7 +555,7 @@ func StickyHeader(stats *StatsSummary, liffV1Url string) templ.Component {
 			var templ_7745c5c3_Var22 string
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", child.Upcoming))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 223, Col: 75}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 228, Col: 75}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 			if templ_7745c5c3_Err != nil {
@@ -560,7 +568,7 @@ func StickyHeader(stats *StatsSummary, liffV1Url string) templ.Component {
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", child.Completed))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 224, Col: 76}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 229, Col: 76}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {
@@ -573,7 +581,7 @@ func StickyHeader(stats *StatsSummary, liffV1Url string) templ.Component {
 			var templ_7745c5c3_Var24 string
 			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", child.Leave))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 225, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 230, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 			if templ_7745c5c3_Err != nil {
@@ -608,7 +616,7 @@ func StickyHeader(stats *StatsSummary, liffV1Url string) templ.Component {
 			var templ_7745c5c3_Var27 string
 			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", child.Absent))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 226, Col: 124}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 231, Col: 124}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 			if templ_7745c5c3_Err != nil {
@@ -621,7 +629,7 @@ func StickyHeader(stats *StatsSummary, liffV1Url string) templ.Component {
 			var templ_7745c5c3_Var28 string
 			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.1f", child.AvgWeek))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 227, Col: 76}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 232, Col: 76}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 			if templ_7745c5c3_Err != nil {
@@ -668,7 +676,7 @@ func WeekRow(week *WeekData, user *UserContext) templ.Component {
 		var templ_7745c5c3_Var30 string
 		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(week.ID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 238, Col: 96}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 243, Col: 96}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 		if templ_7745c5c3_Err != nil {
@@ -686,7 +694,7 @@ func WeekRow(week *WeekData, user *UserContext) templ.Component {
 			var templ_7745c5c3_Var31 string
 			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(day.FullDate)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 241, Col: 88}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 246, Col: 88}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 			if templ_7745c5c3_Err != nil {
@@ -721,7 +729,7 @@ func WeekRow(week *WeekData, user *UserContext) templ.Component {
 			var templ_7745c5c3_Var34 string
 			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(day.DayOfWeek)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 243, Col: 66}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 248, Col: 66}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 			if templ_7745c5c3_Err != nil {
@@ -734,7 +742,7 @@ func WeekRow(week *WeekData, user *UserContext) templ.Component {
 			var templ_7745c5c3_Var35 string
 			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(day.DateDisplay)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 244, Col: 68}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 249, Col: 68}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 			if templ_7745c5c3_Err != nil {
@@ -804,7 +812,7 @@ func CourseCapsule(slot *SlotData, user *UserContext) templ.Component {
 		var templ_7745c5c3_Var38 string
 		templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs("slot-" + slot.ID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 266, Col: 24}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 271, Col: 24}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 		if templ_7745c5c3_Err != nil {
@@ -884,7 +892,7 @@ func SlotContent(slot *SlotData) templ.Component {
 		var templ_7745c5c3_Var41 string
 		templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(slot.TimeDisplay)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 282, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 287, Col: 67}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 		if templ_7745c5c3_Err != nil {
@@ -897,7 +905,7 @@ func SlotContent(slot *SlotData) templ.Component {
 		var templ_7745c5c3_Var42 string
 		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(slot.CourseName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 283, Col: 115}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 288, Col: 115}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 		if templ_7745c5c3_Err != nil {
@@ -1005,7 +1013,7 @@ func BookingPopup(user *UserContext) templ.Component {
 				var templ_7745c5c3_Var46 string
 				templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 335, Col: 204}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 340, Col: 204}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 				if templ_7745c5c3_Err != nil {
@@ -1083,7 +1091,7 @@ func MyBookingsModal(bookings []*MyBookingItem) templ.Component {
 				var templ_7745c5c3_Var49 string
 				templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(item.DateDisplay)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 364, Col: 76}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 369, Col: 76}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 				if templ_7745c5c3_Err != nil {
@@ -1096,7 +1104,7 @@ func MyBookingsModal(bookings []*MyBookingItem) templ.Component {
 				var templ_7745c5c3_Var50 string
 				templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(item.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 364, Col: 132}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 369, Col: 132}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 				if templ_7745c5c3_Err != nil {
@@ -1163,7 +1171,7 @@ func InlineConfirmation(idPrefix string) templ.Component {
 		var templ_7745c5c3_Var52 string
 		templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-panel")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 379, Col: 38}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 384, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 		if templ_7745c5c3_Err != nil {
@@ -1176,7 +1184,7 @@ func InlineConfirmation(idPrefix string) templ.Component {
 		var templ_7745c5c3_Var53 string
 		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-title")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 380, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 385, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 		if templ_7745c5c3_Err != nil {
@@ -1189,7 +1197,7 @@ func InlineConfirmation(idPrefix string) templ.Component {
 		var templ_7745c5c3_Var54 string
 		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-msg")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 380, Col: 160}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 385, Col: 160}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 		if templ_7745c5c3_Err != nil {
@@ -1202,7 +1210,7 @@ func InlineConfirmation(idPrefix string) templ.Component {
 		var templ_7745c5c3_Var55 string
 		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-cancel")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 381, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 386, Col: 67}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 		if templ_7745c5c3_Err != nil {
@@ -1215,7 +1223,7 @@ func InlineConfirmation(idPrefix string) templ.Component {
 		var templ_7745c5c3_Var56 string
 		templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-ok")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 381, Col: 206}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 386, Col: 206}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 		if templ_7745c5c3_Err != nil {
@@ -1250,13 +1258,13 @@ func Script(liffId string) templ.Component {
 			templ_7745c5c3_Var57 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, "<script src=\"https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js\" defer></script><script>\n\t\tconst fetchApi = async (u, o = {}) => {\n\t\t\tconst res = await fetch(u, { ...o, headers: { 'Content-Type': 'application/json', ...o.headers } });\n\t\t\tconst d = await res.json(); if (!res.ok) throw new Error(d.message || 'API failed'); return d;\n\t\t};\n\n\t\tconst getStatusClasses = (s) => {\n\t\t\tconst m = {\n\t\t\t\t'Booked': 'bg-[#60A5FA] text-white border-transparent',\n\t\t\t\t'Leave': 'bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/30',\n\t\t\t\t'CheckedIn': 'bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30',\n\t\t\t\t'Absent': 'bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/30'\n\t\t\t};\n\t\t\treturn m[s] || 'bg-[#3F3F46]/10 text-[#A1A1AA] border border-[#3F3F46]/30';\n\t\t};\n\n\t\tconst jsRenderTag = (p, mini) => {\n\t\t\tconst s = p.status || p.Status, n = p.name || p.Name, classes = \"rounded transition-colors \" + getStatusClasses(s);\n\t\t\tif (mini) return (\"<span class=\\\"text-[9px] px-1.5 py-0.5 rounded-[4px] overflow-hidden whitespace-nowrap block \" + classes + \"\\\">\" + n + \"<\\/span>\");\n\t\t\tconst suffix = s === 'Leave' ? ' (請假)' : (s === 'CheckedIn' ? ' (已簽到)' : (s === 'Absent' ? ' (缺席)' : ''));\n\t\t\tconst slotId = p.slot_id || p.SlotID;\n\t\t\tconst bookingTime = p.booking_time || p.BookingTime;\n\t\t\tconst bookingId = p.booking_id || p.BookingID;\n\t\t\t// Escape single quotes for use in JS function call\n\t\t\tconst escapedName = n.replace(/'/g, \"\\\\'\");\n\t\t\treturn `<button class=\"text-xs px-2 py-1 ${classes}\" onclick=\"handleMyBookingTagClick(this, '${escapedName}', '${s}', '${bookingTime}', '${bookingId}', '${slotId}')\">${n}${suffix}</button>`;\n\t\t};\n\n\t\tconst jsRenderSlotContent = (s) => {\n\t\t\tconst tags = (s.attendees || []).map(p => jsRenderTag(p, true)).join('');\n\t\t\treturn (\"<div class=\\\"flex flex-col leading-tight\\\"><span class=\\\"text-xs text-[#8E8E93] font-mono\\\">\" + s.time_display + \"<\\/span><span class=\\\"text-xs font-bold text-white break-all leading-tight line-clamp-3 overflow-hidden\\\">\" + s.course_name + \"<\\/span><\\/div><div class=\\\"flex flex-col gap-1 mt-1\\\">\" + tags + \"<\\/div>\");\n\t\t};\n\n\t\tasync function refreshSlot(slotId) {\n\t\t\tif (!slotId) return;\n\t\t\ttry {\n\t\t\t\tconst s = await fetchApi(\"/api/v2/calendar/slots/\" + slotId);\n\t\t\t\tconst btn = document.getElementById('slot-' + slotId);\n\t\t\t\tif (btn) {\n\t\t\t\t\tbtn.innerHTML = jsRenderSlotContent(s);\n\t\t\t\t\t\n\t\t\t\t\t// Update class for past slots\n\t\t\t\t\tif (s.is_past) {\n\t\t\t\t\t\tbtn.className = \"w-full rounded-[8px] py-2 px-1.5 flex flex-col gap-1 text-left transition-transform bg-[#1C1C1E] opacity-50 cursor-not-allowed\";\n\t\t\t\t\t\tbtn.removeAttribute('onclick');\n\t\t\t\t\t} else {\n\t\t\t\t\t\tbtn.className = \"w-full rounded-[8px] py-2 px-1.5 flex flex-col gap-1 text-left transition-transform bg-[#1C1C1E] active:scale-95\";\n\t\t\t\t\t\t\n\t\t\t\t\t\t// Use properly escaped arguments for the onclick handler\n\t\t\t\t\t\tbtn.onclick = () => {\n\t\t\t\t\t\t\topenBookingPopup(s.id, s.time_display, s.end_time_display, s.course_name, s.booked_count, s.capacity, s.attendees);\n\t\t\t\t\t\t};\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\t\n\t\t\t\t// Update popup numbers if it's currently displaying this slot\n\t\t\t\tconst popupSlotId = document.getElementById('popup-slot-id');\n\t\t\t\tif (popupSlotId && popupSlotId.value === slotId) {\n\t\t\t\t\tconst countEl = document.getElementById('popup-booked-count');\n\t\t\t\t\tconst capEl = document.getElementById('popup-capacity');\n\t\t\t\t\tif (countEl) countEl.innerText = s.booked_count;\n\t\t\t\t\tif (capEl) capEl.innerText = s.capacity;\n\t\t\t\t}\n\t\t\t} catch (e) { console.error(\"Refresh slot failed:\", e); }\n\t\t}\n\n\t\tfunction refreshStats() {\n\t\t\tif (currentYear && currentMonth) fetchMonthlyStats(currentYear, currentMonth);\n\t\t}\n\n\t\tlet currentYear, currentMonth, isLoading = false, isEndTop = false, isEndBottom = false, firstLoadedDate, lastLoadedDate;\n\n\t\tconst updateHeaderTitle = () => {\n\t\t\tconst c = document.getElementById('calendar-container'), t = document.getElementById('current-month-title');\n\t\t\tif (!c || !t) return;\n\t\t\tconst weeks = c.querySelectorAll('[data-week-id]'), cTop = c.getBoundingClientRect().top;\n\t\t\tfor (let w of weeks) {\n\t\t\t\tif (w.getBoundingClientRect().bottom > cTop + 100) {\n\t\t\t\t\tconst d = w.querySelector('[data-date]');\n\t\t\t\t\tif (d) {\n\t\t\t\t\t\tconst parts = d.dataset.date.split('-'), y = parts[0], m = parts[1], mi = parseInt(m, 10);\n\t\t\t\t\t\tif (y !== currentYear || mi !== currentMonth) { currentYear = y; currentMonth = mi; t.innerText = y + \"年\" + mi + \"月\"; fetchMonthlyStats(y, mi); }\n\t\t\t\t\t}\n\t\t\t\t\tbreak;\n\t\t\t\t}\n\t\t\t}\n\t\t};\n\n\t\tasync function fetchMonthlyStats(y, m) {\n\t\t\tconst label = document.getElementById('stats-label'); if (label) label.innerText = y + \"年\" + m + \"月統計:\";\n\t\t\ttry {\n\t\t\t\tconst stats = await fetchApi(\"/api/v2/calendar/stats?year=\" + y + \"&month=\" + m);\n\t\t\t\tconst body = document.getElementById('stats-children-body');\n\t\t\t\tif (body) body.innerHTML = stats.children.map(c => (\"<tr class=\\\"border-b border-[#27272A]/50 last:border-0\\\"><td class=\\\"py-2 text-left\\\">\" + c.name + \"<\\/td><td class=\\\"py-2 text-[#60A5FA]\\\">\" + c.upcoming + \"<\\/td><td class=\\\"py-2 text-[#34D399]\\\">\" + c.completed + \"<\\/td><td class=\\\"py-2 text-[#8E8E93]\\\">\" + c.leave + \"<\\/td><td class=\\\"py-2 \" + (c.absent > 0 ? 'text-[#F87171]' : 'text-[#8E8E93]') + \"\\\">\" + c.absent + \"<\\/td><td class=\\\"py-2 text-[#8E8E93]\\\">\" + c.avg_week.toFixed(1) + \"<\\/td><\\/tr>\")).join('');\n\t\t\t\tconst tu = document.getElementById('total-upcoming'); if (tu) tu.innerText = stats.total_upcoming + \" 預約\";\n\t\t\t\tconst ts = document.getElementById('total-sessions'); if (ts) ts.innerText = stats.total_sessions + \" 堂\";\n\t\t\t\tconst tl = document.getElementById('total-leave'); if (tl) tl.innerText = stats.total_leave;\n\t\t\t} catch (e) { console.error(e); }\n\t\t}\n\n\t\tconst renderWeekRow = (w) => {\n\t\t\tconst days = w.days.map(d => {\n\t\t\t\tconst slots = d.slots.map(s => {\n\t\t\t\t\tif (s.is_empty) return (\"<div class=\\\"w-full rounded-[8px] py-2 px-1.5 border border-dashed border-[#3A3A3C] flex items-center justify-center text-left min-h-[40px] opacity-50 cursor-default\\\"><span class=\\\"text-xs text-[#8E8E93]\\\">[未排課]<\\/span><\\/div>\");\n\t\t\t\t\tconst state = s.is_past ? 'opacity-50 cursor-not-allowed' : 'active:scale-95';\n\t\t\t\t\tconst onclick = s.is_past ? '' : (\"onclick=\\\"openBookingPopup('\" + s.id + \"', '\" + s.time_display + \"', '\" + s.end_time_display + \"', '\" + s.course_name + \"', \" + s.booked_count + \", \" + s.capacity + \", \" + JSON.stringify(s.attendees).replace(/\\\"/g, '&quot;') + \")\\\"\");\n\t\t\t\t\treturn (\"<button id=\\\"slot-\" + s.id + \"\\\" class=\\\"w-full rounded-[8px] py-2 px-1.5 flex flex-col gap-1 text-left transition-transform bg-[#1C1C1E] \" + state + \"\\\" \" + onclick + \">\" + jsRenderSlotContent(s) + \"<\\/button>\");\n\t\t\t\t}).join('');\n\t\t\t\treturn (\"<div class=\\\"flex flex-col items-center gap-2 min-h-[120px]\\\" data-date=\\\"\" + d.full_date + \"\\\"><div class=\\\"flex flex-col items-center justify-center w-10 h-10 rounded-full text-sm font-medium \" + (d.is_today ? \"bg-white text-black\" : \"text-[#8E8E93]\") + \"\\\"><span class=\\\"text-xs uppercase leading-none\\\">\" + d.day_of_week + \"<\\/span><span class=\\\"text-lg leading-none font-bold\\\">\" + d.date_display + \"<\\/span><\\/div><div class=\\\"w-full flex flex-col gap-2 px-0\\\">\" + slots + \"<\\/div><\\/div>\");\n\t\t\t}).join('');\n\t\t\treturn (\"<div class=\\\"snap-start pt-4 pb-2 border-b border-[#27272A] min-h-[50vh]\\\" data-week-id=\\\"\" + w.id + \"\\\"><div class=\\\"grid grid-cols-7 gap-[2px] px-1\\\">\" + days + \"<\\/div><\\/div>\");\n\t\t};\n\n\t\tasync function loadWeeks(dir) {\n\t\t\tif (isLoading || (dir === 'prev' && isEndTop) || (dir === 'next' && isEndBottom)) return;\n\t\t\tconst c = document.getElementById('calendar-container'), ref = dir === 'next' ? lastLoadedDate : firstLoadedDate;\n\t\t\tif (!ref) return; isLoading = true;\n\t\t\ttry {\n\t\t\t\tconst data = await fetchApi(\"/api/v2/calendar/weeks?start_date=\" + ref + \"&direction=\" + dir);\n\t\t\t\tif (data.weeks && data.weeks.length) {\n\t\t\t\t\t// Prep for prepend\n\t\t\t\t\tconst oldH = c.scrollHeight, oldT = c.scrollTop;\n\t\t\t\t\t\n\t\t\t\t\t// Temporarily disable smooth scrolling and snapping to prevent jumping during position adjustment\n\t\t\t\t\tif (dir === 'prev') {\n\t\t\t\t\t\tc.style.scrollBehavior = 'auto';\n\t\t\t\t\t\tc.style.scrollSnapType = 'none';\n\t\t\t\t\t}\n\n\t\t\t\t\tconst html = data.weeks.map(w => renderWeekRow(w)).join(''), topS = document.getElementById('sentinel-top'), botS = document.getElementById('sentinel-bottom');\n\t\t\t\t\tconst temp = document.createElement('div'); temp.innerHTML = html; const nodes = Array.from(temp.children);\n\t\t\t\t\t\n\t\t\t\t\tif (dir === 'next') { \n\t\t\t\t\t\tnodes.forEach(n => c.insertBefore(n, botS)); \n\t\t\t\t\t\tlastLoadedDate = data.weeks[data.weeks.length-1].days[6].full_date; \n\t\t\t\t\t} else { \n\t\t\t\t\t\tnodes.reverse().forEach(n => c.insertBefore(n, topS.nextSibling)); \n\t\t\t\t\t\t// Immediately adjust scroll position to stay at the same content\n\t\t\t\t\t\tc.scrollTop = c.scrollHeight - oldH + oldT;\n\t\t\t\t\t\tfirstLoadedDate = data.weeks[0].days[0].full_date; \n\t\t\t\t\t}\n\n\t\t\t\t\t// Restore styles after adjustment\n\t\t\t\t\tif (dir === 'prev') {\n\t\t\t\t\t\trequestAnimationFrame(() => {\n\t\t\t\t\t\t\tc.style.scrollBehavior = '';\n\t\t\t\t\t\t\tc.style.scrollSnapType = '';\n\t\t\t\t\t\t});\n\t\t\t\t\t}\n\t\t\t\t} else dir === 'next' ? (isEndBottom = true, alert(\"最多只能查詢半年內\")) : (isEndTop = true, alert(\"最多只能查詢三個月前\"));\n\t\t\t} catch (e) { console.error(e); }\n\t\t\tfinally { updateHeaderTitle(); setTimeout(() => { isLoading = false; checkSentinels(); }, 500); }\n\t\t}\n\n\t\tconst checkSentinels = () => {\n\t\t\tconst c = document.getElementById('calendar-container'), cRect = c.getBoundingClientRect();\n\t\t\tconst isV = el => { if (!el) return false; const r = el.getBoundingClientRect(); return r.bottom >= cRect.top - 10 && r.top <= cRect.bottom + 10; };\n\t\t\tif (!isLoading) {\n\t\t\t\tif (!isEndBottom && isV(document.getElementById('sentinel-bottom'))) loadWeeks('next');\n\t\t\t\telse if (!isEndTop && isV(document.getElementById('sentinel-top'))) loadWeeks('prev');\n\t\t\t}\n\t\t};\n\n\t\tdocument.addEventListener('DOMContentLoaded', () => {\n\t\t\tconst days = document.querySelectorAll('[data-date]');\n\t\t\tif (days.length) { firstLoadedDate = days[0].dataset.date; lastLoadedDate = days[days.length-1].dataset.date; }\n\t\t\tconst c = document.getElementById('calendar-container'), today = c.querySelector('.bg-white.text-black');\n\t\t\tif (today) today.parentElement.scrollIntoView({ block: 'center' });\n\t\t\tc.addEventListener('scroll', () => { updateHeaderTitle(); checkSentinels(); });\n\t\t\tupdateHeaderTitle();\n\n\t\t\tliff.init({ liffId: '")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, "<script src=\"https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js\" defer></script><script>\n\t\tconst fetchApi = async (u, o = {}) => {\n\t\t\tconst csrfInput = document.querySelector('input[name=\"_csrf\"]');\n\t\t\tconst csrfToken = csrfInput ? csrfInput.value : '';\n\t\t\tconst headers = { 'Content-Type': 'application/json', ...o.headers };\n\t\t\t\n\t\t\tif (csrfToken && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(o.method?.toUpperCase())) {\n\t\t\t\theaders['X-CSRF-Token'] = csrfToken;\n\t\t\t}\n\n\t\t\tconst res = await fetch(u, { ...o, headers });\n\t\t\tconst d = await res.json(); if (!res.ok) throw new Error(d.message || 'API failed'); return d;\n\t\t};\n\n\t\tconst getStatusClasses = (s) => {\n\t\t\tconst m = {\n\t\t\t\t'Booked': 'bg-[#60A5FA] text-white border-transparent',\n\t\t\t\t'Leave': 'bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/30',\n\t\t\t\t'CheckedIn': 'bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30',\n\t\t\t\t'Absent': 'bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/30'\n\t\t\t};\n\t\t\treturn m[s] || 'bg-[#3F3F46]/10 text-[#A1A1AA] border border-[#3F3F46]/30';\n\t\t};\n\n\t\tconst jsRenderTag = (p, mini) => {\n\t\t\tconst s = p.status || p.Status, n = p.name || p.Name, classes = \"rounded transition-colors \" + getStatusClasses(s);\n\t\t\tif (mini) return (\"<span class=\\\"text-[9px] px-1.5 py-0.5 rounded-[4px] overflow-hidden whitespace-nowrap block \" + classes + \"\\\">\" + n + \"<\\/span>\");\n\t\t\tconst suffix = s === 'Leave' ? ' (請假)' : (s === 'CheckedIn' ? ' (已簽到)' : (s === 'Absent' ? ' (缺席)' : ''));\n\t\t\tconst slotId = p.slot_id || p.SlotID;\n\t\t\tconst bookingTime = p.booking_time || p.BookingTime;\n\t\t\tconst bookingId = p.booking_id || p.BookingID;\n\t\t\t// Escape single quotes for use in JS function call\n\t\t\tconst escapedName = n.replace(/'/g, \"\\\\'\");\n\t\t\treturn `<button class=\"text-xs px-2 py-1 ${classes}\" onclick=\"handleMyBookingTagClick(this, '${escapedName}', '${s}', '${bookingTime}', '${bookingId}', '${slotId}')\">${n}${suffix}</button>`;\n\t\t};\n\n\t\tconst jsRenderSlotContent = (s) => {\n\t\t\tconst tags = (s.attendees || []).map(p => jsRenderTag(p, true)).join('');\n\t\t\treturn (\"<div class=\\\"flex flex-col leading-tight\\\"><span class=\\\"text-xs text-[#8E8E93] font-mono\\\">\" + s.time_display + \"<\\/span><span class=\\\"text-xs font-bold text-white break-all leading-tight line-clamp-3 overflow-hidden\\\">\" + s.course_name + \"<\\/span><\\/div><div class=\\\"flex flex-col gap-1 mt-1\\\">\" + tags + \"<\\/div>\");\n\t\t};\n\n\t\tasync function refreshSlot(slotId) {\n\t\t\tif (!slotId) return;\n\t\t\ttry {\n\t\t\t\tconst s = await fetchApi(\"/api/v2/calendar/slots/\" + slotId);\n\t\t\t\tconst btn = document.getElementById('slot-' + slotId);\n\t\t\t\tif (btn) {\n\t\t\t\t\tbtn.innerHTML = jsRenderSlotContent(s);\n\t\t\t\t\t\n\t\t\t\t\t// Update class for past slots\n\t\t\t\t\tif (s.is_past) {\n\t\t\t\t\t\tbtn.className = \"w-full rounded-[8px] py-2 px-1.5 flex flex-col gap-1 text-left transition-transform bg-[#1C1C1E] opacity-50 cursor-not-allowed\";\n\t\t\t\t\t\tbtn.removeAttribute('onclick');\n\t\t\t\t\t} else {\n\t\t\t\t\t\tbtn.className = \"w-full rounded-[8px] py-2 px-1.5 flex flex-col gap-1 text-left transition-transform bg-[#1C1C1E] active:scale-95\";\n\t\t\t\t\t\t\n\t\t\t\t\t\t// Use properly escaped arguments for the onclick handler\n\t\t\t\t\t\tbtn.onclick = () => {\n\t\t\t\t\t\t\topenBookingPopup(s.id, s.time_display, s.end_time_display, s.course_name, s.booked_count, s.capacity, s.attendees);\n\t\t\t\t\t\t};\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\t\n\t\t\t\t// Update popup numbers if it's currently displaying this slot\n\t\t\t\tconst popupSlotId = document.getElementById('popup-slot-id');\n\t\t\t\tif (popupSlotId && popupSlotId.value === slotId) {\n\t\t\t\t\tconst countEl = document.getElementById('popup-booked-count');\n\t\t\t\t\tconst capEl = document.getElementById('popup-capacity');\n\t\t\t\t\tif (countEl) countEl.innerText = s.booked_count;\n\t\t\t\t\tif (capEl) capEl.innerText = s.capacity;\n\t\t\t\t}\n\t\t\t} catch (e) { console.error(\"Refresh slot failed:\", e); }\n\t\t}\n\n\t\tfunction refreshStats() {\n\t\t\tif (currentYear && currentMonth) fetchMonthlyStats(currentYear, currentMonth);\n\t\t}\n\n\t\tlet currentYear, currentMonth, isLoading = false, isEndTop = false, isEndBottom = false, firstLoadedDate, lastLoadedDate;\n\n\t\tconst updateHeaderTitle = () => {\n\t\t\tconst c = document.getElementById('calendar-container'), t = document.getElementById('current-month-title');\n\t\t\tif (!c || !t) return;\n\t\t\tconst weeks = c.querySelectorAll('[data-week-id]'), cTop = c.getBoundingClientRect().top;\n\t\t\tfor (let w of weeks) {\n\t\t\t\tif (w.getBoundingClientRect().bottom > cTop + 100) {\n\t\t\t\t\tconst d = w.querySelector('[data-date]');\n\t\t\t\t\tif (d) {\n\t\t\t\t\t\tconst parts = d.dataset.date.split('-'), y = parts[0], m = parts[1], mi = parseInt(m, 10);\n\t\t\t\t\t\tif (y !== currentYear || mi !== currentMonth) { currentYear = y; currentMonth = mi; t.innerText = y + \"年\" + mi + \"月\"; fetchMonthlyStats(y, mi); }\n\t\t\t\t\t}\n\t\t\t\t\tbreak;\n\t\t\t\t}\n\t\t\t}\n\t\t};\n\n\t\tasync function fetchMonthlyStats(y, m) {\n\t\t\tconst label = document.getElementById('stats-label'); if (label) label.innerText = y + \"年\" + m + \"月統計:\";\n\t\t\ttry {\n\t\t\t\tconst stats = await fetchApi(\"/api/v2/calendar/stats?year=\" + y + \"&month=\" + m);\n\t\t\t\tconst body = document.getElementById('stats-children-body');\n\t\t\t\tif (body) body.innerHTML = stats.children.map(c => (\"<tr class=\\\"border-b border-[#27272A]/50 last:border-0\\\"><td class=\\\"py-2 text-left\\\">\" + c.name + \"<\\/td><td class=\\\"py-2 text-[#60A5FA]\\\">\" + c.upcoming + \"<\\/td><td class=\\\"py-2 text-[#34D399]\\\">\" + c.completed + \"<\\/td><td class=\\\"py-2 text-[#8E8E93]\\\">\" + c.leave + \"<\\/td><td class=\\\"py-2 \" + (c.absent > 0 ? 'text-[#F87171]' : 'text-[#8E8E93]') + \"\\\">\" + c.absent + \"<\\/td><td class=\\\"py-2 text-[#8E8E93]\\\">\" + c.avg_week.toFixed(1) + \"<\\/td><\\/tr>\")).join('');\n\t\t\t\tconst tu = document.getElementById('total-upcoming'); if (tu) tu.innerText = stats.total_upcoming + \" 預約\";\n\t\t\t\tconst ts = document.getElementById('total-sessions'); if (ts) ts.innerText = stats.total_sessions + \" 堂\";\n\t\t\t\tconst tl = document.getElementById('total-leave'); if (tl) tl.innerText = stats.total_leave;\n\t\t\t} catch (e) { console.error(e); }\n\t\t}\n\n\t\tconst renderWeekRow = (w) => {\n\t\t\tconst days = w.days.map(d => {\n\t\t\t\tconst slots = d.slots.map(s => {\n\t\t\t\t\tif (s.is_empty) return (\"<div class=\\\"w-full rounded-[8px] py-2 px-1.5 border border-dashed border-[#3A3A3C] flex items-center justify-center text-left min-h-[40px] opacity-50 cursor-default\\\"><span class=\\\"text-xs text-[#8E8E93]\\\">[未排課]<\\/span><\\/div>\");\n\t\t\t\t\tconst state = s.is_past ? 'opacity-50 cursor-not-allowed' : 'active:scale-95';\n\t\t\t\t\tconst onclick = s.is_past ? '' : (\"onclick=\\\"openBookingPopup('\" + s.id + \"', '\" + s.time_display + \"', '\" + s.end_time_display + \"', '\" + s.course_name + \"', \" + s.booked_count + \", \" + s.capacity + \", \" + JSON.stringify(s.attendees).replace(/\\\"/g, '&quot;') + \")\\\"\");\n\t\t\t\t\treturn (\"<button id=\\\"slot-\" + s.id + \"\\\" class=\\\"w-full rounded-[8px] py-2 px-1.5 flex flex-col gap-1 text-left transition-transform bg-[#1C1C1E] \" + state + \"\\\" \" + onclick + \">\" + jsRenderSlotContent(s) + \"<\\/button>\");\n\t\t\t\t}).join('');\n\t\t\t\treturn (\"<div class=\\\"flex flex-col items-center gap-2 min-h-[120px]\\\" data-date=\\\"\" + d.full_date + \"\\\"><div class=\\\"flex flex-col items-center justify-center w-10 h-10 rounded-full text-sm font-medium \" + (d.is_today ? \"bg-white text-black\" : \"text-[#8E8E93]\") + \"\\\"><span class=\\\"text-xs uppercase leading-none\\\">\" + d.day_of_week + \"<\\/span><span class=\\\"text-lg leading-none font-bold\\\">\" + d.date_display + \"<\\/span><\\/div><div class=\\\"w-full flex flex-col gap-2 px-0\\\">\" + slots + \"<\\/div><\\/div>\");\n\t\t\t}).join('');\n\t\t\treturn (\"<div class=\\\"snap-start pt-4 pb-2 border-b border-[#27272A] min-h-[50vh]\\\" data-week-id=\\\"\" + w.id + \"\\\"><div class=\\\"grid grid-cols-7 gap-[2px] px-1\\\">\" + days + \"<\\/div><\\/div>\");\n\t\t};\n\n\t\tasync function loadWeeks(dir) {\n\t\t\tif (isLoading || (dir === 'prev' && isEndTop) || (dir === 'next' && isEndBottom)) return;\n\t\t\tconst c = document.getElementById('calendar-container'), ref = dir === 'next' ? lastLoadedDate : firstLoadedDate;\n\t\t\tif (!ref) return; isLoading = true;\n\t\t\ttry {\n\t\t\t\tconst data = await fetchApi(\"/api/v2/calendar/weeks?start_date=\" + ref + \"&direction=\" + dir);\n\t\t\t\tif (data.weeks && data.weeks.length) {\n\t\t\t\t\t// Prep for prepend\n\t\t\t\t\tconst oldH = c.scrollHeight, oldT = c.scrollTop;\n\t\t\t\t\t\n\t\t\t\t\t// Temporarily disable smooth scrolling and snapping to prevent jumping during position adjustment\n\t\t\t\t\tif (dir === 'prev') {\n\t\t\t\t\t\tc.style.scrollBehavior = 'auto';\n\t\t\t\t\t\tc.style.scrollSnapType = 'none';\n\t\t\t\t\t}\n\n\t\t\t\t\tconst html = data.weeks.map(w => renderWeekRow(w)).join(''), topS = document.getElementById('sentinel-top'), botS = document.getElementById('sentinel-bottom');\n\t\t\t\t\tconst temp = document.createElement('div'); temp.innerHTML = html; const nodes = Array.from(temp.children);\n\t\t\t\t\t\n\t\t\t\t\tif (dir === 'next') { \n\t\t\t\t\t\tnodes.forEach(n => c.insertBefore(n, botS)); \n\t\t\t\t\t\tlastLoadedDate = data.weeks[data.weeks.length-1].days[6].full_date; \n\t\t\t\t\t} else { \n\t\t\t\t\t\tnodes.reverse().forEach(n => c.insertBefore(n, topS.nextSibling)); \n\t\t\t\t\t\t// Immediately adjust scroll position to stay at the same content\n\t\t\t\t\t\tc.scrollTop = c.scrollHeight - oldH + oldT;\n\t\t\t\t\t\tfirstLoadedDate = data.weeks[0].days[0].full_date; \n\t\t\t\t\t}\n\n\t\t\t\t\t// Restore styles after adjustment\n\t\t\t\t\tif (dir === 'prev') {\n\t\t\t\t\t\trequestAnimationFrame(() => {\n\t\t\t\t\t\t\tc.style.scrollBehavior = '';\n\t\t\t\t\t\t\tc.style.scrollSnapType = '';\n\t\t\t\t\t\t});\n\t\t\t\t\t}\n\t\t\t\t} else dir === 'next' ? (isEndBottom = true, alert(\"最多只能查詢半年內\")) : (isEndTop = true, alert(\"最多只能查詢三個月前\"));\n\t\t\t} catch (e) { console.error(e); }\n\t\t\tfinally { updateHeaderTitle(); setTimeout(() => { isLoading = false; checkSentinels(); }, 500); }\n\t\t}\n\n\t\tconst checkSentinels = () => {\n\t\t\tconst c = document.getElementById('calendar-container'), cRect = c.getBoundingClientRect();\n\t\t\tconst isV = el => { if (!el) return false; const r = el.getBoundingClientRect(); return r.bottom >= cRect.top - 10 && r.top <= cRect.bottom + 10; };\n\t\t\tif (!isLoading) {\n\t\t\t\tif (!isEndBottom && isV(document.getElementById('sentinel-bottom'))) loadWeeks('next');\n\t\t\t\telse if (!isEndTop && isV(document.getElementById('sentinel-top'))) loadWeeks('prev');\n\t\t\t}\n\t\t};\n\n\t\tdocument.addEventListener('DOMContentLoaded', () => {\n\t\t\tconst days = document.querySelectorAll('[data-date]');\n\t\t\tif (days.length) { firstLoadedDate = days[0].dataset.date; lastLoadedDate = days[days.length-1].dataset.date; }\n\t\t\tconst c = document.getElementById('calendar-container'), today = c.querySelector('.bg-white.text-black');\n\t\t\tif (today) today.parentElement.scrollIntoView({ block: 'center' });\n\t\t\tc.addEventListener('scroll', () => { updateHeaderTitle(); checkSentinels(); });\n\t\t\tupdateHeaderTitle();\n\n\t\t\tliff.init({ liffId: '")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Var58, templ_7745c5c3_Err := templruntime.ScriptContentInsideStringLiteral(liffId)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 558, Col: 33}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 571, Col: 33}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var58)
 		if templ_7745c5c3_Err != nil {

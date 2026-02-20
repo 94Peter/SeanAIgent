@@ -206,8 +206,9 @@ func (api *v2BookingAPI) getBookingV2Form(c *gin.Context) {
 
 	// Transform data to ViewModel
 	modelV2 := &booking_v2.BookingV2Model{
-		LiffID:    lineliffid,
-		LiffV1Url: lineliff.GetBookingLiffUrl(),
+		LiffID:     lineliffid,
+		LiffV1Url:  lineliff.GetBookingLiffUrl(),
+		EnableCSRF: api.enableCSRF,
 		CurrentUser: &booking_v2.UserContext{
 			DisplayName:      getUserDisplayName(c),
 			UserID:           userID,
@@ -557,13 +558,11 @@ func (api *v2BookingAPI) getCalendarWeeksV2(c *gin.Context) {
 
 	ctx := c.Request.Context()
 	userID := getUserID(c)
-	fmt.Println("getCalendarWeeksV2", startDateStr, direction, refDate)
 	weeks, errUC := api.queryTwoWeeksScheduleUC.Execute(ctx, readtrain.ReqQueryTwoWeeksSchedule{
 		UserID:        userID,
 		ReferenceDate: refDate,
 		Direction:     direction,
 	})
-	fmt.Println("getCalendarWeeksV2", weeks)
 	if errUC != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": errUC.Error()})
 		return
