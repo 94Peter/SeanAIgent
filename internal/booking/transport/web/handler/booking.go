@@ -23,7 +23,6 @@ import (
 	writeAppt "seanAIgent/internal/booking/usecase/appointment/write"
 	uccore "seanAIgent/internal/booking/usecase/core"
 	readTrain "seanAIgent/internal/booking/usecase/traindate/read"
-	"seanAIgent/internal/db/model"
 	"seanAIgent/internal/service"
 	"seanAIgent/internal/service/lineliff"
 	"seanAIgent/templates"
@@ -511,8 +510,8 @@ func modelToMyBookingsViewModel(dbBookings []*entity.AppointmentWithTrainDate, c
 			continue // Skip if training date info is missing
 		}
 		td := dbBooking.TrainDate
-		startDate = model.ToTime(td.StartDate, td.Timezone)
-		endDate = model.ToTime(td.EndDate, td.Timezone)
+		startDate = toTime(td.StartDate, td.Timezone)
+		endDate = toTime(td.EndDate, td.Timezone)
 		dateDisplay := formattedDate(startDate)
 
 		childName := dbBooking.ChildName
@@ -608,8 +607,8 @@ func modelTrainingDateToBookTrainingDate(
 					IsOnLeave: userBookingModel.IsOnLeave,
 				})
 			}
-			startTime = model.ToTime(slotModel.StartDate, slotModel.Timezone)
-			endTime = model.ToTime(slotModel.EndDate, slotModel.Timezone)
+			startTime = toTime(slotModel.StartDate, slotModel.Timezone)
+			endTime = toTime(slotModel.EndDate, slotModel.Timezone)
 			slotVM := &bookTraining.BookableSlot{
 				ID:                    slotModel.ID,
 				StartTime:             startTime.Format("15:04"),
@@ -794,8 +793,8 @@ func modelToCheckinPageModel(data *entity.TrainDateHasApptState) *checkin.Checki
 		}
 	}
 	var startTime, endTime time.Time
-	startTime = model.ToTime(data.StartDate, data.Timezone)
-	endTime = model.ToTime(data.EndDate, data.Timezone)
+	startTime = toTime(data.StartDate, data.Timezone)
+	endTime = toTime(data.EndDate, data.Timezone)
 
 	return &checkin.CheckinPageModel{
 		SlotID: data.ID, // Assuming all items are for the same slot
@@ -812,8 +811,8 @@ func modelToCheckinPageModel(data *entity.TrainDateHasApptState) *checkin.Checki
 func messageCheckinResult(checkinResults *entity.TrainDateHasApptState) string {
 	// Construct message
 	var startTime, endTime time.Time
-	startTime = model.ToTime(checkinResults.StartDate, checkinResults.Timezone)
-	endTime = model.ToTime(checkinResults.EndDate, checkinResults.Timezone)
+	startTime = toTime(checkinResults.StartDate, checkinResults.Timezone)
+	endTime = toTime(checkinResults.EndDate, checkinResults.Timezone)
 	var msgBuilder strings.Builder
 	msgBuilder.WriteString("簽到結果通知\n\n")
 	msgBuilder.WriteString(fmt.Sprintf("課程：%s %s - %s @ %s\n",
