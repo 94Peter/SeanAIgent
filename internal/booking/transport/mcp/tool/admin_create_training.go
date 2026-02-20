@@ -2,12 +2,12 @@ package tool
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
 
 	writeTrain "seanAIgent/internal/booking/usecase/traindate/write"
+	"seanAIgent/internal/util/timeutil"
 
 	"github.com/mark3labs/mcp-go/server"
 )
@@ -74,20 +74,11 @@ type schedule struct {
 }
 
 func (s *schedule) GetStartTime(timeZone string) (time.Time, error) {
-	return toTime(s.Date, s.StartTime, timeZone)
+	return timeutil.ParseDateTime(s.Date, s.StartTime, timeZone)
 }
 
 func (s *schedule) GetEndTime(timeZone string) (time.Time, error) {
-	return toTime(s.Date, s.EndTime, timeZone)
-}
-
-func toTime(date, timeStr, timezone string) (time.Time, error) {
-	loc, err := time.LoadLocation(timezone)
-	if err != nil {
-		// Fallback to UTC or local if timezone is invalid
-		loc = time.UTC
-	}
-	return time.ParseInLocation("2006-01-02 15:04", fmt.Sprintf("%s %s", date, timeStr), loc)
+	return timeutil.ParseDateTime(s.Date, s.EndTime, timeZone)
 }
 
 func createTrainingCoursesHandler(ctx context.Context, request mcp.CallToolRequest, args createTrainingCoursesArgs) (*mcp.CallToolResult, error) {

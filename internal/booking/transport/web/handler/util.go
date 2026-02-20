@@ -7,6 +7,8 @@ import (
 
 	"github.com/94peter/botreplyer/provider/line/mid"
 	"github.com/gin-gonic/gin"
+
+	"seanAIgent/internal/util/timeutil"
 )
 
 func getUserID(c *gin.Context) string {
@@ -26,17 +28,9 @@ func formattedDate(date time.Time) string {
 }
 
 func TrainDateRangeFormat(start, end time.Time, timezone string) string {
-	start = toTime(start, timezone)
-	end = toTime(end, timezone)
+	start = timeutil.ToLocation(start, timezone)
+	end = timeutil.ToLocation(end, timezone)
 	return start.Format("01/02 15:04") + " - " + end.Format("15:04")
-}
-
-func toTime(t time.Time, timezone string) time.Time {
-	loc, err := time.LoadLocation(timezone)
-	if err != nil {
-		panic(err)
-	}
-	return t.In(loc)
 }
 
 func getAllErrorMessage(err error) string {

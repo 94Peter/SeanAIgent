@@ -18,6 +18,7 @@ import (
 	"seanAIgent/components/icon"
 	"seanAIgent/components/input"
 	"seanAIgent/components/timepicker"
+	"seanAIgent/internal/util/timeutil"
 	"strings"
 	"time"
 )
@@ -61,26 +62,17 @@ func (t *InputTrainingDate) Dates() ([]*dateTimeRange, error) {
 	}
 	dates := make([]*dateTimeRange, len(dateSlice))
 	for i, d := range dateSlice {
-		start, err := toTime(d, t.Start, t.Timezone)
+		start, err := timeutil.ParseDateTime(d, t.Start, t.Timezone)
 		if err != nil {
 			return nil, err
 		}
-		end, err := toTime(d, t.End, t.Timezone)
+		end, err := timeutil.ParseDateTime(d, t.End, t.Timezone)
 		if err != nil {
 			return nil, err
 		}
 		dates[i] = &dateTimeRange{Start: start, End: end}
 	}
 	return dates, nil
-}
-
-func toTime(date, timeStr, timezone string) (time.Time, error) {
-	loc, err := time.LoadLocation(timezone)
-	if err != nil {
-		// Fallback to UTC or local if timezone is invalid
-		loc = time.UTC
-	}
-	return time.ParseInLocation("2006-01-02 15:04", fmt.Sprintf("%s %s", date, timeStr), loc)
 }
 
 type MultiTrainingDateFormModel struct {
@@ -657,7 +649,7 @@ func TrainingDateRow(date *TrainingDate, isAdmin bool, enableCSRF bool) templ.Co
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("date-%s", date.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/manageTrainingDate/manage_training_date.templ`, Line: 246, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/manageTrainingDate/manage_training_date.templ`, Line: 237, Col: 42}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -670,7 +662,7 @@ func TrainingDateRow(date *TrainingDate, isAdmin bool, enableCSRF bool) templ.Co
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(date.FormattedDate)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/manageTrainingDate/manage_training_date.templ`, Line: 248, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/manageTrainingDate/manage_training_date.templ`, Line: 239, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
@@ -683,7 +675,7 @@ func TrainingDateRow(date *TrainingDate, isAdmin bool, enableCSRF bool) templ.Co
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(date.Start)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/manageTrainingDate/manage_training_date.templ`, Line: 249, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/manageTrainingDate/manage_training_date.templ`, Line: 240, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -696,7 +688,7 @@ func TrainingDateRow(date *TrainingDate, isAdmin bool, enableCSRF bool) templ.Co
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(date.End)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/manageTrainingDate/manage_training_date.templ`, Line: 249, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/manageTrainingDate/manage_training_date.templ`, Line: 240, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 		if templ_7745c5c3_Err != nil {
@@ -709,7 +701,7 @@ func TrainingDateRow(date *TrainingDate, isAdmin bool, enableCSRF bool) templ.Co
 		var templ_7745c5c3_Var24 string
 		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(date.Location)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/manageTrainingDate/manage_training_date.templ`, Line: 250, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/manageTrainingDate/manage_training_date.templ`, Line: 241, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 		if templ_7745c5c3_Err != nil {
@@ -722,7 +714,7 @@ func TrainingDateRow(date *TrainingDate, isAdmin bool, enableCSRF bool) templ.Co
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d / %d", date.BookedCount, date.Capacity))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/manageTrainingDate/manage_training_date.templ`, Line: 251, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/manageTrainingDate/manage_training_date.templ`, Line: 242, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {
@@ -735,7 +727,7 @@ func TrainingDateRow(date *TrainingDate, isAdmin bool, enableCSRF bool) templ.Co
 		var templ_7745c5c3_Var26 string
 		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("#date-%s", date.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/manageTrainingDate/manage_training_date.templ`, Line: 257, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/manageTrainingDate/manage_training_date.templ`, Line: 248, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 		if templ_7745c5c3_Err != nil {
@@ -753,7 +745,7 @@ func TrainingDateRow(date *TrainingDate, isAdmin bool, enableCSRF bool) templ.Co
 			var templ_7745c5c3_Var27 string
 			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("此時段已有 %d 人預約，您確定要刪除嗎？", date.BookedCount))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/manageTrainingDate/manage_training_date.templ`, Line: 261, Col: 106}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/manageTrainingDate/manage_training_date.templ`, Line: 252, Col: 106}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 			if templ_7745c5c3_Err != nil {
@@ -786,7 +778,7 @@ func TrainingDateRow(date *TrainingDate, isAdmin bool, enableCSRF bool) templ.Co
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(date.ID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/manageTrainingDate/manage_training_date.templ`, Line: 269, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/manageTrainingDate/manage_training_date.templ`, Line: 260, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 		if templ_7745c5c3_Err != nil {

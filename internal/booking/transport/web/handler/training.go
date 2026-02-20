@@ -16,6 +16,7 @@ import (
 	readTrain "seanAIgent/internal/booking/usecase/traindate/read"
 	writeTrain "seanAIgent/internal/booking/usecase/traindate/write"
 	"seanAIgent/internal/booking/transport/util/lineutil"
+	"seanAIgent/internal/util/timeutil"
 	"seanAIgent/templates"
 	"seanAIgent/templates/forms/manageTrainingDate"
 )
@@ -188,8 +189,8 @@ func sliceDbTrainingDateToTrainingDate(dbTrainingDate []*entity.TrainDateHasAppt
 }
 
 func dbTrainingDateToTrainingDate(dbTrainingDate *entity.TrainDateHasApptState) *manageTrainingDate.TrainingDate {
-	startDate := toTime(dbTrainingDate.StartDate, dbTrainingDate.Timezone)
-	endDate := toTime(dbTrainingDate.EndDate, dbTrainingDate.Timezone)
+	startDate := timeutil.ToLocation(dbTrainingDate.StartDate, dbTrainingDate.Timezone)
+	endDate := timeutil.ToLocation(dbTrainingDate.EndDate, dbTrainingDate.Timezone)
 	return &manageTrainingDate.TrainingDate{
 		ID:            dbTrainingDate.ID,
 		Date:          startDate.Format("2006/01/02"),

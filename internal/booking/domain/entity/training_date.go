@@ -4,6 +4,8 @@ import (
 	"errors"
 	"math"
 	"time"
+
+	"seanAIgent/internal/util/timeutil"
 )
 
 type TrainDateStatus string
@@ -187,20 +189,12 @@ func (p *TrainDate) Validate() error {
 	return nil
 }
 
-func (p *TrainDate) StartDateWithTimeZone() (time.Time, error) {
-	return toTime(p.period.start, p.location)
+func (p *TrainDate) StartDateWithTimeZone() time.Time {
+	return timeutil.ToLocation(p.period.start, p.timezone)
 }
 
-func (p *TrainDate) EndDateWithTimeZone() (time.Time, error) {
-	return toTime(p.period.end, p.location)
-}
-
-func toTime(t time.Time, timezone string) (time.Time, error) {
-	loc, err := time.LoadLocation(timezone)
-	if err != nil {
-		return time.Time{}, nil
-	}
-	return t.In(loc), nil
+func (p *TrainDate) EndDateWithTimeZone() time.Time {
+	return timeutil.ToLocation(p.period.end, p.timezone)
 }
 
 // Getter
