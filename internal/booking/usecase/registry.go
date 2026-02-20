@@ -5,7 +5,6 @@ import (
 	readAppt "seanAIgent/internal/booking/usecase/appointment/read"
 	writeAppt "seanAIgent/internal/booking/usecase/appointment/write"
 	"seanAIgent/internal/booking/usecase/core"
-	migrationv1tov2 "seanAIgent/internal/booking/usecase/migration/v1tov2"
 	readStats "seanAIgent/internal/booking/usecase/stats/read"
 	readTrain "seanAIgent/internal/booking/usecase/traindate/read"
 	writeTrain "seanAIgent/internal/booking/usecase/traindate/write"
@@ -35,9 +34,4 @@ type Registry struct {
 	GetUserMonthlyStats   readStats.GetUserMonthlyStatsUseCase
 	QueryTwoWeeksSchedule readTrain.QueryTwoWeeksScheduleUseCase
 	QueryAllUserApptStats core.ReadUseCase[readStats.ReqQueryAllUserApptStats, []*entity.UserApptStats]
-}
-
-type MigrationRegistry struct {
-	TrainDataMigrationV1ToV2 migrationv1tov2.TrainDataMigrationUseCase
-	ApptMigrationV1ToV2      migrationv1tov2.ApptMigrationUseCase
 }

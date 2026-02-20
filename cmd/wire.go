@@ -74,14 +74,3 @@ func GetUseCaseRegistry() *usecase.Registry {
 	)
 	return nil
 }
-
-func GetMigrationUseCaseSet() usecase.MigrationRegistry {
-	wire.Build(
-		// 1. 提供資料庫與 Repo (內含 wire.Bind 介面綁定)
-		db.InfraSet,
-
-		// 2. 提供包裝過的 UseCase 與 Registry
-		usecase.MigrationUseCaseSet,
-	)
-	return usecase.MigrationRegistry{}
-}

@@ -13,9 +13,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
-
-	"seanAIgent/internal/db/factory"
-	"seanAIgent/internal/booking/transport/mcp"
 )
 
 // parentCmd represents the parent command
@@ -42,19 +39,23 @@ to quickly create a Cobra application.`,
 		dbTracer := otel.Tracer("Mongodb")
 		// db connection
 		dbCtx, cancel := context.WithTimeout(mainCtx, time.Minute)
-		err = factory.InitializeDb(
+		err = mgo.InitConnection(
 			dbCtx,
-			factory.WithMongoDB(
-				viper.GetString("database.uri"),
-				viper.GetString("database.db"),
-			),
-			factory.WithTracer(dbTracer),
+			viper.GetString("database.db"),
+			dbTracer,
+			mgo.WithURI(viper.GetString("database.uri")),
+			mgo.WithMinPoolSize(viper.GetUint64("database.min_pool_size")),
+			mgo.WithMaxPoolSize(viper.GetUint64("database.max_pool_size")),
 		)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
+		err = mgo.SyncIndexes(dbCtx)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
 		defer func() {
-			closeCtx, cancel := context.WithTimeout(mainCtx, time.Minute)
+			closeCtx, cancel := context.WithTimeout(context.Background(), time.Minute)
 			err = mgo.Close(closeCtx)
 			if err != nil {
 				log.Fatal(err.Error())
@@ -63,11 +64,7 @@ to quickly create a Cobra application.`,
 		}()
 		cancel()
 
-		var mcpServer mcp.Server
-		factory.InjectStore(func(stores *factory.Stores) {
-			mcpServer = InitializeMCP()
-		})
-
+		mcpServer := InitializeMCP()
 		mcpServer.Start()
 	},
 }
@@ -83,5 +80,5 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// parentCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// teacherCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

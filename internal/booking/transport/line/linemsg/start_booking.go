@@ -3,7 +3,7 @@ package linemsg
 import (
 	"context"
 	"fmt"
-	"seanAIgent/internal/service/lineliff"
+	"seanAIgent/internal/booking/transport/util/lineutil"
 	"slices"
 	"strings"
 
@@ -29,7 +29,7 @@ func NewStartBookingReply() textreply.LineKeywordReply {
 
 	return &startBookingReply{
 		cfg:             &cfg,
-		msgStartBooking: fmt.Sprintf("大家好!!我是SeanAIgent!!由我來為大家提供約課的服務喔!!\n請點擊下方的按鈕開始約課吧!!\n%s", lineliff.GetBookingLiffUrl()),
+		msgStartBooking: fmt.Sprintf("大家好!!我是SeanAIgent!!由我來為大家提供約課的服務喔!!\n請點擊下方的按鈕開始約課吧!!\n%s", lineutil.GetBookingLiffUrl()),
 	}
 }
 

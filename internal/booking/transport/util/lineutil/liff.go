@@ -1,4 +1,4 @@
-package lineliff
+package lineutil
 
 import "fmt"
 

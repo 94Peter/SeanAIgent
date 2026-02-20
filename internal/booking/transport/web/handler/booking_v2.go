@@ -12,7 +12,7 @@ import (
 	writeappt "seanAIgent/internal/booking/usecase/appointment/write"
 	readstats "seanAIgent/internal/booking/usecase/stats/read"
 	readtrain "seanAIgent/internal/booking/usecase/traindate/read"
-	"seanAIgent/internal/service/lineliff"
+	"seanAIgent/internal/booking/transport/util/lineutil"
 	"seanAIgent/templates"
 	"seanAIgent/templates/forms/booking_v2"
 
@@ -156,7 +156,7 @@ func (api *v2BookingAPI) getCalendarStatsV2(c *gin.Context) {
 
 // getBookingV2Form renders the V2 Booking Page with real data
 func (api *v2BookingAPI) getBookingV2Form(c *gin.Context) {
-	lineliffid := lineliff.GetBookingV2LiffId()
+	lineliffid := lineutil.GetBookingV2LiffId()
 	userID := getUserID(c)
 
 	ctx := c.Request.Context()
@@ -207,7 +207,7 @@ func (api *v2BookingAPI) getBookingV2Form(c *gin.Context) {
 	// Transform data to ViewModel
 	modelV2 := &booking_v2.BookingV2Model{
 		LiffID:     lineliffid,
-		LiffV1Url:  lineliff.GetBookingLiffUrl(),
+		LiffV1Url:  lineutil.GetBookingLiffUrl(),
 		EnableCSRF: api.enableCSRF,
 		CurrentUser: &booking_v2.UserContext{
 			DisplayName:      getUserDisplayName(c),

@@ -177,17 +177,6 @@ func GetUseCaseRegistry() *usecase.Registry {
 	return registry
 }
 
-func GetMigrationUseCaseSet() usecase.MigrationRegistry {
-	dbRepository := db.NewDbRepoAndIdGenerate()
-	trainDataMigrationUseCase := usecase.ProvideTrainDataMigrationV1ToV2(dbRepository)
-	apptMigrationUseCase := usecase.ProvideApptMigrationV1ToV2(dbRepository)
-	migrationRegistry := usecase.MigrationRegistry{
-		TrainDataMigrationV1ToV2: trainDataMigrationUseCase,
-		ApptMigrationV1ToV2:      apptMigrationUseCase,
-	}
-	return migrationRegistry
-}
-
 // wire.go:
 
 func toolSet() []server.ServerTool {

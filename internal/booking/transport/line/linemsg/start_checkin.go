@@ -6,7 +6,7 @@ import (
 	"seanAIgent/internal/booking/domain/entity"
 	"seanAIgent/internal/booking/usecase/core"
 	readTrain "seanAIgent/internal/booking/usecase/traindate/read"
-	"seanAIgent/internal/service/lineliff"
+	"seanAIgent/internal/booking/transport/util/lineutil"
 	"slices"
 	"strings"
 	"time"
@@ -39,7 +39,7 @@ func NewStartCheckinReply(
 	return &startCheckinReply{
 		cfg:                      &cfg,
 		findNearestTrainByTimeUC: findNearestTrainByTimeUC,
-		msgStartCheckin:          fmt.Sprintf("大家好!!教練要簽到啦!!\n教練請點擊下方的按鈕開始簽到吧!!\n%s", lineliff.GetCheckinLiffUrl()),
+		msgStartCheckin:          fmt.Sprintf("大家好!!教練要簽到啦!!\n教練請點擊下方的按鈕開始簽到吧!!\n%s", lineutil.GetCheckinLiffUrl()),
 	}
 }
 

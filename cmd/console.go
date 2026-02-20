@@ -31,7 +31,7 @@ import (
 	"seanAIgent/internal/booking/transport/line/linemsg/replyfunc"
 	"seanAIgent/internal/booking/transport/line/notification"
 	"seanAIgent/internal/booking/transport/web"
-	"seanAIgent/internal/service/lineliff"
+	"seanAIgent/internal/booking/transport/util/lineutil"
 	"seanAIgent/locales"
 )
 
@@ -62,7 +62,7 @@ to quickly create a Cobra application.`,
 			shutdown(ctx)
 		}()
 
-		lineliff.InitLineLiff(viper.GetStringMapString("liffids"))
+		lineutil.InitLineLiff(viper.GetStringMapString("liffids"))
 		// load locales
 		if err := ctxi18n.Load(locales.Content); err != nil {
 			log.Fatalf("error loading locales: %v", err)
@@ -78,6 +78,12 @@ to quickly create a Cobra application.`,
 		msgCfgFile := viper.GetString("linebot.message.config_file")
 		if err := textreply.Load(msgCfgFile); err != nil {
 			log.Fatalf("Failed to load message templates: %v", err)
+		}
+
+		// Load service response templates
+		responseCfgFile := viper.GetString("service.response_templates")
+		if err := lineutil.LoadTemplateMsg(responseCfgFile); err != nil {
+			log.Fatalf("Failed to load response templates: %v", err)
 		}
 
 		dbTracer := otel.Tracer("Mongodb")

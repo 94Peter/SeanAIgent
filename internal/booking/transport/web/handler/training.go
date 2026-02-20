@@ -15,7 +15,7 @@ import (
 	uccore "seanAIgent/internal/booking/usecase/core"
 	readTrain "seanAIgent/internal/booking/usecase/traindate/read"
 	writeTrain "seanAIgent/internal/booking/usecase/traindate/write"
-	"seanAIgent/internal/service/lineliff"
+	"seanAIgent/internal/booking/transport/util/lineutil"
 	"seanAIgent/templates"
 	"seanAIgent/templates/forms/manageTrainingDate"
 )
@@ -140,7 +140,7 @@ func (api *trainingAPI) deleteTrainingDate(c *gin.Context) {
 }
 
 func (api *trainingAPI) getForm(c *gin.Context) {
-	lineliffid := lineliff.GetTrainingDataLiffId()
+	lineliffid := lineutil.GetTrainingDataLiffId()
 	isAdmin := isAdmin(c)
 
 	dbTrainingDate, err := api.queryFutureTrainUC.Execute(

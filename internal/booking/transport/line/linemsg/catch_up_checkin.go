@@ -9,7 +9,7 @@ import (
 	"seanAIgent/internal/booking/domain/entity"
 	"seanAIgent/internal/booking/usecase/core"
 	readTrain "seanAIgent/internal/booking/usecase/traindate/read"
-	"seanAIgent/internal/service/lineliff"
+	"seanAIgent/internal/booking/transport/util/lineutil"
 	"slices"
 	"strings"
 	"time"
@@ -98,7 +98,7 @@ func (r *catchUpCheckInReply) MessageTextReply(
 		return nil, nil, err
 	}
 	var strBuf bytes.Buffer
-	strBuf.WriteString(lineliff.GetCheckinLiffUrl())
+	strBuf.WriteString(lineutil.GetCheckinLiffUrl())
 	strBuf.WriteString("?time=")
 	strBuf.WriteString(url.QueryEscape(msg))
 

@@ -23,8 +23,7 @@ import (
 	writeAppt "seanAIgent/internal/booking/usecase/appointment/write"
 	uccore "seanAIgent/internal/booking/usecase/core"
 	readTrain "seanAIgent/internal/booking/usecase/traindate/read"
-	"seanAIgent/internal/service"
-	"seanAIgent/internal/service/lineliff"
+	"seanAIgent/internal/booking/transport/util/lineutil"
 	"seanAIgent/templates"
 	"seanAIgent/templates/forms/bookTraining"
 	"seanAIgent/templates/forms/checkin"
@@ -123,7 +122,7 @@ func (api *bookingAPI) getMyBookingsPage(c *gin.Context) {
 
 	com := templates.Layout(
 		myBookings.MyBookingsPage(viewModel),
-		lineliff.GetBookingLiffId(),
+		lineutil.GetBookingLiffId(),
 		&templates.OgMeta{
 			Title:       "我的預約",
 			Description: "管理您的預約記錄",
@@ -162,7 +161,7 @@ func (api *bookingAPI) getMyBookingsNextPage(c *gin.Context) {
 }
 
 func (api *bookingAPI) getBookingForm(c *gin.Context) {
-	lineliffid := lineliff.GetBookingLiffId()
+	lineliffid := lineutil.GetBookingLiffId()
 	userId := getUserID(c)
 	displayName := getUserDisplayName(c)
 
@@ -224,7 +223,7 @@ func (api *bookingAPI) bookingSummary(c *gin.Context) {
 
 	var message buffer.Buffer
 	message.WriteString("✨ 點擊下方連結開始預約，加入我們一起進步！\n\n")
-	message.WriteString(fmt.Sprintf("👉 %s\n\n", lineliff.GetBookingLiffUrl()))
+	message.WriteString(fmt.Sprintf("👉 %s\n\n", lineutil.GetBookingLiffUrl()))
 	message.WriteString("📋 課程預約與出席名單\n")
 	message.WriteString("-------------------\n")
 	for _, td := range viewTrainingDate {
@@ -253,7 +252,7 @@ func (api *bookingAPI) getLeaveRequestForm(c *gin.Context) {
 		return
 	}
 
-	com := myBookings.LeaveRequestModal(bookingID, api.enableCSRF, lineliff.GetBookingLiffId())
+	com := myBookings.LeaveRequestModal(bookingID, api.enableCSRF, lineutil.GetBookingLiffId())
 	r := newTemplRenderer(c.Request.Context(), http.StatusOK, com)
 	c.Render(http.StatusOK, r)
 }
@@ -319,7 +318,7 @@ func (api *bookingAPI) submitLeaveRequest(c *gin.Context) {
 	})
 	if err != nil {
 		log.Error(err.Error())
-		msg, err = service.RenderTemplate("leave_msg", map[string]string{
+		msg, err = lineutil.RenderTemplate("leave_msg", map[string]string{
 			"ChildName": appt.ChildName(),
 			"Date": TrainDateRangeFormat(
 				train.StartDate,
@@ -332,7 +331,7 @@ func (api *bookingAPI) submitLeaveRequest(c *gin.Context) {
 			log.Err(err)
 		}
 	} else {
-		msg, err = service.RenderTemplate("leave_msg", map[string]any{
+		msg, err = lineutil.RenderTemplate("leave_msg", map[string]any{
 			"ChildName": appt.ChildName(),
 			"Date": TrainDateRangeFormat(
 				train.StartDate,
@@ -342,7 +341,7 @@ func (api *bookingAPI) submitLeaveRequest(c *gin.Context) {
 			"Reason":      appt.LeaveInfo().Reason(),
 			"RemainQuota": train.AvailableCapacity,
 			"BookedList":  train.AllUsers,
-			"BookingURL":  lineliff.GetBookingLiffUrl(),
+			"BookingURL":  lineutil.GetBookingLiffUrl(),
 		})
 		if err != nil {
 			log.Err(err)
@@ -654,7 +653,7 @@ func (api *bookingAPI) cancelLeave(c *gin.Context) {
 }
 
 func (api *bookingAPI) getCheckinPage(c *gin.Context) {
-	lineliffid := lineliff.GetCheckinLiffId() // Assuming same liffId for now
+	lineliffid := lineutil.GetCheckinLiffId() // Assuming same liffId for now
 
 	var viewModel *checkin.CheckinPageModel
 	var queryTime time.Time
