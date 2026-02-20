@@ -66,6 +66,15 @@ func InitializeMCP() mcp.Server {
 	return nil
 }
 
+func GetUseCaseRegistry() *usecase.Registry {
+	wire.Build(
+		db.InfraSet,
+		service.NewTrainDateService,
+		usecase.UseCaseSet,
+	)
+	return nil
+}
+
 func GetMigrationUseCaseSet() usecase.MigrationRegistry {
 	wire.Build(
 		// 1. 提供資料庫與 Repo (內含 wire.Bind 介面綁定)

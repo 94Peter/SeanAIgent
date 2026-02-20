@@ -6,8 +6,9 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"seanAIgent/internal/db"
-	"seanAIgent/internal/db/model"
+	"seanAIgent/internal/booking/domain/entity"
+	"seanAIgent/internal/booking/usecase/core"
+	readTrain "seanAIgent/internal/booking/usecase/traindate/read"
 	"seanAIgent/internal/service/lineliff"
 	"slices"
 	"strings"
@@ -16,14 +17,15 @@ import (
 	"github.com/94peter/botreplyer/provider/line/reply/textreply"
 	"github.com/gin-contrib/sessions"
 	"github.com/line/line-bot-sdk-go/v7/linebot"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 type keyWordsCfg struct {
 	Keywords []string `yaml:"keywords"`
 }
 
-func NewCatchUpCheckInReply(training db.TrainingDateStore) textreply.LineKeywordReply {
+func NewCatchUpCheckInReply(
+	adminQueryRecentTrainUC core.ReadUseCase[readTrain.ReqAdminQueryRecentTrain, []*entity.TrainDate],
+) textreply.LineKeywordReply {
 	yamlCfg, ok := textreply.GetNode("catch_up_check_in")
 	if !ok {
 		panic("yaml catch_up_check_in is not setting")
@@ -35,14 +37,14 @@ func NewCatchUpCheckInReply(training db.TrainingDateStore) textreply.LineKeyword
 	}
 
 	return &catchUpCheckInReply{
-		cfg:      &cfg,
-		training: training,
+		cfg:                     &cfg,
+		adminQueryRecentTrainUC: adminQueryRecentTrainUC,
 	}
 }
 
 type catchUpCheckInReply struct {
-	cfg      *keyWordsCfg
-	training db.TrainingDateStore
+	cfg                     *keyWordsCfg
+	adminQueryRecentTrainUC core.ReadUseCase[readTrain.ReqAdminQueryRecentTrain, []*entity.TrainDate]
 }
 
 func (r *catchUpCheckInReply) MessageTextReply(
@@ -54,19 +56,11 @@ func (r *catchUpCheckInReply) MessageTextReply(
 		var sendingMsgs []linebot.SendingMessage
 		now := time.Now()
 		pastTime := now.Add(time.Hour * -72)
-		timeQ := bson.M{
-			"$gte": pastTime, "$lte": now,
-		}
+
 		// 查詢過去72小時的課程
-		trainings, err := r.training.Find(ctx, bson.M{
-			"$or": bson.A{
-				bson.M{
-					"start_date": timeQ,
-				},
-				bson.M{
-					"end_date": timeQ,
-				},
-			},
+		trainings, err := r.adminQueryRecentTrainUC.Execute(ctx, readTrain.ReqAdminQueryRecentTrain{
+			StartTime: pastTime,
+			EndTime:   now,
 		})
 		if err != nil {
 			return nil, nil, err
@@ -81,9 +75,10 @@ func (r *catchUpCheckInReply) MessageTextReply(
 
 		quickReplyButtons := make([]*linebot.QuickReplyButton, 0, len(trainings))
 		for _, training := range trainings {
-			selectTime := model.ToTime(training.StartDate, training.Timezone)
+			startTime := training.Period().Start()
+			// 如果有時區資訊，可以考慮在這裡處理，但簽到頁面主要依賴 RFC3339 傳遞時間
 			quickReplyButtons = append(quickReplyButtons, linebot.NewQuickReplyButton("",
-				linebot.NewMessageAction(selectTime.Format("2006-01-02 15:04"), selectTime.Format(time.RFC3339)),
+				linebot.NewMessageAction(startTime.In(time.Local).Format("2006-01-02 15:04"), startTime.Format(time.RFC3339)),
 			))
 		}
 		sendingMsgs = []linebot.SendingMessage{
@@ -107,7 +102,8 @@ func (r *catchUpCheckInReply) MessageTextReply(
 	strBuf.WriteString("?time=")
 	strBuf.WriteString(url.QueryEscape(msg))
 
-	sendingMsgs := []linebot.SendingMessage{
+	var sendingMsgs []linebot.SendingMessage
+	sendingMsgs = []linebot.SendingMessage{
 		linebot.NewTextMessage("請點選下列連結進行補簽：\n" + strBuf.String()),
 	}
 	mysession.Delete("topic")

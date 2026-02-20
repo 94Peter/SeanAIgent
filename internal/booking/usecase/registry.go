@@ -22,6 +22,7 @@ type Registry struct {
 	UserQueryFutureTrain   core.ReadUseCase[readTrain.ReqUserQueryFutureTrain, []*entity.TrainDateHasUserApptState]
 	UserQueryTrainByID     core.ReadUseCase[readTrain.ReqUserQueryTrainByID, *entity.TrainDateHasUserApptState]
 	AdminQueryTrainRange   core.ReadUseCase[readTrain.ReqAdminQueryTrainRange, []*entity.TrainDateHasApptState]
+	AdminQueryRecentTrain  core.ReadUseCase[readTrain.ReqAdminQueryRecentTrain, []*entity.TrainDate]
 
 	CreateAppt  core.WriteUseCase[writeAppt.ReqCreateAppt, []*entity.Appointment]
 	CheckIn     core.WriteUseCase[writeAppt.ReqCheckIn, []*entity.Appointment]
@@ -33,6 +34,7 @@ type Registry struct {
 	// FindBooking       core.ReadUseCase[readAppt.ReqFindBooking, *entity.AppointmentWithTrainDate]
 	GetUserMonthlyStats   readStats.GetUserMonthlyStatsUseCase
 	QueryTwoWeeksSchedule readTrain.QueryTwoWeeksScheduleUseCase
+	QueryAllUserApptStats core.ReadUseCase[readStats.ReqQueryAllUserApptStats, []*entity.UserApptStats]
 }
 
 type MigrationRegistry struct {

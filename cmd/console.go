@@ -27,13 +27,11 @@ import (
 	"go.opentelemetry.io/otel"
 
 	"seanAIgent/internal/booking/infra/db"
+	"seanAIgent/internal/booking/transport/line/linemsg"
+	"seanAIgent/internal/booking/transport/line/linemsg/replyfunc"
 	"seanAIgent/internal/booking/transport/line/notification"
 	"seanAIgent/internal/booking/transport/web"
-	"seanAIgent/internal/db/factory"
-	"seanAIgent/internal/service"
 	"seanAIgent/internal/service/lineliff"
-	"seanAIgent/internal/service/linemsg"
-	"seanAIgent/internal/service/linemsg/replyfunc"
 	"seanAIgent/locales"
 )
 
@@ -82,27 +80,23 @@ to quickly create a Cobra application.`,
 			log.Fatalf("Failed to load message templates: %v", err)
 		}
 
-		// Load service response templates
-		responseCfgFile := viper.GetString("service.response_templates")
-		if err := service.LoadTemplateMsg(responseCfgFile); err != nil {
-			log.Fatalf("Failed to load response templates: %v", err)
-		}
-
 		dbTracer := otel.Tracer("Mongodb")
 		// db connection
 		dbCtx, cancel := context.WithTimeout(mainCtx, time.Minute)
-		err = factory.InitializeDb(
+		// 這裡不再使用 factory.InitializeDb，因為 UseCase 內部的 db.InfraSet 會處理連線 (待驗證，或保留基礎連線)
+		// 但根據 Clean Architecture，連線應該在此初始化
+		err = mgo.InitConnection(
 			dbCtx,
-			factory.WithMongoDB(
-				viper.GetString("database.uri"),
-				viper.GetString("database.db"),
-			),
-			factory.WithMongoDBPoolSize(
-				viper.GetUint64("database.max_pool_size"),
-				viper.GetUint64("database.min_pool_size"),
-			),
-			factory.WithTracer(dbTracer),
+			viper.GetString("database.db"),
+			dbTracer,
+			mgo.WithURI(viper.GetString("database.uri")),
+			mgo.WithMinPoolSize(viper.GetUint64("database.min_pool_size")),
+			mgo.WithMaxPoolSize(viper.GetUint64("database.max_pool_size")),
 		)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		err = mgo.SyncIndexes(dbCtx)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
@@ -127,22 +121,22 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			log.Fatal(err.Error())
 		}
+
 		var checkinReplyer textreply.LineKeywordReply
 		var appointmentState textreply.LineKeywordReply
 		var catchUpCheckIn textreply.LineKeywordReply
 		var userApptStatsNotify notification.UserApptStatsNotifier
 		var webService web.WebService
-		factory.InjectStore(func(stores *factory.Stores) {
-			webService = InitializeWeb()
 
-			// v2 handler
-			dbRepo := db.NewDbRepoAndIdGenerate()
-			userApptStatsNotify = notification.NewUserApptStatsNotifier(dbRepo)
+		// v2 initialization
+		webService = InitializeWeb()
+		registry := GetUseCaseRegistry()
+		dbRepo := db.NewDbRepoAndIdGenerate()
+		userApptStatsNotify = notification.NewUserApptStatsNotifier(dbRepo)
 
-			checkinReplyer = linemsg.NewStartCheckinReply(stores.TrainingDateStore)
-			appointmentState = linemsg.NewAppointmentStateReply(stores.AppointmentStore, r2storage)
-			catchUpCheckIn = linemsg.NewCatchUpCheckInReply(stores.TrainingDateStore)
-		})
+		checkinReplyer = linemsg.NewStartCheckinReply(registry.FindNearestTrainByTime)
+		appointmentState = linemsg.NewAppointmentStateReply(registry.QueryAllUserApptStats, r2storage)
+		catchUpCheckIn = linemsg.NewCatchUpCheckInReply(registry.AdminQueryRecentTrain)
 
 		// init botreplyer
 		botctx, cancel := context.WithTimeout(mainCtx, time.Minute)

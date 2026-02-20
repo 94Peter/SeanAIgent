@@ -3,8 +3,9 @@ package linemsg
 import (
 	"context"
 	"fmt"
-	"seanAIgent/internal/db"
-	"seanAIgent/internal/db/model"
+	"seanAIgent/internal/booking/domain/entity"
+	"seanAIgent/internal/booking/usecase/core"
+	readStats "seanAIgent/internal/booking/usecase/stats/read"
 	"slices"
 	"strconv"
 	"time"
@@ -15,35 +16,37 @@ import (
 	"github.com/94peter/vulpes/storage"
 	"github.com/gin-contrib/sessions"
 	"github.com/line/line-bot-sdk-go/v7/linebot"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 type appointmentStateCfg struct {
 	Keywords []string `yaml:"keywords"`
 }
 
-func NewAppointmentStateReply(appointmentStore db.AppointmentStore, storage storage.Storage) textreply.LineKeywordReply {
+func NewAppointmentStateReply(
+	queryAllUserApptStatsUC core.ReadUseCase[readStats.ReqQueryAllUserApptStats, []*entity.UserApptStats],
+	storage storage.Storage,
+) textreply.LineKeywordReply {
 	yamlCfg, ok := textreply.GetNode("appointment_statistic")
 	if !ok {
-		panic("create_class is not defined")
+		panic("appointment_statistic is not defined")
 	}
 	var cfg appointmentStateCfg
 	err := yamlCfg.Decode(&cfg)
 	if err != nil {
-		panic(fmt.Errorf("decode create_class config: %w", err))
+		panic(fmt.Errorf("decode appointment_statistic config: %w", err))
 	}
 
 	return &appointmentStateReply{
-		cfg:              &cfg,
-		appointmentStore: appointmentStore,
-		storage:          storage,
+		cfg:                     &cfg,
+		queryAllUserApptStatsUC: queryAllUserApptStatsUC,
+		storage:                 storage,
 	}
 }
 
 type appointmentStateReply struct {
-	cfg              *appointmentStateCfg
-	appointmentStore db.AppointmentStore
-	storage          storage.Storage
+	cfg                     *appointmentStateCfg
+	queryAllUserApptStatsUC core.ReadUseCase[readStats.ReqQueryAllUserApptStats, []*entity.UserApptStats]
+	storage                 storage.Storage
 }
 
 func (r *appointmentStateReply) MessageTextReply(ctx context.Context, typ linebot.EventSourceType, groupID, userID, msg string, mysession sessions.Session) ([]linebot.SendingMessage, textreply.DelayedMessage, error) {
@@ -102,15 +105,13 @@ func (r *appointmentStateReply) MessageTextReply(ctx context.Context, typ linebo
 const keyTpl = "appointment_state_%d_%d.csv"
 
 func (r *appointmentStateReply) updateCsvAndGetUrl(ctx context.Context, year int, month time.Month) (string, error) {
-	filter := bson.M{
-		"$expr": bson.M{
-			"$and": bson.A{
-				bson.M{"$eq": bson.A{bson.M{"$year": "$start_date"}, year}},
-				bson.M{"$eq": bson.A{bson.M{"$month": "$start_date"}, month}},
-			},
-		},
-	}
-	results, err := r.appointmentStore.AppointmentState(ctx, filter)
+	start := time.Date(year, month, 1, 0, 0, 0, 0, time.Local)
+	end := start.AddDate(0, 1, 0).Add(-time.Second)
+
+	results, err := r.queryAllUserApptStatsUC.Execute(ctx, readStats.ReqQueryAllUserApptStats{
+		StartTime: start,
+		EndTime:   end,
+	})
 	if err != nil {
 		return "", err
 	}
@@ -118,12 +119,12 @@ func (r *appointmentStateReply) updateCsvAndGetUrl(ctx context.Context, year int
 	return csv.Upload(ctx, r.storage, key, newAppointmentStateCsvMarshaler(results))
 }
 
-func newAppointmentStateCsvMarshaler(data []*model.AggrAppointmentState) csv.CSVMarshaler {
+func newAppointmentStateCsvMarshaler(data []*entity.UserApptStats) csv.CSVMarshaler {
 	return &csvMarshaler{data: data}
 }
 
 type csvMarshaler struct {
-	data []*model.AggrAppointmentState
+	data []*entity.UserApptStats
 }
 
 func (m *csvMarshaler) MarshalCSV() (headers []string, rows [][]string, err error) {

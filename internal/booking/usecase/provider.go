@@ -131,6 +131,18 @@ func ProvideQueryTwoWeeksScheduleUC(
 	return core.WithReadOTel(readTrain.NewQueryTwoWeeksScheduleUseCase(repo))
 }
 
+func ProvideAdminQueryRecentTrainUC(
+	repo Repository,
+) core.ReadUseCase[readTrain.ReqAdminQueryRecentTrain, []*entity.TrainDate] {
+	return core.WithReadOTel(readTrain.NewAdminQueryRecentTrainUseCase(repo))
+}
+
+func ProvideQueryAllUserApptStatsUC(
+	repo Repository,
+) core.ReadUseCase[readStats.ReqQueryAllUserApptStats, []*entity.UserApptStats] {
+	return core.WithReadOTel(readStats.NewQueryAllUserApptStatsUseCase(repo))
+}
+
 var UseCaseSet = wire.NewSet(
 	ProvideCreateTrainDateUC,
 	ProvideBatchCreateTrainDateUC,
@@ -141,6 +153,7 @@ var UseCaseSet = wire.NewSet(
 	ProvideFindNearestTrainByTimeUC,
 	ProvideFindTrainHasApptsByIdUC,
 	ProvideAdminQueryTrainRangeUC,
+	ProvideAdminQueryRecentTrainUC,
 
 	ProvideCreateApptUC,
 	ProvideCancelApptUC,
@@ -151,6 +164,7 @@ var UseCaseSet = wire.NewSet(
 
 	ProvideGetUserMonthlyStatsUC,
 	ProvideQueryTwoWeeksScheduleUC,
+	ProvideQueryAllUserApptStatsUC,
 
 	wire.Struct(new(ServiceAggregator), "*"),
 	wire.Struct(new(Registry), "*"),

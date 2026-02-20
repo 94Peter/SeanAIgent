@@ -2,9 +2,10 @@ package linemsg
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"seanAIgent/internal/db"
+	"seanAIgent/internal/booking/domain/entity"
+	"seanAIgent/internal/booking/usecase/core"
+	readTrain "seanAIgent/internal/booking/usecase/traindate/read"
 	"seanAIgent/internal/service/lineliff"
 	"slices"
 	"strings"
@@ -22,7 +23,9 @@ type startCheckinCfg struct {
 	Keywords []string `yaml:"keywords"`
 }
 
-func NewStartCheckinReply(training db.TrainingDateStore) textreply.LineKeywordReply {
+func NewStartCheckinReply(
+	findNearestTrainByTimeUC core.ReadUseCase[readTrain.ReqFindNearestTrainByTime, *entity.TrainDateHasApptState],
+) textreply.LineKeywordReply {
 	yamlCfg, ok := textreply.GetNode("start_checkin")
 	if !ok {
 		panic("create_class is not defined")
@@ -34,16 +37,16 @@ func NewStartCheckinReply(training db.TrainingDateStore) textreply.LineKeywordRe
 	}
 
 	return &startCheckinReply{
-		cfg:             &cfg,
-		training:        training,
-		msgStartCheckin: fmt.Sprintf("大家好!!教練要簽到啦!!\n教練請點擊下方的按鈕開始簽到吧!!\n%s", lineliff.GetCheckinLiffUrl()),
+		cfg:                      &cfg,
+		findNearestTrainByTimeUC: findNearestTrainByTimeUC,
+		msgStartCheckin:          fmt.Sprintf("大家好!!教練要簽到啦!!\n教練請點擊下方的按鈕開始簽到吧!!\n%s", lineliff.GetCheckinLiffUrl()),
 	}
 }
 
 type startCheckinReply struct {
-	cfg             *startBookingCfg
-	training        db.TrainingDateStore
-	msgStartCheckin string
+	cfg                      *startBookingCfg
+	findNearestTrainByTimeUC core.ReadUseCase[readTrain.ReqFindNearestTrainByTime, *entity.TrainDateHasApptState]
+	msgStartCheckin          string
 }
 
 func (r *startCheckinReply) MessageTextReply(ctx context.Context, typ linebot.EventSourceType, groupID, userID, msg string, mysession sessions.Session) ([]linebot.SendingMessage, textreply.DelayedMessage, error) {
@@ -51,23 +54,22 @@ func (r *startCheckinReply) MessageTextReply(ctx context.Context, typ linebot.Ev
 		if !session.IsAdmin(mysession) {
 			return nil, nil, nil
 		}
-		var err error
 		var sendingMsgs []linebot.SendingMessage
 
 		now := time.Now().Add(10 * time.Minute)
-		data, err := r.training.QueryTrainingDateHasCheckinList(ctx, now)
-		if err != nil {
-			switch {
-			case errors.Is(err, db.ErrNotFound):
+		data, ucErr := r.findNearestTrainByTimeUC.Execute(ctx, readTrain.ReqFindNearestTrainByTime{
+			TimeAfter: now,
+		})
+		if ucErr != nil {
+			if ucErr.Type() == core.ErrNotFound {
 				sendingMsgs = []linebot.SendingMessage{
 					linebot.NewTextMessage("目前沒有課程可以簽到ㄛ!!"),
 				}
 				return sendingMsgs, nil, nil
-			default:
-				return nil, nil, err
 			}
+			return nil, nil, ucErr
 		}
-		if len(data.CheckinItems) == 0 {
+		if len(data.UserAppointments) == 0 {
 			sendingMsgs = []linebot.SendingMessage{
 				linebot.NewTextMessage("這時段沒有人預約喔!!"),
 			}
@@ -77,7 +79,7 @@ func (r *startCheckinReply) MessageTextReply(ctx context.Context, typ linebot.Ev
 		sendingMsgs = []linebot.SendingMessage{
 			linebot.NewTextMessage(r.msgStartCheckin),
 		}
-		return sendingMsgs, nil, err
+		return sendingMsgs, nil, nil
 	}
 	return nil, nil, nil
 }

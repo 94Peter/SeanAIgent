@@ -38,14 +38,16 @@ func InitializeWeb() web.WebService {
 	readUseCase3 := usecase.ProvideUserQueryFutureTrainUC(dbRepository)
 	readUseCase4 := usecase.ProvideUserQueryTrainByIDUC(dbRepository)
 	readUseCase5 := usecase.ProvideAdminQueryTrainRangeUC(dbRepository)
+	readUseCase6 := usecase.ProvideAdminQueryRecentTrainUC(dbRepository)
 	writeUseCase3 := usecase.ProvideCreateApptUC(dbRepository)
 	writeUseCase4 := usecase.ProvideCheckInUC(dbRepository)
 	writeUseCase5 := usecase.ProvideCancelApptUC(dbRepository)
 	writeUseCase6 := usecase.ProvideCreateLeaveUC(dbRepository)
 	writeUseCase7 := usecase.ProvideCancelLeaveUC(dbRepository)
-	readUseCase6 := usecase.ProvideQueryUserBookingsUC(dbRepository)
+	readUseCase7 := usecase.ProvideQueryUserBookingsUC(dbRepository)
 	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
 	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
+	readUseCase8 := usecase.ProvideQueryAllUserApptStatsUC(dbRepository)
 	registry := &usecase.Registry{
 		CreateTrainDate:        writeUseCase,
 		BatchCreateTrainDate:   coreWriteUseCase,
@@ -56,14 +58,16 @@ func InitializeWeb() web.WebService {
 		UserQueryFutureTrain:   readUseCase3,
 		UserQueryTrainByID:     readUseCase4,
 		AdminQueryTrainRange:   readUseCase5,
+		AdminQueryRecentTrain:  readUseCase6,
 		CreateAppt:             writeUseCase3,
 		CheckIn:                writeUseCase4,
 		CancelAppt:             writeUseCase5,
 		CreateLeave:            writeUseCase6,
 		CancelLeave:            writeUseCase7,
-		QueryUserBookings:      readUseCase6,
+		QueryUserBookings:      readUseCase7,
 		GetUserMonthlyStats:    getUserMonthlyStatsUseCase,
 		QueryTwoWeeksSchedule:  queryTwoWeeksScheduleUseCase,
+		QueryAllUserApptStats:  readUseCase8,
 	}
 	bookingUseCaseSet := handler.NewBookingUseCaseSet(registry)
 	trainingUseCaseSet := handler.NewTrainingUseCaseSet(registry)
@@ -88,14 +92,16 @@ func InitializeMCP() mcp.Server {
 	readUseCase3 := usecase.ProvideUserQueryFutureTrainUC(dbRepository)
 	readUseCase4 := usecase.ProvideUserQueryTrainByIDUC(dbRepository)
 	readUseCase5 := usecase.ProvideAdminQueryTrainRangeUC(dbRepository)
+	readUseCase6 := usecase.ProvideAdminQueryRecentTrainUC(dbRepository)
 	writeUseCase3 := usecase.ProvideCreateApptUC(dbRepository)
 	writeUseCase4 := usecase.ProvideCheckInUC(dbRepository)
 	writeUseCase5 := usecase.ProvideCancelApptUC(dbRepository)
 	writeUseCase6 := usecase.ProvideCreateLeaveUC(dbRepository)
 	writeUseCase7 := usecase.ProvideCancelLeaveUC(dbRepository)
-	readUseCase6 := usecase.ProvideQueryUserBookingsUC(dbRepository)
+	readUseCase7 := usecase.ProvideQueryUserBookingsUC(dbRepository)
 	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
 	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
+	readUseCase8 := usecase.ProvideQueryAllUserApptStatsUC(dbRepository)
 	registry := &usecase.Registry{
 		CreateTrainDate:        writeUseCase,
 		BatchCreateTrainDate:   coreWriteUseCase,
@@ -106,18 +112,69 @@ func InitializeMCP() mcp.Server {
 		UserQueryFutureTrain:   readUseCase3,
 		UserQueryTrainByID:     readUseCase4,
 		AdminQueryTrainRange:   readUseCase5,
+		AdminQueryRecentTrain:  readUseCase6,
 		CreateAppt:             writeUseCase3,
 		CheckIn:                writeUseCase4,
 		CancelAppt:             writeUseCase5,
 		CreateLeave:            writeUseCase6,
 		CancelLeave:            writeUseCase7,
-		QueryUserBookings:      readUseCase6,
+		QueryUserBookings:      readUseCase7,
 		GetUserMonthlyStats:    getUserMonthlyStatsUseCase,
 		QueryTwoWeeksSchedule:  queryTwoWeeksScheduleUseCase,
+		QueryAllUserApptStats:  readUseCase8,
 	}
 	v := toolSet()
 	server := mcp.InitMcpServer(registry, v)
 	return server
+}
+
+func GetUseCaseRegistry() *usecase.Registry {
+	dbRepository := db.NewDbRepoAndIdGenerate()
+	trainDateService := service.NewTrainDateService(dbRepository)
+	serviceAggregator := usecase.ServiceAggregator{
+		TrainDateService: trainDateService,
+	}
+	writeUseCase := usecase.ProvideCreateTrainDateUC(dbRepository, serviceAggregator)
+	coreWriteUseCase := usecase.ProvideBatchCreateTrainDateUC(dbRepository, serviceAggregator)
+	writeUseCase2 := usecase.ProvideDeleteTrainDateUC(dbRepository)
+	readUseCase := usecase.ProvideQueryFutureTrainUC(dbRepository)
+	coreReadUseCase := usecase.ProvideFindNearestTrainByTimeUC(dbRepository)
+	readUseCase2 := usecase.ProvideFindTrainHasApptsByIdUC(dbRepository)
+	readUseCase3 := usecase.ProvideUserQueryFutureTrainUC(dbRepository)
+	readUseCase4 := usecase.ProvideUserQueryTrainByIDUC(dbRepository)
+	readUseCase5 := usecase.ProvideAdminQueryTrainRangeUC(dbRepository)
+	readUseCase6 := usecase.ProvideAdminQueryRecentTrainUC(dbRepository)
+	writeUseCase3 := usecase.ProvideCreateApptUC(dbRepository)
+	writeUseCase4 := usecase.ProvideCheckInUC(dbRepository)
+	writeUseCase5 := usecase.ProvideCancelApptUC(dbRepository)
+	writeUseCase6 := usecase.ProvideCreateLeaveUC(dbRepository)
+	writeUseCase7 := usecase.ProvideCancelLeaveUC(dbRepository)
+	readUseCase7 := usecase.ProvideQueryUserBookingsUC(dbRepository)
+	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
+	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
+	readUseCase8 := usecase.ProvideQueryAllUserApptStatsUC(dbRepository)
+	registry := &usecase.Registry{
+		CreateTrainDate:        writeUseCase,
+		BatchCreateTrainDate:   coreWriteUseCase,
+		DeleteTrainDate:        writeUseCase2,
+		QueryFutureTrain:       readUseCase,
+		FindNearestTrainByTime: coreReadUseCase,
+		FindTrainHasApptsById:  readUseCase2,
+		UserQueryFutureTrain:   readUseCase3,
+		UserQueryTrainByID:     readUseCase4,
+		AdminQueryTrainRange:   readUseCase5,
+		AdminQueryRecentTrain:  readUseCase6,
+		CreateAppt:             writeUseCase3,
+		CheckIn:                writeUseCase4,
+		CancelAppt:             writeUseCase5,
+		CreateLeave:            writeUseCase6,
+		CancelLeave:            writeUseCase7,
+		QueryUserBookings:      readUseCase7,
+		GetUserMonthlyStats:    getUserMonthlyStatsUseCase,
+		QueryTwoWeeksSchedule:  queryTwoWeeksScheduleUseCase,
+		QueryAllUserApptStats:  readUseCase8,
+	}
+	return registry
 }
 
 func GetMigrationUseCaseSet() usecase.MigrationRegistry {
