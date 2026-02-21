@@ -2,7 +2,7 @@ package stats
 
 import (
 	"context"
-	"fmt"
+	"strconv"
 	"seanAIgent/internal/booking/domain/entity"
 	"seanAIgent/internal/booking/domain/repository"
 	"time"
@@ -37,9 +37,8 @@ func (r *cachedStatsRepo) GetUserApptStats(
 ) (*entity.UserApptStats, repository.RepoError) {
 	// 僅針對時間範圍過濾做快取 (通常是用於月度統計)
 	if f, ok := filter.(repository.FilterUserApptStatsByTrainTimeRange); ok {
-		// 建立 Cache Key: stats:userID:year:month
-		// 注意：這裡假設傳入的是整個月的範圍
-		cacheKey := fmt.Sprintf("stats:%s:%d:%d", userID, f.TrainStart.Year(), int(f.TrainStart.Month()))
+		// 優化：改用字串拼接與 strconv 避免 fmt.Sprintf 的反射開銷
+		cacheKey := "stats:" + userID + ":" + strconv.Itoa(f.TrainStart.Year()) + ":" + strconv.Itoa(int(f.TrainStart.Month()))
 		if val, found := r.cache.Get(cacheKey); found {
 			return val.(*entity.UserApptStats), nil
 		}
@@ -64,7 +63,7 @@ func (r *cachedStatsRepo) GetUserApptStats(
 }
 
 func (r *cachedStatsRepo) CleanStatsCache(ctx context.Context, userID string, year, month int) repository.RepoError {
-	cacheKey := fmt.Sprintf("stats:%s:%d:%d", userID, year, month)
+	cacheKey := "stats:" + userID + ":" + strconv.Itoa(year) + ":" + strconv.Itoa(month)
 	r.cache.Delete(cacheKey)
 	return r.delegate.CleanStatsCache(ctx, userID, year, month)
 }

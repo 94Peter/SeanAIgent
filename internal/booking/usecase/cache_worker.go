@@ -14,6 +14,9 @@ type cleaningJob struct {
 
 type CacheWorker interface {
 	Clean(uid string, tid string)
+	// CleanSync 進行同步清理，確保關鍵資料即時失效
+	// 直接傳入 startTime 避免再次查詢資料庫
+	CleanSync(ctx context.Context, uid string, tid string, startTime time.Time)
 	Start(ctx context.Context)
 }
 
@@ -33,9 +36,16 @@ func (w *cacheWorker) Clean(uid string, tid string) {
 	select {
 	case w.jobChan <- cleaningJob{UserID: uid, TrainingID: tid}:
 	default:
-		// Channel full, drop or handle accordingly. For cache cleaning, dropping is usually acceptable
-		// but we might want to log it.
+		// Channel full, drop or handle accordingly.
 	}
+}
+
+func (w *cacheWorker) CleanSync(ctx context.Context, uid string, tid string, startTime time.Time) {
+	// 1. 清理該用戶的排程快取 (精準清理)
+	_ = w.repo.CleanTrainCache(ctx, uid)
+	
+	// 2. 清理統計快取 (同步呼叫確保一致性)
+	_ = w.repo.CleanStatsCache(ctx, uid, startTime.Year(), int(startTime.Month()))
 }
 
 func (w *cacheWorker) Start(ctx context.Context) {
@@ -63,11 +73,9 @@ func (w *cacheWorker) Start(ctx context.Context) {
 func (w *cacheWorker) process(job cleaningJob) {
 	bgCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-
+	
 	trainDate, err := w.repo.FindTrainDateByID(bgCtx, job.TrainingID)
 	if err == nil {
-		trainingStart := trainDate.Period().Start()
-		_ = w.repo.CleanStatsCache(bgCtx, job.UserID, trainingStart.Year(), int(trainingStart.Month()))
-		_ = w.repo.CleanTrainCache(bgCtx, job.UserID)
+		w.CleanSync(bgCtx, job.UserID, job.TrainingID, trainDate.Period().Start())
 	}
 }

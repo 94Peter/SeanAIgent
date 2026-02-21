@@ -52,33 +52,41 @@ func (uc *cancelLeaveUseCase) Name() string {
 
 func (uc *cancelLeaveUseCase) Execute(
 	ctx context.Context, req ReqCancelLeave) (*entity.Appointment, core.UseCaseError) {
-	var err error
-	appt, err := uc.repo.FindApptByID(ctx, req.ApptID)
-	if err != nil {
-		if errors.Is(err, repository.ErrNotFound) {
+	appt, repoErr := uc.repo.FindApptByID(ctx, req.ApptID)
+	if repoErr != nil {
+		if errors.Is(repoErr, repository.ErrNotFound) {
 			return nil, ErrCancelLeaveApptNotFound
 		}
-		return nil, ErrCancelLeaveFindApptFail.Wrap(err)
+		return nil, ErrCancelLeaveFindApptFail.Wrap(repoErr)
 	}
-	err = appt.CancelLeave(req.UserID)
+	
+	// 取得課程資訊以獲得 startTime
+	trainDate, repoErr := uc.repo.FindTrainDateByID(ctx, appt.TrainingID())
+	if repoErr != nil {
+		return nil, ErrCancelLeaveTrainDateNotFound.Wrap(repoErr)
+	}
+
+	// 這裡會檢查 req.UserID 是否為預約本人
+	err := appt.CancelLeave(req.UserID)
 	if err != nil {
 		return nil, ErrCancelLeaveCancelLeaveFail.Wrap(err)
 	}
-	// 2. 扣除名額, 若失敗則回傳錯誤，不更新 appointment
-	err = uc.repo.DeductCapacity(ctx, appt.TrainingID(), 1)
-	if err != nil {
-		return nil, ErrCancelLeaveDeductCapacityFail.Wrap(err)
+	
+	// 2. 扣除名額
+	repoErr = uc.repo.DeductCapacity(ctx, appt.TrainingID(), 1)
+	if repoErr != nil {
+		return nil, ErrCancelLeaveDeductCapacityFail.Wrap(repoErr)
 	}
+	
 	// 3. 更新 appointment
-	err = uc.repo.UpdateAppt(ctx, appt)
-	if err != nil {
-		// rollback
+	repoErr = uc.repo.UpdateAppt(ctx, appt)
+	if repoErr != nil {
 		_ = uc.repo.IncreaseCapacity(ctx, appt.TrainingID(), 1)
-		return nil, ErrCancelLeaveUpdateApptFail.Wrap(err)
+		return nil, ErrCancelLeaveUpdateApptFail.Wrap(repoErr)
 	}
 
-	// 使用背景 Worker 進行非同步清理
-	uc.cw.Clean(appt.User().UserID(), appt.TrainingID())
+	// 使用同步清理，確保跳轉頁面後資料一致
+	uc.cw.CleanSync(ctx, appt.User().UserID(), appt.TrainingID(), trainDate.Period().Start())
 
 	return appt, nil
 }

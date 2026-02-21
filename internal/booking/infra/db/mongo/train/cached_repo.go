@@ -2,9 +2,9 @@ package train
 
 import (
 	"context"
-	"fmt"
 	"seanAIgent/internal/booking/domain/entity"
 	"seanAIgent/internal/booking/domain/repository"
+	"sync"
 	"time"
 
 	"github.com/patrickmn/go-cache"
@@ -15,6 +15,10 @@ type cachedTrainRepo struct {
 	delegate repository.TrainRepository
 	cache    *cache.Cache
 	sfGroup  *singleflight.Group
+	
+	// 用於紀錄每個用戶關聯的快取 Key，以便精準刪除
+	// key: string (userID), value: *sync.Map (key: cacheKey, value: struct{}{})
+	userKeys sync.Map
 }
 
 func NewCachedTrainRepository(delegate repository.TrainRepository) repository.TrainRepository {
@@ -28,15 +32,19 @@ func NewCachedTrainRepository(delegate repository.TrainRepository) repository.Tr
 func (r *cachedTrainRepo) UserQueryTrainDateHasApptState(
 	ctx context.Context, userID string, filter repository.FilterTrainDate,
 ) ([]*entity.TrainDateHasUserApptState, repository.RepoError) {
-	// 僅對按時間範圍的查詢做快取
 	if f, ok := filter.(repository.FilterTrainingDateByTimeRange); ok {
-		// 建立 Cache Key: schedule:userID:startTime:endTime
-		cacheKey := fmt.Sprintf("schedule:%s:%s:%s", userID, f.StartTime.Format("2006-01-02"), f.EndTime.Format("2006-01-02"))
+		// 優化：改用字串拼接避免 fmt.Sprintf 的反射開銷
+		cacheKey := "schedule:" + userID + ":" + f.StartTime.Format("2006-01-02") + ":" + f.EndTime.Format("2006-01-02")
+		
+		// 紀錄 Key 關聯 (使用 sync.Map 降低鎖競爭)
+		actual, _ := r.userKeys.LoadOrStore(userID, &sync.Map{})
+		userMap := actual.(*sync.Map)
+		userMap.Store(cacheKey, struct{}{})
+
 		if val, found := r.cache.Get(cacheKey); found {
 			return val.([]*entity.TrainDateHasUserApptState), nil
 		}
 
-		// 使用 SingleFlight 解決緩存擊穿
 		res, err, _ := r.sfGroup.Do(cacheKey, func() (interface{}, error) {
 			data, repoErr := r.delegate.UserQueryTrainDateHasApptState(ctx, userID, filter)
 			if repoErr != nil {
@@ -56,12 +64,25 @@ func (r *cachedTrainRepo) UserQueryTrainDateHasApptState(
 }
 
 func (r *cachedTrainRepo) CleanTrainCache(ctx context.Context, userID string) repository.RepoError {
-	// 因為我們不知道具體是哪個時間範圍被快取了，最簡單的方法是清除該用戶的所有相關快取
-	// 或者如果 go-cache 支持按前綴刪除（它不支持），我們可能需要換種方式。
-	// 對於 go-cache，我們可以簡單地 Flush 或不處理，但更好的做法是使用 userID 作為 Key 的一部分
-	// 這裡我們先用 Flush 簡化，但在生產環境建議用 Redis 或更細粒度的控制。
-	// 由於這是 memory cache 且 TTL 很短 (5m)，不 Clean 也許能接受，但為了正確性：
-	r.cache.Flush() 
+	if userID != "" {
+		if actual, ok := r.userKeys.Load(userID); ok {
+			userMap := actual.(*sync.Map)
+			userMap.Range(func(key, value interface{}) bool {
+				r.cache.Delete(key.(string))
+				return true
+			})
+			r.userKeys.Delete(userID)
+		}
+	} else {
+		// 如果沒有指定 userID，則維持原有的 Flush 行為（全域清理）
+		r.cache.Flush()
+		// 同時清空所有用戶的 Key 紀錄
+		r.userKeys.Range(func(key, value interface{}) bool {
+			r.userKeys.Delete(key)
+			return true
+		})
+	}
+
 	return r.delegate.CleanTrainCache(ctx, userID)
 }
 

@@ -84,9 +84,9 @@ func (uc *checkInUseCase) Execute(
 		return nil, ErrCheckInUpdateApptFail.Wrap(err)
 	}
 
-	// 使用背景 Worker 進行非同步清理
+	// 使用同步清理，確保所有受影響用戶的資料即時更新
 	for userID := range affectedUserIDs {
-		uc.cw.Clean(userID, req.TrainDateID)
+		uc.cw.CleanSync(ctx, userID, req.TrainDateID, trainDate.Period().Start())
 	}
 
 	return updatedAppts, nil

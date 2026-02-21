@@ -79,8 +79,8 @@ func (uc *createLeaveUseCase) Execute(
 		return nil, ErrCreateLeaveSaveLeaveFail.Wrap(err)
 	}
 
-	// 使用背景 Worker 進行非同步清理
-	uc.cw.Clean(req.User.UserID(), appt.TrainingID())
+	// 使用同步清理，確保跳轉頁面後資料一致
+	uc.cw.CleanSync(ctx, req.User.UserID(), appt.TrainingID(), trainDate.Period().Start())
 
 	return appt, nil
 }
