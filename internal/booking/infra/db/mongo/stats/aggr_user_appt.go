@@ -137,3 +137,7 @@ func (*statsRepoImpl) GetUserApptStats(
 	}
 	return result[0], nil
 }
+
+func (*statsRepoImpl) CleanStatsCache(ctx context.Context, userID string, year, month int) repository.RepoError {
+	return nil
+}

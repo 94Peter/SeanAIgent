@@ -30,8 +30,8 @@ import (
 	"seanAIgent/internal/booking/transport/line/linemsg"
 	"seanAIgent/internal/booking/transport/line/linemsg/replyfunc"
 	"seanAIgent/internal/booking/transport/line/notification"
-	"seanAIgent/internal/booking/transport/web"
 	"seanAIgent/internal/booking/transport/util/lineutil"
+	"seanAIgent/internal/booking/transport/web"
 	"seanAIgent/locales"
 )
 
@@ -98,6 +98,8 @@ to quickly create a Cobra application.`,
 			mgo.WithURI(viper.GetString("database.uri")),
 			mgo.WithMinPoolSize(viper.GetUint64("database.min_pool_size")),
 			mgo.WithMaxPoolSize(viper.GetUint64("database.max_pool_size")),
+			mgo.WithMaxConnIdleTime(viper.GetDuration("database.max_conn_idle_time")),
+			mgo.WithTimeout(viper.GetDuration("database.timeout")),
 		)
 		if err != nil {
 			log.Fatal(err.Error())
@@ -194,6 +196,7 @@ to quickly create a Cobra application.`,
 
 		apiCtx, apicancel := context.WithCancel(mainCtx)
 
+		registry.Start(apiCtx)
 		go webService.Run(apiCtx)
 		cancelSlice = append(cancelSlice, apicancel)
 

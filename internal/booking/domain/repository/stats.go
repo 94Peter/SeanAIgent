@@ -32,4 +32,5 @@ type StatsRepository interface {
 	GetUserApptStats(
 		ctx context.Context, userID string, filter FilterUserApptStats,
 	) (*entity.UserApptStats, RepoError)
+	CleanStatsCache(ctx context.Context, userID string, year, month int) RepoError
 }

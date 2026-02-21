@@ -368,6 +368,10 @@ func (*trainRepoImpl) IncreaseCapacity(
 	return nil
 }
 
+func (*trainRepoImpl) CleanTrainCache(ctx context.Context, userID string) repository.RepoError {
+	return nil
+}
+
 func (*trainRepoImpl) UpdateManyTrainDates(
 	ctx context.Context, trainings []*entity.TrainDate,
 ) repository.RepoError {

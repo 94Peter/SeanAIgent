@@ -102,6 +102,14 @@ func (m *MockTrainRepository) IncreaseCapacity(ctx context.Context, trainingID s
 	return args.Get(0).(repository.RepoError)
 }
 
+func (m *MockTrainRepository) CleanTrainCache(ctx context.Context, userID string) repository.RepoError {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil
+	}
+	return args.Get(0).(repository.RepoError)
+}
+
 func TestCheckTrainerAvailability(t *testing.T) {
 	mockRepo := new(MockTrainRepository)
 	svc := NewTrainDateService(mockRepo)

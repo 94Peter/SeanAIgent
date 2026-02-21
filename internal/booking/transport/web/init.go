@@ -75,8 +75,9 @@ type Config struct {
 	tracer struct {
 		Enable bool
 	}
-	mode string
-	port uint16
+	mode                  string
+	port                  uint16
+	maxConcurrentRequests int
 }
 
 type webService struct {
@@ -110,6 +111,7 @@ func (s *webService) Run(ctx context.Context) {
 		ezapi.WithTracerEnable(s.cfg.tracer.Enable),
 		ezapi.WithLoggerEnable(s.cfg.logger.Enable),
 		ezapi.WithMode(s.cfg.mode),
+		ezapi.WithMaxConcurrentRequests(s.cfg.maxConcurrentRequests),
 	); err != nil {
 		log.Info(err.Error())
 	}

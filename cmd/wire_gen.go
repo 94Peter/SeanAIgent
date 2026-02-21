@@ -39,11 +39,12 @@ func InitializeWeb() web.WebService {
 	readUseCase4 := usecase.ProvideUserQueryTrainByIDUC(dbRepository)
 	readUseCase5 := usecase.ProvideAdminQueryTrainRangeUC(dbRepository)
 	readUseCase6 := usecase.ProvideAdminQueryRecentTrainUC(dbRepository)
-	writeUseCase3 := usecase.ProvideCreateApptUC(dbRepository)
-	writeUseCase4 := usecase.ProvideCheckInUC(dbRepository)
-	writeUseCase5 := usecase.ProvideCancelApptUC(dbRepository)
-	writeUseCase6 := usecase.ProvideCreateLeaveUC(dbRepository)
-	writeUseCase7 := usecase.ProvideCancelLeaveUC(dbRepository)
+	cacheWorker := usecase.NewCacheWorker(dbRepository)
+	writeUseCase3 := usecase.ProvideCreateApptUC(dbRepository, cacheWorker)
+	writeUseCase4 := usecase.ProvideCheckInUC(dbRepository, cacheWorker)
+	writeUseCase5 := usecase.ProvideCancelApptUC(dbRepository, cacheWorker)
+	writeUseCase6 := usecase.ProvideCreateLeaveUC(dbRepository, cacheWorker)
+	writeUseCase7 := usecase.ProvideCancelLeaveUC(dbRepository, cacheWorker)
 	readUseCase7 := usecase.ProvideQueryUserBookingsUC(dbRepository)
 	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
 	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
@@ -68,6 +69,7 @@ func InitializeWeb() web.WebService {
 		GetUserMonthlyStats:    getUserMonthlyStatsUseCase,
 		QueryTwoWeeksSchedule:  queryTwoWeeksScheduleUseCase,
 		QueryAllUserApptStats:  readUseCase8,
+		CacheWorker:            cacheWorker,
 	}
 	bookingUseCaseSet := handler.NewBookingUseCaseSet(registry)
 	trainingUseCaseSet := handler.NewTrainingUseCaseSet(registry)
@@ -93,11 +95,12 @@ func InitializeMCP() mcp.Server {
 	readUseCase4 := usecase.ProvideUserQueryTrainByIDUC(dbRepository)
 	readUseCase5 := usecase.ProvideAdminQueryTrainRangeUC(dbRepository)
 	readUseCase6 := usecase.ProvideAdminQueryRecentTrainUC(dbRepository)
-	writeUseCase3 := usecase.ProvideCreateApptUC(dbRepository)
-	writeUseCase4 := usecase.ProvideCheckInUC(dbRepository)
-	writeUseCase5 := usecase.ProvideCancelApptUC(dbRepository)
-	writeUseCase6 := usecase.ProvideCreateLeaveUC(dbRepository)
-	writeUseCase7 := usecase.ProvideCancelLeaveUC(dbRepository)
+	cacheWorker := usecase.NewCacheWorker(dbRepository)
+	writeUseCase3 := usecase.ProvideCreateApptUC(dbRepository, cacheWorker)
+	writeUseCase4 := usecase.ProvideCheckInUC(dbRepository, cacheWorker)
+	writeUseCase5 := usecase.ProvideCancelApptUC(dbRepository, cacheWorker)
+	writeUseCase6 := usecase.ProvideCreateLeaveUC(dbRepository, cacheWorker)
+	writeUseCase7 := usecase.ProvideCancelLeaveUC(dbRepository, cacheWorker)
 	readUseCase7 := usecase.ProvideQueryUserBookingsUC(dbRepository)
 	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
 	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
@@ -122,6 +125,7 @@ func InitializeMCP() mcp.Server {
 		GetUserMonthlyStats:    getUserMonthlyStatsUseCase,
 		QueryTwoWeeksSchedule:  queryTwoWeeksScheduleUseCase,
 		QueryAllUserApptStats:  readUseCase8,
+		CacheWorker:            cacheWorker,
 	}
 	v := toolSet()
 	server := mcp.InitMcpServer(registry, v)
@@ -144,11 +148,12 @@ func GetUseCaseRegistry() *usecase.Registry {
 	readUseCase4 := usecase.ProvideUserQueryTrainByIDUC(dbRepository)
 	readUseCase5 := usecase.ProvideAdminQueryTrainRangeUC(dbRepository)
 	readUseCase6 := usecase.ProvideAdminQueryRecentTrainUC(dbRepository)
-	writeUseCase3 := usecase.ProvideCreateApptUC(dbRepository)
-	writeUseCase4 := usecase.ProvideCheckInUC(dbRepository)
-	writeUseCase5 := usecase.ProvideCancelApptUC(dbRepository)
-	writeUseCase6 := usecase.ProvideCreateLeaveUC(dbRepository)
-	writeUseCase7 := usecase.ProvideCancelLeaveUC(dbRepository)
+	cacheWorker := usecase.NewCacheWorker(dbRepository)
+	writeUseCase3 := usecase.ProvideCreateApptUC(dbRepository, cacheWorker)
+	writeUseCase4 := usecase.ProvideCheckInUC(dbRepository, cacheWorker)
+	writeUseCase5 := usecase.ProvideCancelApptUC(dbRepository, cacheWorker)
+	writeUseCase6 := usecase.ProvideCreateLeaveUC(dbRepository, cacheWorker)
+	writeUseCase7 := usecase.ProvideCancelLeaveUC(dbRepository, cacheWorker)
 	readUseCase7 := usecase.ProvideQueryUserBookingsUC(dbRepository)
 	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
 	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
@@ -173,6 +178,7 @@ func GetUseCaseRegistry() *usecase.Registry {
 		GetUserMonthlyStats:    getUserMonthlyStatsUseCase,
 		QueryTwoWeeksSchedule:  queryTwoWeeksScheduleUseCase,
 		QueryAllUserApptStats:  readUseCase8,
+		CacheWorker:            cacheWorker,
 	}
 	return registry
 }

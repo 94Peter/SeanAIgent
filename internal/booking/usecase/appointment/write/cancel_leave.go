@@ -16,10 +16,14 @@ type ReqCancelLeave struct {
 type cancelLeaveUseCaseRepo interface {
 	repository.TrainRepository
 	repository.AppointmentRepository
+	repository.StatsRepository
 }
 
-func NewCancelLeaveUseCase(repo cancelLeaveUseCaseRepo) core.WriteUseCase[ReqCancelLeave, *entity.Appointment] {
-	return &cancelLeaveUseCase{repo: repo}
+func NewCancelLeaveUseCase(repo cancelLeaveUseCaseRepo, cw cacheWorker) core.WriteUseCase[ReqCancelLeave, *entity.Appointment] {
+	return &cancelLeaveUseCase{
+		repo: repo,
+		cw:   cw,
+	}
 }
 
 var (
@@ -33,10 +37,13 @@ var (
 		"CANCEL_LEAVE", "DEDUCT_CAPACITY_FAIL", "deduct capacity fail", core.ErrConflict)
 	ErrCancelLeaveUpdateApptFail = core.NewDBError(
 		"CANCEL_LEAVE", "UPDATE_APPOINTMENT_FAIL", "update appointment fail", core.ErrInternal)
+	ErrCancelLeaveTrainDateNotFound = core.NewDBError(
+		"CANCEL_LEAVE", "TRAIN_DATE_NOT_FOUND", "train date not found", core.ErrNotFound)
 )
 
 type cancelLeaveUseCase struct {
 	repo cancelLeaveUseCaseRepo
+	cw   cacheWorker
 }
 
 func (uc *cancelLeaveUseCase) Name() string {
@@ -69,5 +76,9 @@ func (uc *cancelLeaveUseCase) Execute(
 		_ = uc.repo.IncreaseCapacity(ctx, appt.TrainingID(), 1)
 		return nil, ErrCancelLeaveUpdateApptFail.Wrap(err)
 	}
+
+	// 使用背景 Worker 進行非同步清理
+	uc.cw.Clean(appt.User().UserID(), appt.TrainingID())
+
 	return appt, nil
 }

@@ -44,3 +44,9 @@ func WithMode(mode string) Option {
 		cfg.mode = mode
 	}
 }
+
+func WithMaxConcurrentRequests(limit int) Option {
+	return func(cfg *Config) {
+		cfg.maxConcurrentRequests = limit
+	}
+}

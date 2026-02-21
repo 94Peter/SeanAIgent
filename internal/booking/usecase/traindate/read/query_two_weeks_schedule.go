@@ -6,6 +6,7 @@ import (
 	"seanAIgent/internal/booking/domain/entity"
 	"seanAIgent/internal/booking/domain/repository"
 	"seanAIgent/internal/booking/usecase/core"
+	"sync"
 	"time"
 )
 
@@ -64,7 +65,9 @@ func (uc *queryTwoWeeksScheduleUseCase) Name() string {
 	return "QueryTwoWeeksSchedule"
 }
 
-func (uc *queryTwoWeeksScheduleUseCase) Execute(ctx context.Context, req ReqQueryTwoWeeksSchedule) ([]*WeekVO, core.UseCaseError) {
+func (uc *queryTwoWeeksScheduleUseCase) Execute(
+	ctx context.Context, req ReqQueryTwoWeeksSchedule,
+) ([]*WeekVO, core.UseCaseError) {
 	var start, end time.Time
 	if req.Direction == "prev" {
 		end = req.ReferenceDate.AddDate(0, 0, -1)
@@ -87,6 +90,7 @@ func (uc *queryTwoWeeksScheduleUseCase) Execute(ctx context.Context, req ReqQuer
 
 func groupToWeeks(data []*entity.TrainDateHasUserApptState, start, end time.Time) []*WeekVO {
 	weeksMap := make(map[string]*WeekVO)
+	dateToDayMap := make(map[string]*DayVO)
 	var weekIDs []string
 
 	// 初始化所有日期，確保沒課的天數也會顯示
@@ -97,40 +101,36 @@ func groupToWeeks(data []*entity.TrainDateHasUserApptState, start, end time.Time
 			weeksMap[weekID] = &WeekVO{ID: weekID, Days: make([]*DayVO, 0)}
 			weekIDs = append(weekIDs, weekID)
 		}
-		weeksMap[weekID].Days = append(weeksMap[weekID].Days, &DayVO{
+		day := &DayVO{
 			FullDate:    d.Format("2006-01-02"),
 			DateDisplay: fmt.Sprintf("%d", d.Day()),
 			DayOfWeek:   d.Format("Mon"),
 			IsToday:     d.Format("2006-01-02") == time.Now().Format("2006-01-02"),
 			Slots:       []*SlotVO{},
-		})
+		}
+		weeksMap[weekID].Days = append(weeksMap[weekID].Days, day)
+		dateToDayMap[day.FullDate] = day
 	}
 
 	// 填入實際課程
 	for _, td := range data {
-		year, week := td.StartDate.ISOWeek()
-
-		weekID := fmt.Sprintf("%d-W%02d", year, week)
-		if w, ok := weeksMap[weekID]; ok {
-			for _, day := range w.Days {
-				loc := getLocation(td.Timezone)
-				startDate := td.StartDate.In(loc)
-				if day.FullDate == td.StartDate.Format("2006-01-02") {
-					endDate := td.EndDate.In(loc)
-					day.Slots = append(day.Slots, &SlotVO{
-						ID:             td.ID,
-						TimeDisplay:    startDate.Format("15:04"),
-						EndTimeDisplay: endDate.Format("15:04"),
-						CourseName:     "@" + td.Location, // 暫用 Date 欄位
-						Location:       td.Location,
-						Capacity:       td.Capacity,
-						BookedCount:    td.Capacity - td.AvailableCapacity,
-						IsFull:         td.AvailableCapacity <= 0,
-						Attendees:      transformAttendees(td.UserAppointments, td.EndDate),
-						EndDate:        td.EndDate,
-					})
-				}
-			}
+		fullDate := td.StartDate.Format("2006-01-02")
+		if day, ok := dateToDayMap[fullDate]; ok {
+			loc := getLocation(td.Timezone)
+			startDate := td.StartDate.In(loc)
+			endDate := td.EndDate.In(loc)
+			day.Slots = append(day.Slots, &SlotVO{
+				ID:             td.ID,
+				TimeDisplay:    startDate.Format("15:04"),
+				EndTimeDisplay: endDate.Format("15:04"),
+				CourseName:     "@" + td.Location,
+				Location:       td.Location,
+				Capacity:       td.Capacity,
+				BookedCount:    td.Capacity - td.AvailableCapacity,
+				IsFull:         td.AvailableCapacity <= 0,
+				Attendees:      transformAttendees(td.UserAppointments, td.EndDate),
+				EndDate:        td.EndDate,
+			})
 		}
 	}
 
@@ -169,16 +169,26 @@ func transformAttendees(appts []entity.UserAppointment, courseEndDate time.Time)
 	return res
 }
 
-var locationCache = make(map[string]*time.Location)
+var (
+	locationCache   = make(map[string]*time.Location)
+	locationCacheMu sync.RWMutex
+)
 
 func getLocation(location string) *time.Location {
-	if loc, ok := locationCache[location]; ok {
+	locationCacheMu.RLock()
+	loc, ok := locationCache[location]
+	locationCacheMu.RUnlock()
+	if ok {
 		return loc
 	}
+
 	loc, err := time.LoadLocation(location)
 	if err != nil {
 		return time.UTC
 	}
+
+	locationCacheMu.Lock()
 	locationCache[location] = loc
+	locationCacheMu.Unlock()
 	return loc
 }

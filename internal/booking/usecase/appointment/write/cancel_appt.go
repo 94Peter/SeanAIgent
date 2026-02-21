@@ -3,6 +3,7 @@ package write
 import (
 	"context"
 	"errors"
+
 	"seanAIgent/internal/booking/domain/entity"
 	"seanAIgent/internal/booking/domain/repository"
 	"seanAIgent/internal/booking/usecase/core"
@@ -18,14 +19,19 @@ type CancelApptUseCase core.WriteUseCase[ReqCancelAppt, *entity.Appointment]
 type cancelApptUseCaseRepo interface {
 	repository.AppointmentRepository
 	repository.TrainRepository
+	repository.StatsRepository
 }
 
-func NewCancelApptUseCase(repo cancelApptUseCaseRepo) core.WriteUseCase[ReqCancelAppt, *entity.Appointment] {
-	return &cancelApptUseCase{repo: repo}
+func NewCancelApptUseCase(repo cancelApptUseCaseRepo, cw cacheWorker) core.WriteUseCase[ReqCancelAppt, *entity.Appointment] {
+	return &cancelApptUseCase{
+		repo: repo,
+		cw:   cw,
+	}
 }
 
 type cancelApptUseCase struct {
 	repo cancelApptUseCaseRepo
+	cw   cacheWorker
 }
 
 func (uc *cancelApptUseCase) Name() string {
@@ -59,6 +65,10 @@ func (uc *cancelApptUseCase) Execute(
 		_ = uc.repo.DeductCapacity(ctx, appt.TrainingID(), 1)
 		return nil, ErrCancelApptDeleteApptFail.Wrap(err)
 	}
+
+	// 使用背景 Worker 進行非同步清理
+	uc.cw.Clean(req.UserID, appt.TrainingID())
+
 	return appt, nil
 }
 

@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"seanAIgent/internal/booking/domain/entity"
 	readAppt "seanAIgent/internal/booking/usecase/appointment/read"
 	writeAppt "seanAIgent/internal/booking/usecase/appointment/write"
@@ -34,4 +35,12 @@ type Registry struct {
 	GetUserMonthlyStats   readStats.GetUserMonthlyStatsUseCase
 	QueryTwoWeeksSchedule readTrain.QueryTwoWeeksScheduleUseCase
 	QueryAllUserApptStats core.ReadUseCase[readStats.ReqQueryAllUserApptStats, []*entity.UserApptStats]
+
+	CacheWorker CacheWorker
+}
+
+func (r *Registry) Start(ctx context.Context) {
+	if r.CacheWorker != nil {
+		r.CacheWorker.Start(ctx)
+	}
 }

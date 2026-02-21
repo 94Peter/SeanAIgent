@@ -20,14 +20,24 @@ type createApptUseCaseRepo interface {
 	repository.IdentityGenerator
 	repository.TrainRepository
 	repository.AppointmentRepository
+	repository.StatsRepository
 }
 
-func NewCreateApptUseCase(repo createApptUseCaseRepo) CreateApptUseCase {
-	return &createApptUseCase{repo: repo}
+// 加入 CacheWorker 介面定義或直接使用
+type cacheWorker interface {
+	Clean(uid string, tid string)
+}
+
+func NewCreateApptUseCase(repo createApptUseCaseRepo, cw cacheWorker) CreateApptUseCase {
+	return &createApptUseCase{
+		repo: repo,
+		cw:   cw,
+	}
 }
 
 type createApptUseCase struct {
 	repo createApptUseCaseRepo
+	cw   cacheWorker
 }
 
 func (uc *createApptUseCase) Name() string {
@@ -61,6 +71,10 @@ func (uc *createApptUseCase) Execute(
 	if err != nil {
 		return nil, ErrCreateApptSaveApptFail.Wrap(err)
 	}
+
+	// 使用背景 Worker 進行非同步清理
+	uc.cw.Clean(req.User.UserID(), req.TrainDateID)
+
 	return appointments, nil
 }
 

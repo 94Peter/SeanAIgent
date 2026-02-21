@@ -33,6 +33,8 @@ type TrainRepository interface {
 	DeductCapacity(ctx context.Context, trainingID string, count int) RepoError
 	// 原子增加名額
 	IncreaseCapacity(ctx context.Context, trainingID string, count int) RepoError
+
+	CleanTrainCache(ctx context.Context, userID string) RepoError
 }
 
 // Filter

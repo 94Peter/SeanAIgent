@@ -49,6 +49,10 @@ func (uc *deleteTrainDateUseCase) Execute(
 		returnErr = ErrDeleteTrainDateDeleteFail.Wrap(err)
 		return
 	}
+
+	// Invalidate train cache
+	_ = uc.repo.CleanTrainCache(ctx, "")
+
 	result = trainDate
 	return
 }

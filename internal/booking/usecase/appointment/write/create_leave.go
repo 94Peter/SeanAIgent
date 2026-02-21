@@ -3,6 +3,7 @@ package write
 import (
 	"context"
 	"errors"
+
 	"seanAIgent/internal/booking/domain/entity"
 	"seanAIgent/internal/booking/domain/repository"
 	"seanAIgent/internal/booking/usecase/core"
@@ -17,14 +18,19 @@ type ReqCreateLeave struct {
 type createLeaveUseCaseRepo interface {
 	repository.AppointmentRepository
 	repository.TrainRepository
+	repository.StatsRepository
 }
 
 type createLeaveUseCase struct {
 	repo createLeaveUseCaseRepo
+	cw   cacheWorker
 }
 
-func NewCreateLeaveUseCase(repo createLeaveUseCaseRepo) core.WriteUseCase[ReqCreateLeave, *entity.Appointment] {
-	return &createLeaveUseCase{repo: repo}
+func NewCreateLeaveUseCase(repo createLeaveUseCaseRepo, cw cacheWorker) core.WriteUseCase[ReqCreateLeave, *entity.Appointment] {
+	return &createLeaveUseCase{
+		repo: repo,
+		cw:   cw,
+	}
 }
 
 func (uc *createLeaveUseCase) Name() string {
@@ -72,6 +78,10 @@ func (uc *createLeaveUseCase) Execute(
 		_ = uc.repo.DeductCapacity(ctx, trainDate.ID(), 1)
 		return nil, ErrCreateLeaveSaveLeaveFail.Wrap(err)
 	}
+
+	// 使用背景 Worker 進行非同步清理
+	uc.cw.Clean(req.User.UserID(), appt.TrainingID())
+
 	return appt, nil
 }
 

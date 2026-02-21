@@ -65,21 +65,21 @@ func ProvideUserQueryTrainByIDUC(
 // Appointment UseCase
 
 func ProvideCreateApptUC(
-	repo Repository,
+	repo Repository, cw CacheWorker,
 ) core.WriteUseCase[writeAppt.ReqCreateAppt, []*entity.Appointment] {
-	return core.WithWriteOTel(writeAppt.NewCreateApptUseCase(repo))
+	return core.WithWriteOTel(writeAppt.NewCreateApptUseCase(repo, cw))
 }
 
 func ProvideCancelApptUC(
-	repo Repository,
+	repo Repository, cw CacheWorker,
 ) core.WriteUseCase[writeAppt.ReqCancelAppt, *entity.Appointment] {
-	return core.WithWriteOTel(writeAppt.NewCancelApptUseCase(repo))
+	return core.WithWriteOTel(writeAppt.NewCancelApptUseCase(repo, cw))
 }
 
 func ProvideCheckInUC(
-	repo Repository,
+	repo Repository, cw CacheWorker,
 ) core.WriteUseCase[writeAppt.ReqCheckIn, []*entity.Appointment] {
-	return core.WithWriteOTel(writeAppt.NewCheckInUseCase(repo))
+	return core.WithWriteOTel(writeAppt.NewCheckInUseCase(repo, cw))
 }
 
 func ProvideQueryUserBookingsUC(
@@ -89,15 +89,15 @@ func ProvideQueryUserBookingsUC(
 }
 
 func ProvideCreateLeaveUC(
-	repo Repository,
+	repo Repository, cw CacheWorker,
 ) core.WriteUseCase[writeAppt.ReqCreateLeave, *entity.Appointment] {
-	return core.WithWriteOTel(writeAppt.NewCreateLeaveUseCase(repo))
+	return core.WithWriteOTel(writeAppt.NewCreateLeaveUseCase(repo, cw))
 }
 
 func ProvideCancelLeaveUC(
-	repo Repository,
+	repo Repository, cw CacheWorker,
 ) core.WriteUseCase[writeAppt.ReqCancelLeave, *entity.Appointment] {
-	return core.WithWriteOTel(writeAppt.NewCancelLeaveUseCase(repo))
+	return core.WithWriteOTel(writeAppt.NewCancelLeaveUseCase(repo, cw))
 }
 
 func ProvideFindNearestTrainByTimeUC(
@@ -164,6 +164,8 @@ var UseCaseSet = wire.NewSet(
 	ProvideGetUserMonthlyStatsUC,
 	ProvideQueryTwoWeeksScheduleUC,
 	ProvideQueryAllUserApptStatsUC,
+
+	NewCacheWorker,
 
 	wire.Struct(new(ServiceAggregator), "*"),
 	wire.Struct(new(Registry), "*"),

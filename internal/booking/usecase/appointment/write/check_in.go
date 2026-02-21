@@ -3,6 +3,7 @@ package write
 import (
 	"context"
 	"errors"
+
 	"seanAIgent/internal/booking/domain/entity"
 	"seanAIgent/internal/booking/domain/repository"
 	"seanAIgent/internal/booking/usecase/core"
@@ -16,14 +17,19 @@ type ReqCheckIn struct {
 type checkInUseCaseRepo interface {
 	repository.AppointmentRepository
 	repository.TrainRepository
+	repository.StatsRepository
 }
 
-func NewCheckInUseCase(repo checkInUseCaseRepo) core.WriteUseCase[ReqCheckIn, []*entity.Appointment] {
-	return &checkInUseCase{repo: repo}
+func NewCheckInUseCase(repo checkInUseCaseRepo, cw cacheWorker) core.WriteUseCase[ReqCheckIn, []*entity.Appointment] {
+	return &checkInUseCase{
+		repo: repo,
+		cw:   cw,
+	}
 }
 
 type checkInUseCase struct {
 	repo checkInUseCaseRepo
+	cw   cacheWorker
 }
 
 func (uc *checkInUseCase) Name() string {
@@ -59,6 +65,7 @@ func (uc *checkInUseCase) Execute(
 		apptMap[appt.ID()] = appt
 	}
 	updatedAppts := make([]*entity.Appointment, 0, len(req.CheckedInBookingIDs))
+	affectedUserIDs := make(map[string]struct{})
 	// update appts
 	for _, id := range req.CheckedInBookingIDs {
 		appt, ok := apptMap[id]
@@ -70,11 +77,18 @@ func (uc *checkInUseCase) Execute(
 			return nil, ErrCheckInMarkAsAttendedFail.Wrap(err)
 		}
 		updatedAppts = append(updatedAppts, appt)
+		affectedUserIDs[appt.User().UserID()] = struct{}{}
 	}
 	err = uc.repo.UpdateManyAppts(ctx, updatedAppts)
 	if err != nil {
 		return nil, ErrCheckInUpdateApptFail.Wrap(err)
 	}
+
+	// 使用背景 Worker 進行非同步清理
+	for userID := range affectedUserIDs {
+		uc.cw.Clean(userID, req.TrainDateID)
+	}
+
 	return updatedAppts, nil
 }
 

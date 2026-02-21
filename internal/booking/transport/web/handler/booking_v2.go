@@ -3,21 +3,25 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
 	"seanAIgent/internal/booking/domain/entity"
+	"seanAIgent/internal/booking/transport/util/lineutil"
 	"seanAIgent/internal/booking/usecase"
 	readappt "seanAIgent/internal/booking/usecase/appointment/read"
 	writeappt "seanAIgent/internal/booking/usecase/appointment/write"
 	readstats "seanAIgent/internal/booking/usecase/stats/read"
 	readtrain "seanAIgent/internal/booking/usecase/traindate/read"
-	"seanAIgent/internal/booking/transport/util/lineutil"
 	"seanAIgent/templates"
 	"seanAIgent/templates/forms/booking_v2"
 
 	"github.com/94peter/vulpes/ezapi"
+	"github.com/94peter/vulpes/log"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/sync/errgroup"
+	"golang.org/x/sync/singleflight"
 )
 
 func NewV2BookingUseCaseSet(registry *usecase.Registry) V2BookingUseCaseSet {
@@ -44,6 +48,7 @@ func NewV2BookingApi(enableCSRF bool, bookingUseCaseSet V2BookingUseCaseSet) Web
 	return &v2BookingAPI{
 		V2BookingUseCaseSet: bookingUseCaseSet,
 		enableCSRF:          enableCSRF,
+		sfGroup:             &singleflight.Group{},
 	}
 }
 
@@ -51,6 +56,7 @@ type v2BookingAPI struct {
 	V2BookingUseCaseSet
 	enableCSRF bool
 	once       sync.Once
+	sfGroup    *singleflight.Group
 }
 
 func (api *v2BookingAPI) InitRouter(r ezapi.Router) {
@@ -161,45 +167,85 @@ func (api *v2BookingAPI) getBookingV2Form(c *gin.Context) {
 
 	ctx := c.Request.Context()
 	now := time.Now()
-	var err error
+
 	var stats *readstats.UserMonthlyStatsVO
+	var weeks []*readtrain.WeekVO
+	var userBookings *readappt.RespQueryUserBookings
+
+	g, gCtx := errgroup.WithContext(ctx)
+
 	// 1. Fetch current month stats
-	if userID != "" {
-		stats, err = api.getUserMonthlyStatsUC.Execute(ctx, readstats.ReqGetUserMonthlyStats{
-			UserID: userID,
-			Year:   now.Year(),
-			Month:  int(now.Month()),
-		})
-		if err != nil {
-			c.Error(err)
-			return
+	g.Go(func() error {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Errorf("getBookingV2Form stats panic: %v", r)
+			}
+		}()
+		if userID == "" {
+			stats = &readstats.UserMonthlyStatsVO{Children: []*readstats.ChildStatVO{}}
+			return nil
 		}
-	} else {
-		stats = &readstats.UserMonthlyStatsVO{Children: []*readstats.ChildStatVO{}}
-	}
 
-	// 2. Fetch initial 2 weeks schedule (starting from this Monday)
-	// Calculate this week's Monday, then subtract 1 day to get last Sunday as ReferenceDate
-	offset := (int(now.Weekday()) + 6) % 7
-	thisMonday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).AddDate(0, 0, -offset)
-	lastSunday := thisMonday.AddDate(0, 0, -1)
-
-	weeks, err := api.queryTwoWeeksScheduleUC.Execute(ctx, readtrain.ReqQueryTwoWeeksSchedule{
-		UserID:        userID,
-		ReferenceDate: lastSunday,
-		Direction:     "next",
+		key := "form:stats:" + userID + ":" + strconv.Itoa(now.Year()) + ":" + strconv.Itoa(int(now.Month()))
+		v, err, _ := api.sfGroup.Do(key, func() (interface{}, error) {
+			return api.getUserMonthlyStatsUC.Execute(gCtx, readstats.ReqGetUserMonthlyStats{
+				UserID: userID,
+				Year:   now.Year(),
+				Month:  int(now.Month()),
+			})
+		})
+		if err == nil {
+			stats = v.(*readstats.UserMonthlyStatsVO)
+		}
+		return err
 	})
-	if err != nil {
-		c.Error(err)
-		return
-	}
+
+	// 2. Fetch initial 2 weeks schedule
+	g.Go(func() error {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Errorf("getBookingV2Form weeks panic: %v", r)
+			}
+		}()
+		offset := (int(now.Weekday()) + 6) % 7
+		thisMonday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).AddDate(0, 0, -offset)
+		lastSunday := thisMonday.AddDate(0, 0, -1)
+
+		key := "form:weeks:" + userID + ":" + lastSunday.Format("2006-01-02")
+		v, err, _ := api.sfGroup.Do(key, func() (interface{}, error) {
+			return api.queryTwoWeeksScheduleUC.Execute(gCtx, readtrain.ReqQueryTwoWeeksSchedule{
+				UserID:        userID,
+				ReferenceDate: lastSunday,
+				Direction:     "next",
+			})
+		})
+		if err == nil {
+			weeks = v.([]*readtrain.WeekVO)
+		}
+		return err
+	})
 
 	// 3. Fetch current user bookings
-	userBookings, err := api.queryUserBookingsUC.Execute(ctx, readappt.ReqQueryUserBookings{
-		UserID:         userID,
-		TrainDateAfter: now,
+	g.Go(func() error {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Errorf("getBookingV2Form bookings panic: %v", r)
+			}
+		}()
+		key := "form:bookings:" + userID
+		v, err, _ := api.sfGroup.Do(key, func() (interface{}, error) {
+			return api.queryUserBookingsUC.Execute(gCtx, readappt.ReqQueryUserBookings{
+				UserID:         userID,
+				TrainDateAfter: now,
+			})
+		})
+		if err == nil {
+			userBookings = v.(*readappt.RespQueryUserBookings)
+		}
+		return err
 	})
-	if err != nil {
+
+	if err := g.Wait(); err != nil {
 		c.Error(err)
 		return
 	}

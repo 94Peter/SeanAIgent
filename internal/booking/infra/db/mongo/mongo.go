@@ -13,8 +13,8 @@ import (
 func NewRepoAndIdGenerate() core.DbRepository {
 	repoImpl := &dbRepoImpl{
 		AppointmentRepository: appointment.NewApptRepository(),
-		TrainRepository:       train.NewTrainRepository(),
-		StatsRepository:       stats.NewStatsRepository(),
+		TrainRepository:       train.NewCachedTrainRepository(train.NewTrainRepository()),
+		StatsRepository:       stats.NewCachedStatsRepository(stats.NewStatsRepository()),
 	}
 	return repoImpl
 }

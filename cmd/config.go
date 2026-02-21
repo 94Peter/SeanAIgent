@@ -25,6 +25,7 @@ func ProvideWebConfig() web.Config {
 		web.WithTracerEnable(viper.GetBool("http.tracer.enabled")),
 		web.WithLoggerEnable(viper.GetBool("http.logger.enabled")),
 		web.WithMode(viper.GetString("http.mode")),
+		web.WithMaxConcurrentRequests(viper.GetInt("http.max_concurrent_requests")),
 	}
 
 	cfg := web.Config{}

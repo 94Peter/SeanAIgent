@@ -86,6 +86,10 @@ func (uc *createSlotUseCase) Execute(
 		returnErr = ErrCreateTrainDateSaveToDBFail.Wrap(err)
 		return
 	}
+
+	// Invalidate train cache
+	_ = uc.repo.CleanTrainCache(ctx, "")
+
 	result = training
 	return
 }
