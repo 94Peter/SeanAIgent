@@ -23,12 +23,16 @@
 - [x] **Architecture Alignment**: Migrated MCP and LINE messaging to the Transport layer.
 - [x] **Utility Consolidation**: Unified `timeutil` and `lineutil` for shared cross-layer functions.
 
-### 2. ⚡ Performance Optimization (Next Focus)
-- [ ] **Parallel Fetching**: Implement `errgroup` in `getBookingV2Form` to fetch stats, schedules, and bookings concurrently.
-- [ ] **Frontend Resource Separation**: Extract inline JavaScript from `booking_v2.templ` to `/assets/js/booking_v2.js`.
-- [ ] **API Caching**: Add short-term caching for monthly statistics.
+### 2. ✅ Performance Optimization - COMPLETED
+- [x] **Parallel Fetching**: Integrated `errgroup` in `getBookingV2Form` to fetch stats, schedules, and bookings concurrently.
+- [x] **Request Merging (SingleFlight)**: Implemented `SingleFlight` in both Handler and Repository layers to prevent cache stampedes and database spikes.
+- [x] **Asynchronous Cache Invalidation**: Built a centralized `CacheWorker` pool (5 workers) for non-blocking background cleanup of user stats and schedules.
+- [x] **Algorithmic Optimization**: Refactored `groupToWeeks` logic from $O(N \times M)$ to $O(N)$ using map lookups, reducing CPU time during scheduling.
+- [x] **Concurrency Stability**: Secured global caches with `sync.RWMutex` and added `recover` blocks to background goroutines for auto-recovery.
+- [x] **Observability Tuning**: Optimized OpenTelemetry sampling rate to 5% to reduce GC pressure and memory overhead at high throughput (4500+ RPS).
 
-### 3. ✨ UX & Robustness
+### 3. ✨ UX & Robustness (Next Focus)
+- [ ] **Frontend Resource Separation**: Extract inline JavaScript from `booking_v2.templ` to `/assets/js/booking_v2.js`.
 - [ ] **Toast System Integration**: Replace all `alert()` and `console.error()` calls with the project's native Toast notifications.
 - [ ] **Skeleton Screens**: Add loading placeholders for smoother infinite scroll transitions.
 - [ ] **Input Validation**: Implement stricter server-side validation for student names.
@@ -41,4 +45,4 @@
 - [ ] **Admin Dashboard**: Enhanced management view for class capacities and attendance tracking.
 
 ---
-*Roadmap last updated: 2026-02-20 by Gemini CLI*
+*Roadmap last updated: 2026-02-22 by Gemini CLI*
