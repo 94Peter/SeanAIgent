@@ -2,3 +2,15 @@
 llm.md
 tmp/*
 .app/*
+
+# AutoProfile artifacts
+.profiles/
+autoprofile_prompt.txt
+k6_metrics.json
+load_test.js
+
+# Binary
+seanAIgent
+
+# Tool artifacts
+.antigravity/
