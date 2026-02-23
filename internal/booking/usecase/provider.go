@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"time"
 	"seanAIgent/internal/booking/domain/entity"
 	"seanAIgent/internal/booking/domain/repository"
 	"seanAIgent/internal/booking/domain/service"
@@ -166,7 +167,12 @@ var UseCaseSet = wire.NewSet(
 	ProvideQueryAllUserApptStatsUC,
 
 	NewCacheWorker,
+	ProvideIdempotencyManager,
 
 	wire.Struct(new(ServiceAggregator), "*"),
 	wire.Struct(new(Registry), "*"),
 )
+
+func ProvideIdempotencyManager() IdempotencyManager {
+	return NewIdempotencyManager(30 * time.Minute)
+}

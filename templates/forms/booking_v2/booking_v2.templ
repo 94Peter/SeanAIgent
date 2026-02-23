@@ -438,27 +438,29 @@ templ Script(liffId string) {
 				if (btn) {
 					btn.innerHTML = jsRenderSlotContent(s);
 					
-					// Update class for past slots
+					// 更新過期狀態
 					if (s.is_past) {
-						btn.className = "w-full rounded-[8px] py-2 px-1.5 flex flex-col gap-1 text-left transition-transform bg-[#1C1C1E] opacity-50 cursor-not-allowed";
+						btn.className = "w-full rounded-[8px] py-2 px-1.5 flex flex-col gap-1 text-left transition-all bg-[#1C1C1E] opacity-50 cursor-not-allowed";
 						btn.removeAttribute('onclick');
 					} else {
-						btn.className = "w-full rounded-[8px] py-2 px-1.5 flex flex-col gap-1 text-left transition-transform bg-[#1C1C1E] active:scale-95";
-						
-						// Use properly escaped arguments for the onclick handler
+						btn.className = "w-full rounded-[8px] py-2 px-1.5 flex flex-col gap-1 text-left transition-all bg-[#1C1C1E] active:scale-95";
 						btn.onclick = () => {
 							openBookingPopup(s.id, s.time_display, s.end_time_display, s.course_name, s.booked_count, s.capacity, s.attendees);
 						};
 					}
+
+					// 視覺同步動畫：閃爍效果
+					btn.classList.add('ring-2', 'ring-[#FFD700]', 'ring-inset');
+					setTimeout(() => {
+						btn.classList.remove('ring-2', 'ring-[#FFD700]', 'ring-inset');
+					}, 1000);
 				}
 				
-				// Update popup numbers if it's currently displaying this slot
+				// 同時更新彈窗中的數據
 				const popupSlotId = document.getElementById('popup-slot-id');
 				if (popupSlotId && popupSlotId.value === slotId) {
 					const countEl = document.getElementById('popup-booked-count');
-					const capEl = document.getElementById('popup-capacity');
 					if (countEl) countEl.innerText = s.booked_count;
-					if (capEl) capEl.innerText = s.capacity;
 				}
 			} catch (e) { console.error("Refresh slot failed:", e); }
 		}
@@ -597,6 +599,9 @@ templ Script(liffId string) {
 		}
 
 		function openBookingPopup(id, time, endTime, title, bookedCount, capacity, attendees) {
+			// 產生冪等性 Key
+			window.currentIdempotencyKey = self.crypto.randomUUID();
+			
 			document.getElementById('popup-course-title').innerText = title; 
 			document.getElementById('popup-time-info').innerText = time + ' ~ ' + endTime; 
 			document.getElementById('popup-slot-id').value = id;
@@ -609,13 +614,18 @@ templ Script(liffId string) {
 			document.getElementById('booking-popup').classList.remove('hidden');
 		}
 
-		function closeBookingPopup() { document.getElementById('booking-popup').classList.add('hidden'); document.getElementById('booking-leave-view').classList.add('hidden'); document.getElementById('booking-main-view').classList.remove('hidden'); }
+		function closeBookingPopup() { 
+			window.currentIdempotencyKey = null;
+			document.getElementById('booking-popup').classList.add('hidden'); 
+			document.getElementById('booking-leave-view').classList.add('hidden'); 
+			document.getElementById('booking-main-view').classList.remove('hidden'); 
+		}
 		function openMyBookings() { document.getElementById('my-bookings-modal').classList.remove('hidden'); switchMyBookingsTab('upcoming'); }
 		function closeMyBookings() { document.getElementById('my-bookings-modal').classList.add('hidden'); }
 
 		const addBookedTag = (n, s, t, id) => {
 			const tag = document.createElement('div'); tag.className = "flex items-center gap-1 px-3 py-1 rounded-full cursor-pointer transition-all " + getStatusClasses(s);
-			tag.innerHTML = ("<span>" + n + "<\/span>"); tag.onclick = () => handleTagAction("booking", n, s, t, id, (ns) => { if (ns === "Remove") tag.remove(); else tag.className = "flex items-center gap-1 px-3 py-1 rounded-full cursor-pointer transition-all " + getStatusClasses(ns); });
+			tag.innerHTML = ("<span>" + n + "<\/span>"); tag.onclick = () => handleTagAction(tag, "booking", n, s, t, id, (ns) => { if (ns === "Remove") tag.remove(); else tag.className = "flex items-center gap-1 px-3 py-1 rounded-full cursor-pointer transition-all " + getStatusClasses(ns); });
 			document.getElementById('booked-participants-list').appendChild(tag); document.getElementById('booked-list-wrapper').classList.remove('hidden');
 		};
 
@@ -631,20 +641,69 @@ templ Script(liffId string) {
 			} catch(e) { l.innerHTML = '<div class="text-center text-[#F87171] py-8">載入失敗<\/div>'; }
 		}
 
-		async function handleMyBookingTagClick(btn, n, s, t, id, slotId) { handleTagAction("my-booking", n, s, t, id, (ns) => { if (ns === "Remove") btn.remove(); else switchMyBookingsTab(currentTab); }, slotId); }
-		async function handleTagAction(prefix, n, s, t, id, callback, slotId) {
+		async function handleMyBookingTagClick(btn, n, s, t, id, slotId) { handleTagAction(btn, "my-booking", n, s, t, id, (ns) => { if (ns === "Remove") btn.remove(); else switchMyBookingsTab(currentTab); }, slotId); }
+		async function handleTagAction(btn, prefix, n, s, t, id, callback, slotId) {
 			const currentSlotId = slotId || document.getElementById('popup-slot-id').value;
+			
+			const executeAction = async (url, method, successStatus) => {
+				const originalHtml = btn.innerHTML;
+				const isButton = btn.tagName === 'BUTTON';
+				
+				try {
+					if (isButton) btn.disabled = true;
+					btn.innerHTML = "處理中...";
+					btn.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
+					
+					const opts = { method: method, headers: {} };
+					if (window.currentIdempotencyKey) {
+						opts.headers['Idempotency-Key'] = window.currentIdempotencyKey;
+					}
+
+					await fetchApi(url, opts);
+					
+					// 成功處理：如果是恢復預約，移除後綴文字並包裹 span 保持樣式
+					if (successStatus === "Booked") {
+						btn.innerHTML = "<span>" + n + "</span>"; 
+					} else {
+						btn.innerHTML = originalHtml;
+					}
+					
+					callback(successStatus);
+					refreshSlot(currentSlotId);
+					refreshStats();
+				} catch(e) {
+					alert(e.message);
+					btn.innerHTML = originalHtml;
+				} finally {
+					if (isButton) btn.disabled = false;
+					btn.classList.remove('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
+				}
+			};
+
 			if (s === "Booked") {
 				const diff = (new Date() - new Date(t)) / 36e5;
-				if (diff < 24) { if (await showInlineConfirm(prefix, "取消預約", "建立未滿 24 小時，確定取消？")) { try { await fetchApi("/api/v2/bookings/" + id, { method: 'DELETE' }); callback("Remove"); refreshSlot(currentSlotId); refreshStats(); } catch(e) { alert(e.message); } } }
-				else { if (prefix === 'my-booking') closeMyBookings(); openLeaveRequest(id, n); }
-			} else if (s === "Leave") { if (await showInlineConfirm(prefix, "恢復預約", "取消 " + n + " 的請假？")) { try { await fetchApi("/api/v2/bookings/" + id + "/leave", { method: 'DELETE' }); callback("Booked"); refreshSlot(currentSlotId); refreshStats(); } catch(e) { alert(e.message); } } }
+				if (diff < 24) {
+					if (await showInlineConfirm(prefix, "取消預約", "建立未滿 24 小時，確定取消？")) {
+						window.currentIdempotencyKey = self.crypto.randomUUID();
+						await executeAction("/api/v2/bookings/" + id, 'DELETE', "Remove");
+					}
+				} else {
+					if (prefix === 'my-booking') closeMyBookings();
+					openLeaveRequest(id, n, currentSlotId);
+				}
+			} else if (s === "Leave") {
+				if (await showInlineConfirm(prefix, "恢復預約", "取消 " + n + " 的請假？")) {
+					window.currentIdempotencyKey = self.crypto.randomUUID();
+					await executeAction("/api/v2/bookings/" + id + "/leave", 'DELETE', "Booked");
+				}
+			}
 		}
 
 		function showInlineConfirm(prefix, title, msg) {
 			return new Promise(resolve => {
 				const p = document.getElementById(prefix + '-confirm-panel'), t = document.getElementById(prefix + '-confirm-title'), m = document.getElementById(prefix + '-confirm-msg');
 				const c = document.getElementById(prefix + '-confirm-cancel'), o = document.getElementById(prefix + '-confirm-ok');
+				if (!p) return resolve(false); // 安全檢查
 				t.innerText = title; m.innerText = msg; p.classList.remove('hidden'); requestAnimationFrame(() => p.classList.remove('translate-y-full'));
 				const done = r => { p.classList.add('translate-y-full'); setTimeout(() => p.classList.add('hidden'), 300); resolve(r); };
 				c.onclick = () => done(false); o.onclick = () => done(true);
@@ -660,7 +719,10 @@ templ Script(liffId string) {
 			container.insertBefore(tag, input);
 		}
 
+		let isSubmitting = false;
 		const submitBooking = async () => {
+			if (isSubmitting) return;
+			
 			const id = document.getElementById('popup-slot-id').value;
 			const input = document.getElementById('smart-input');
 			const tags = document.querySelectorAll('[data-draft="true"]');
@@ -673,8 +735,26 @@ templ Script(liffId string) {
 			}
 
 			if (!names.length) { closeBookingPopup(); return; }
+
+			const submitBtn = document.querySelector('#booking-main-view button[onclick="submitBooking()"]');
+			const originalText = submitBtn.innerText;
+			
+			isSubmitting = true;
+			submitBtn.disabled = true;
+			submitBtn.innerText = "處理中...";
+			submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
 			try {
-				const res = await fetchApi('/api/v2/bookings', { method: 'POST', body: JSON.stringify({ slot_id: id, student_names: names }) });
+				const opts = { 
+					method: 'POST', 
+					body: JSON.stringify({ slot_id: id, student_names: names }),
+					headers: {} 
+				};
+				if (window.currentIdempotencyKey) {
+					opts.headers['Idempotency-Key'] = window.currentIdempotencyKey;
+				}
+
+				const res = await fetchApi('/api/v2/bookings', opts);
 				res.new_bookings.forEach(b => addBookedTag(b.name, b.status, b.booking_time, b.booking_id));
 				tags.forEach(t => t.remove()); 
 				input.value = ''; // 清空輸入框
@@ -682,12 +762,71 @@ templ Script(liffId string) {
 				closeBookingPopup(); 
 				refreshSlot(id); 
 				refreshStats();
-			} catch(e) { alert(e.message); }
+			} catch(e) { 
+				alert(e.message); 
+			} finally {
+				isSubmitting = false;
+				submitBtn.disabled = false;
+				submitBtn.innerText = originalText;
+				submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+			}
 		};
 
-		function openLeaveRequest(id, name) { document.getElementById('leave-booking-id').value = id; document.getElementById('leave-student-name').innerText = name; document.getElementById('booking-main-view').classList.add('hidden'); document.getElementById('booking-leave-view').classList.remove('hidden'); }
-		function cancelLeaveRequest() { document.getElementById('booking-leave-view').classList.add('hidden'); document.getElementById('booking-main-view').classList.remove('hidden'); }
-		async function submitLeaveRequest(e) { e.preventDefault(); const slotId = document.getElementById('popup-slot-id').value; try { await fetchApi("/api/v2/bookings/" + document.getElementById('leave-booking-id').value + "/leave", { method: 'POST', body: JSON.stringify({ reason: document.getElementById('leaveReason').value }) }); alert("請假申請已送出"); cancelLeaveRequest(); closeBookingPopup(); refreshSlot(slotId); refreshStats(); } catch(err) { alert(err.message); } }
+		function openLeaveRequest(id, name, slotId) { 
+			// 產生請假的冪等性 Key
+			window.currentIdempotencyKey = self.crypto.randomUUID();
+			document.getElementById('leave-booking-id').value = id; 
+			document.getElementById('leave-student-name').innerText = name; 
+			if (slotId) document.getElementById('popup-slot-id').value = slotId;
+			document.getElementById('booking-main-view').classList.add('hidden'); 
+			document.getElementById('booking-leave-view').classList.remove('hidden');
+			// 確保 Booking Popup 是打開的
+			document.getElementById('booking-popup').classList.remove('hidden');
+		}
+		function cancelLeaveRequest() { 
+			window.currentIdempotencyKey = null;
+			document.getElementById('booking-leave-view').classList.add('hidden'); 
+			document.getElementById('booking-main-view').classList.remove('hidden'); 
+		}
+		
+		async function submitLeaveRequest(e) { 
+			e.preventDefault(); 
+			if (isSubmitting) return;
+
+			const slotId = document.getElementById('popup-slot-id').value;
+			const submitBtn = e.target.querySelector('button[type="submit"]');
+			const originalText = submitBtn.innerText;
+
+			isSubmitting = true;
+			submitBtn.disabled = true;
+			submitBtn.innerText = "處理中...";
+			submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+			try { 
+				const opts = { 
+					method: 'POST', 
+					body: JSON.stringify({ reason: document.getElementById('leaveReason').value }),
+					headers: {}
+				};
+				if (window.currentIdempotencyKey) {
+					opts.headers['Idempotency-Key'] = window.currentIdempotencyKey;
+				}
+
+				await fetchApi("/api/v2/bookings/" + document.getElementById('leave-booking-id').value + "/leave", opts); 
+				alert("請假申請已送出"); 
+				cancelLeaveRequest(); 
+				closeBookingPopup(); 
+				await refreshSlot(slotId); 
+				refreshStats(); 
+			} catch(err) { 
+				alert(err.message); 
+			} finally {
+				isSubmitting = false;
+				submitBtn.disabled = false;
+				submitBtn.innerText = originalText;
+				submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+			}
+		}
 		async function shareBookingStatus() {
 			const btn = document.getElementById('share-booking-btn');
 			const originalContent = btn.innerHTML;

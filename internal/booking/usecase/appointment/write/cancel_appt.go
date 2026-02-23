@@ -22,7 +22,7 @@ type cancelApptUseCaseRepo interface {
 	repository.StatsRepository
 }
 
-func NewCancelApptUseCase(repo cancelApptUseCaseRepo, cw cacheWorker) core.WriteUseCase[ReqCancelAppt, *entity.Appointment] {
+func NewCancelApptUseCase(repo cancelApptUseCaseRepo, cw cacheWorker) CancelApptUseCase {
 	return &cancelApptUseCase{
 		repo: repo,
 		cw:   cw,

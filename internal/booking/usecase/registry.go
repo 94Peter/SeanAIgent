@@ -24,11 +24,11 @@ type Registry struct {
 	AdminQueryTrainRange   core.ReadUseCase[readTrain.ReqAdminQueryTrainRange, []*entity.TrainDateHasApptState]
 	AdminQueryRecentTrain  core.ReadUseCase[readTrain.ReqAdminQueryRecentTrain, []*entity.TrainDate]
 
-	CreateAppt  core.WriteUseCase[writeAppt.ReqCreateAppt, []*entity.Appointment]
-	CheckIn     core.WriteUseCase[writeAppt.ReqCheckIn, []*entity.Appointment]
-	CancelAppt  core.WriteUseCase[writeAppt.ReqCancelAppt, *entity.Appointment]
-	CreateLeave core.WriteUseCase[writeAppt.ReqCreateLeave, *entity.Appointment]
-	CancelLeave core.WriteUseCase[writeAppt.ReqCancelLeave, *entity.Appointment]
+	CreateAppt  writeAppt.CreateApptUseCase
+	CheckIn     writeAppt.CheckInUseCase
+	CancelAppt  writeAppt.CancelApptUseCase
+	CreateLeave writeAppt.CreateLeaveUseCase
+	CancelLeave writeAppt.CancelLeaveUseCase
 
 	QueryUserBookings core.ReadUseCase[readAppt.ReqQueryUserBookings, *readAppt.RespQueryUserBookings]
 	// FindBooking       core.ReadUseCase[readAppt.ReqFindBooking, *entity.AppointmentWithTrainDate]
@@ -36,7 +36,8 @@ type Registry struct {
 	QueryTwoWeeksSchedule readTrain.QueryTwoWeeksScheduleUseCase
 	QueryAllUserApptStats core.ReadUseCase[readStats.ReqQueryAllUserApptStats, []*entity.UserApptStats]
 
-	CacheWorker CacheWorker
+	CacheWorker        CacheWorker
+	IdempotencyManager IdempotencyManager
 }
 
 func (r *Registry) Start(ctx context.Context) {

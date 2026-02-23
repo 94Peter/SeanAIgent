@@ -13,13 +13,15 @@ type ReqCancelLeave struct {
 	UserID string
 }
 
+type CancelLeaveUseCase core.WriteUseCase[ReqCancelLeave, *entity.Appointment]
+
 type cancelLeaveUseCaseRepo interface {
 	repository.TrainRepository
 	repository.AppointmentRepository
 	repository.StatsRepository
 }
 
-func NewCancelLeaveUseCase(repo cancelLeaveUseCaseRepo, cw cacheWorker) core.WriteUseCase[ReqCancelLeave, *entity.Appointment] {
+func NewCancelLeaveUseCase(repo cancelLeaveUseCaseRepo, cw cacheWorker) CancelLeaveUseCase {
 	return &cancelLeaveUseCase{
 		repo: repo,
 		cw:   cw,

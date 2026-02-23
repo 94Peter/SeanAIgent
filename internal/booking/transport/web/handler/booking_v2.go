@@ -28,20 +28,26 @@ func NewV2BookingUseCaseSet(registry *usecase.Registry) V2BookingUseCaseSet {
 	return V2BookingUseCaseSet{
 		createApptUC:            registry.CreateAppt,
 		cancelApptUC:            registry.CancelAppt,
+		submitLeaveUC:           registry.CreateLeave,
+		cancelLeaveUC:           registry.CancelLeave,
 		getUserMonthlyStatsUC:   registry.GetUserMonthlyStats,
 		queryTwoWeeksScheduleUC: registry.QueryTwoWeeksSchedule,
 		queryUserBookingsUC:     registry.QueryUserBookings,
 		userQueryTrainByIDUC:    registry.UserQueryTrainByID,
+		idempotencyManager:      registry.IdempotencyManager,
 	}
 }
 
 type V2BookingUseCaseSet struct {
 	createApptUC            writeappt.CreateApptUseCase
 	cancelApptUC            writeappt.CancelApptUseCase
+	submitLeaveUC           writeappt.CreateLeaveUseCase
+	cancelLeaveUC           writeappt.CancelLeaveUseCase
 	getUserMonthlyStatsUC   readstats.GetUserMonthlyStatsUseCase
 	queryTwoWeeksScheduleUC readtrain.QueryTwoWeeksScheduleUseCase
 	queryUserBookingsUC     readappt.QueryUserBookingsUseCase
 	userQueryTrainByIDUC    readtrain.UserQueryTrainByIDUseCase
+	idempotencyManager      usecase.IdempotencyManager
 }
 
 func NewV2BookingApi(enableCSRF bool, bookingUseCaseSet V2BookingUseCaseSet) WebAPI {
@@ -405,6 +411,21 @@ func transformToWeeksVO(weeks []*readtrain.WeekVO) []*booking_v2.WeekData {
 }
 
 func (api *v2BookingAPI) createBookingV2(c *gin.Context) {
+	// 檢查冪等性 Key
+	idempotencyKey := c.GetHeader("Idempotency-Key")
+	if idempotencyKey != "" && !api.idempotencyManager.CheckAndSet(idempotencyKey) {
+		c.JSON(http.StatusConflict, gin.H{"success": false, "message": "請求正在處理中，請勿重複送出"})
+		return
+	}
+
+	// 旗標與 defer 處理：若未成功則刪除 Key 允許重試
+	var isSuccess bool
+	defer func() {
+		if !isSuccess && idempotencyKey != "" {
+			api.idempotencyManager.Delete(idempotencyKey)
+		}
+	}()
+
 	var req struct {
 		SlotID       string   `json:"slot_id"`
 		StudentNames []string `json:"student_names"`
@@ -446,6 +467,7 @@ func (api *v2BookingAPI) createBookingV2(c *gin.Context) {
 		})
 	}
 
+	isSuccess = true
 	c.JSON(http.StatusOK, gin.H{
 		"success":      true,
 		"message":      "預約成功",
@@ -466,6 +488,21 @@ func uiBookingStatusTransform(appt *entity.Appointment) string {
 }
 
 func (api *v2BookingAPI) cancelBookingV2(c *gin.Context) {
+	// 檢查冪等性 Key
+	idempotencyKey := c.GetHeader("Idempotency-Key")
+	if idempotencyKey != "" && !api.idempotencyManager.CheckAndSet(idempotencyKey) {
+		c.JSON(http.StatusConflict, gin.H{"success": false, "message": "請求正在處理中，請勿重複送出"})
+		return
+	}
+
+	// 旗標與 defer 處理
+	var isSuccess bool
+	defer func() {
+		if !isSuccess && idempotencyKey != "" {
+			api.idempotencyManager.Delete(idempotencyKey)
+		}
+	}()
+
 	bookingID := c.Param("bookingId")
 	if bookingID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "Booking ID required"})
@@ -486,6 +523,7 @@ func (api *v2BookingAPI) cancelBookingV2(c *gin.Context) {
 		return
 	}
 
+	isSuccess = true
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "預約已取消",
@@ -493,6 +531,21 @@ func (api *v2BookingAPI) cancelBookingV2(c *gin.Context) {
 }
 
 func (api *v2BookingAPI) submitLeaveV2(c *gin.Context) {
+	// 檢查冪等性 Key
+	idempotencyKey := c.GetHeader("Idempotency-Key")
+	if idempotencyKey != "" && !api.idempotencyManager.CheckAndSet(idempotencyKey) {
+		c.JSON(http.StatusConflict, gin.H{"success": false, "message": "請求正在處理中，請勿重複送出"})
+		return
+	}
+
+	// 旗標與 defer 處理
+	var isSuccess bool
+	defer func() {
+		if !isSuccess && idempotencyKey != "" {
+			api.idempotencyManager.Delete(idempotencyKey)
+		}
+	}()
+
 	bookingID := c.Param("bookingId")
 	var req struct {
 		Reason string `json:"reason"`
@@ -506,6 +559,30 @@ func (api *v2BookingAPI) submitLeaveV2(c *gin.Context) {
 		return
 	}
 
+	userId := getUserID(c)
+	if userId == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "message": "User not logged in"})
+		return
+	}
+
+	userName := getUserDisplayName(c)
+	domainUser, err := entity.NewUser(userId, userName)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "Failed to create user"})
+		return
+	}
+
+	_, errUC := api.submitLeaveUC.Execute(c.Request.Context(), writeappt.ReqCreateLeave{
+		AppointmentID: bookingID,
+		User:          domainUser,
+		Reason:        req.Reason,
+	})
+	if errUC != nil {
+		c.JSON(getStatus(errUC.Type()), gin.H{"success": false, "message": errUC.Message()})
+		return
+	}
+
+	isSuccess = true
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "請假申請已送出",
@@ -513,11 +590,42 @@ func (api *v2BookingAPI) submitLeaveV2(c *gin.Context) {
 }
 
 func (api *v2BookingAPI) cancelLeaveV2(c *gin.Context) {
+	// 檢查冪等性 Key
+	idempotencyKey := c.GetHeader("Idempotency-Key")
+	if idempotencyKey != "" && !api.idempotencyManager.CheckAndSet(idempotencyKey) {
+		c.JSON(http.StatusConflict, gin.H{"success": false, "message": "請求正在處理中，請勿重複送出"})
+		return
+	}
+
+	// 旗標與 defer 處理
+	var isSuccess bool
+	defer func() {
+		if !isSuccess && idempotencyKey != "" {
+			api.idempotencyManager.Delete(idempotencyKey)
+		}
+	}()
+
 	bookingID := c.Param("bookingId")
 	if bookingID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "Booking ID required"})
 		return
 	}
+	userID := getUserID(c)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "message": "User not logged in"})
+		return
+	}
+
+	_, errUC := api.cancelLeaveUC.Execute(c.Request.Context(), writeappt.ReqCancelLeave{
+		ApptID: bookingID,
+		UserID: userID,
+	})
+	if errUC != nil {
+		c.JSON(getStatus(errUC.Type()), gin.H{"success": false, "message": errUC.Message()})
+		return
+	}
+
+	isSuccess = true
 	c.JSON(http.StatusOK, gin.H{
 		"success":        true,
 		"message":        "已取消請假並恢復預約",

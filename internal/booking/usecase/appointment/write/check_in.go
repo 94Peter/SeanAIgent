@@ -14,13 +14,15 @@ type ReqCheckIn struct {
 	CheckedInBookingIDs []string
 }
 
+type CheckInUseCase core.WriteUseCase[ReqCheckIn, []*entity.Appointment]
+
 type checkInUseCaseRepo interface {
 	repository.AppointmentRepository
 	repository.TrainRepository
 	repository.StatsRepository
 }
 
-func NewCheckInUseCase(repo checkInUseCaseRepo, cw cacheWorker) core.WriteUseCase[ReqCheckIn, []*entity.Appointment] {
+func NewCheckInUseCase(repo checkInUseCaseRepo, cw cacheWorker) CheckInUseCase {
 	return &checkInUseCase{
 		repo: repo,
 		cw:   cw,

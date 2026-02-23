@@ -15,6 +15,8 @@ type ReqCreateLeave struct {
 	Reason        string
 }
 
+type CreateLeaveUseCase core.WriteUseCase[ReqCreateLeave, *entity.Appointment]
+
 type createLeaveUseCaseRepo interface {
 	repository.AppointmentRepository
 	repository.TrainRepository
@@ -26,7 +28,7 @@ type createLeaveUseCase struct {
 	cw   cacheWorker
 }
 
-func NewCreateLeaveUseCase(repo createLeaveUseCaseRepo, cw cacheWorker) core.WriteUseCase[ReqCreateLeave, *entity.Appointment] {
+func NewCreateLeaveUseCase(repo createLeaveUseCaseRepo, cw cacheWorker) CreateLeaveUseCase {
 	return &createLeaveUseCase{
 		repo: repo,
 		cw:   cw,

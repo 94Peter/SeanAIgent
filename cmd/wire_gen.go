@@ -49,6 +49,7 @@ func InitializeWeb() web.WebService {
 	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
 	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
 	readUseCase8 := usecase.ProvideQueryAllUserApptStatsUC(dbRepository)
+	idempotencyManager := usecase.ProvideIdempotencyManager()
 	registry := &usecase.Registry{
 		CreateTrainDate:        writeUseCase,
 		BatchCreateTrainDate:   coreWriteUseCase,
@@ -70,6 +71,7 @@ func InitializeWeb() web.WebService {
 		QueryTwoWeeksSchedule:  queryTwoWeeksScheduleUseCase,
 		QueryAllUserApptStats:  readUseCase8,
 		CacheWorker:            cacheWorker,
+		IdempotencyManager:     idempotencyManager,
 	}
 	bookingUseCaseSet := handler.NewBookingUseCaseSet(registry)
 	trainingUseCaseSet := handler.NewTrainingUseCaseSet(registry)
@@ -105,6 +107,7 @@ func InitializeMCP() mcp.Server {
 	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
 	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
 	readUseCase8 := usecase.ProvideQueryAllUserApptStatsUC(dbRepository)
+	idempotencyManager := usecase.ProvideIdempotencyManager()
 	registry := &usecase.Registry{
 		CreateTrainDate:        writeUseCase,
 		BatchCreateTrainDate:   coreWriteUseCase,
@@ -126,6 +129,7 @@ func InitializeMCP() mcp.Server {
 		QueryTwoWeeksSchedule:  queryTwoWeeksScheduleUseCase,
 		QueryAllUserApptStats:  readUseCase8,
 		CacheWorker:            cacheWorker,
+		IdempotencyManager:     idempotencyManager,
 	}
 	v := toolSet()
 	server := mcp.InitMcpServer(registry, v)
@@ -158,6 +162,7 @@ func GetUseCaseRegistry() *usecase.Registry {
 	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
 	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
 	readUseCase8 := usecase.ProvideQueryAllUserApptStatsUC(dbRepository)
+	idempotencyManager := usecase.ProvideIdempotencyManager()
 	registry := &usecase.Registry{
 		CreateTrainDate:        writeUseCase,
 		BatchCreateTrainDate:   coreWriteUseCase,
@@ -179,6 +184,7 @@ func GetUseCaseRegistry() *usecase.Registry {
 		QueryTwoWeeksSchedule:  queryTwoWeeksScheduleUseCase,
 		QueryAllUserApptStats:  readUseCase8,
 		CacheWorker:            cacheWorker,
+		IdempotencyManager:     idempotencyManager,
 	}
 	return registry
 }
