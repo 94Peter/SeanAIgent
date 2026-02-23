@@ -18,12 +18,12 @@ import (
 	"golang.org/x/text/language"
 
 	"seanAIgent/internal/booking/domain/entity"
+	"seanAIgent/internal/booking/transport/util/lineutil"
 	"seanAIgent/internal/booking/usecase"
 	readAppt "seanAIgent/internal/booking/usecase/appointment/read"
 	writeAppt "seanAIgent/internal/booking/usecase/appointment/write"
 	uccore "seanAIgent/internal/booking/usecase/core"
 	readTrain "seanAIgent/internal/booking/usecase/traindate/read"
-	"seanAIgent/internal/booking/transport/util/lineutil"
 	"seanAIgent/internal/util/timeutil"
 	"seanAIgent/templates"
 	"seanAIgent/templates/forms/bookTraining"
@@ -215,7 +215,7 @@ func (api *bookingAPI) bookingSummary(c *gin.Context) {
 	viewTrainingDate := modelTrainingDateToBookTrainingDate(dbTrainingDate)
 	slotUsersName := make(map[string][]string)
 	for _, td := range dbTrainingDate {
-		if len(td.UserAppointments) == 0 {
+		if len(td.AllUsers) == 0 {
 			slotUsersName[td.ID] = []string{}
 		} else {
 			slotUsersName[td.ID] = td.AllUsers
@@ -600,6 +600,7 @@ func modelTrainingDateToBookTrainingDate(
 		// Transform each slot model into a slot view model
 		for _, slotModel := range slotsForDay {
 			userBookings := make([]*bookTraining.UserBooking, 0, len(slotModel.UserAppointments))
+
 			for _, userBookingModel := range slotModel.UserAppointments {
 				userBookings = append(userBookings, &bookTraining.UserBooking{
 					BookingID: userBookingModel.ID,
