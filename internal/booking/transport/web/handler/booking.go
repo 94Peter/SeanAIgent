@@ -690,7 +690,7 @@ func (api *bookingAPI) getCheckinPage(c *gin.Context) {
 					ErrorMessage: "無法載入簽到列表，請稍後再試。",
 				}
 			} else {
-				if checkinList.StartDate.After(queryTime) &&
+				if checkinList.EndDate.After(queryTime) &&
 					checkinList.StartDate.Sub(queryTime) > 10*time.Minute {
 					viewModel = &checkin.CheckinPageModel{
 						ErrorMessage: "該時段尚未到達",
