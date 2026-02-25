@@ -31,6 +31,8 @@ type TrainRepository interface {
 
 	// 我們之前討論過的原子扣名額
 	DeductCapacity(ctx context.Context, trainingID string, count int) RepoError
+	// 行政人員強點扣名額，不檢查容量是否足夠
+	AdminDeductCapacity(ctx context.Context, trainingID string, count int) RepoError
 	// 原子增加名額
 	IncreaseCapacity(ctx context.Context, trainingID string, count int) RepoError
 

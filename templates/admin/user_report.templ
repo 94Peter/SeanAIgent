@@ -1,0 +1,239 @@
+package admin
+
+import (
+	"fmt"
+	"seanAIgent/components/card"
+	"seanAIgent/components/navigation"
+	"seanAIgent/components/table"
+	"seanAIgent/components/icon"
+)
+
+func cond(condition bool, trueVal, falseVal string) string {
+	if condition {
+		return trueVal
+	}
+	return falseVal
+}
+
+type UserReportModel struct {
+	Year        int
+	Month       int
+	UserStats   []*UserAccountStat
+}
+
+type UserAccountStat struct {
+	UserID          string
+	LineDisplayName string
+	TotalBookings   int
+	TotalAttended   int
+	TotalLeave      int
+	TotalAbsent     int
+	AttendanceRate  float64
+	Children        []*ChildMonthlyStat
+}
+
+type ChildMonthlyStat struct {
+	ChildName      string
+	Bookings       int
+	Attended       int
+	Leave          int
+	Absent         int
+	AttendanceRate float64
+}
+
+templ UserReport(model *UserReportModel) {
+	<div class="w-full min-h-screen bg-[#000000] text-white font-sans pb-20" x-data="{ expandedUser: null }">
+		<!-- Navigation -->
+		<div class="sticky top-0 z-50 bg-[#121212] border-b border-[#27272A] p-4">
+			@navigation.NavTabs(navigation.Props{
+				Tabs: []navigation.Tab{
+					{Text: "訓練場次", URL: "/v2/admin/dashboard"},
+					{Text: "經營分析", URL: "/v2/admin/analytics"},
+					{Text: "數據月報表", URL: "/v2/admin/users/report"},
+				},
+				ActiveURL: "/v2/admin/users/report",
+			})
+		</div>
+
+		<div class="p-4 space-y-6">
+			<header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+				<div>
+					<h1 class="text-2xl font-bold text-[#FFD700]">{ fmt.Sprintf("%d年 %d月數據報表", model.Year, model.Month) }</h1>
+					<p class="text-sm text-[#8E8E93]">依家長帳號彙整統計</p>
+				</div>
+				<div class="flex gap-2 w-full sm:w-auto">
+					<button class="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[#1C1C1E] border border-[#3A3A3C] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#2C2C2E] transition-colors">
+						@icon.Calendar(icon.Props{Size: 16})
+						切換月份
+					</button>
+					<button class="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[#06C755] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#05B04B] transition-colors">
+						@icon.Download(icon.Props{Size: 16})
+						匯出 CSV
+					</button>
+				</div>
+			</header>
+
+			<!-- Desktop View Table -->
+			@card.Card(card.Props{ Class: "bg-[#1C1C1E] border-[#27272A] overflow-hidden hidden md:block" }) {
+				@table.Table() {
+					@table.Header() {
+						@table.Row(table.RowProps{ Class: "hover:bg-transparent border-[#27272A]" }) {
+							@table.Head() { 家長 / LINE 帳號 }
+							@table.Head() { 總預約 }
+							@table.Head() { 總出席 }
+							@table.Head() { 總請假 }
+							@table.Head() { 總缺席 }
+							@table.Head() { 總出席率 }
+							@table.Head(table.HeadProps{ Class: "text-right" }) { 操作 }
+						}
+					}
+					@table.Body() {
+						for _, user := range model.UserStats {
+							<!-- Parent Row -->
+							@table.Row(table.RowProps{ 
+								Class: "border-[#27272A]/50 cursor-pointer",
+								Attributes: templ.Attributes{
+									"@click": fmt.Sprintf("expandedUser = (expandedUser === '%s' ? null : '%s')", user.UserID, user.UserID),
+								},
+							}) {
+								@table.Cell() {
+									<div class="flex items-center gap-2">
+										<div class="text-[#8E8E93] transition-transform duration-200" :class={ fmt.Sprintf("expandedUser === '%s' ? 'rotate-90' : ''", user.UserID) }>
+											@icon.ChevronRight(icon.Props{Size: 16})
+										</div>
+										<div class="flex flex-col">
+											<span class="font-bold text-white">{ user.LineDisplayName }</span>
+											<span class="text-[10px] text-[#525252] font-mono">{ user.UserID }</span>
+										</div>
+									</div>
+								}
+								@table.Cell() { <span class="font-mono">{ fmt.Sprintf("%d", user.TotalBookings) }</span> }
+								@table.Cell() { <span class="text-[#34D399] font-mono">{ fmt.Sprintf("%d", user.TotalAttended) }</span> }
+								@table.Cell() { <span class="text-[#F59E0B] font-mono">{ fmt.Sprintf("%d", user.TotalLeave) }</span> }
+								@table.Cell() { 
+									<span class={ cond(user.TotalAbsent > 0, "text-[#EF4444] font-bold", "text-[#8E8E93]") + " font-mono" }>
+										{ fmt.Sprintf("%d", user.TotalAbsent) }
+									</span> 
+								}
+								@table.Cell() { 
+									@AttendanceProgress(user.AttendanceRate)
+								}
+								@table.Cell(table.CellProps{ Class: "text-right" }) {
+									<a href={ templ.URL(fmt.Sprintf("/v2/admin/users/%s", user.UserID)) } @click.stop class="text-[#60A5FA] hover:underline text-sm font-semibold">
+										歷史全紀錄
+									</a>
+								}
+							}
+							<!-- Children Sub-Rows (Expandable) -->
+							<tr x-show={ fmt.Sprintf("expandedUser === '%s'", user.UserID) } class="bg-[#000000]/30 border-b border-[#27272A]/30">
+								<td colspan="7" class="p-0">
+									<div x-show={ fmt.Sprintf("expandedUser === '%s'", user.UserID) } x-collapse class="px-12 py-3 space-y-2">
+										<div class="text-[10px] uppercase tracking-widest text-[#525252] font-bold mb-2">孩子明細</div>
+										for _, child := range user.Children {
+											<div class="grid grid-cols-7 items-center text-sm py-2 border-b border-[#27272A]/20 last:border-0">
+												<div class="col-span-1 font-semibold text-[#FFD700]">{ child.ChildName }</div>
+												<div class="font-mono text-[#8E8E93]">{ fmt.Sprintf("%d", child.Bookings) }</div>
+												<div class="font-mono text-[#34D399]">{ fmt.Sprintf("%d", child.Attended) }</div>
+												<div class="font-mono text-[#F59E0B]">{ fmt.Sprintf("%d", child.Leave) }</div>
+												<div class={ "font-mono " + cond(child.Absent > 0, "text-[#EF4444]", "text-[#525252]") }>{ fmt.Sprintf("%d", child.Absent) }</div>
+												<div class="col-span-2">
+													@AttendanceProgress(child.AttendanceRate)
+												</div>
+											</div>
+										}
+									</div>
+								</td>
+							</tr>
+						}
+					}
+				}
+			}
+
+			<!-- Mobile View Cards -->
+			<div class="space-y-3 md:hidden">
+				for _, user := range model.UserStats {
+					@UserAccountMobileCard(user)
+				}
+			</div>
+		</div>
+		<!-- Scripts for expansion animation -->
+		<script src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js" defer></script>
+		<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+	</div>
+}
+
+templ AttendanceProgress(rate float64) {
+	<div class="flex items-center gap-2 min-w-[100px]">
+		<div class="flex-grow h-1.5 bg-[#27272A] rounded-full overflow-hidden">
+			<div 
+				class={ cond(rate >= 0.8, "bg-[#34D399]", cond(rate >= 0.5, "bg-[#F59E0B]", "bg-[#EF4444]")) + " h-full transition-all" } 
+				style={ fmt.Sprintf("width: %d%%", int(rate*100)) }
+			></div>
+		</div>
+		<span class="text-[10px] font-mono text-[#8E8E93]">{ fmt.Sprintf("%d%%", int(rate*100)) }</span>
+	</div>
+}
+
+templ UserAccountMobileCard(user *UserAccountStat) {
+	@card.Card(card.Props{ 
+		Class: "bg-[#1C1C1E] border-[#27272A]",
+		Attributes: templ.Attributes{
+			"x-data": "{ open: false }",
+		},
+	}) {
+		@card.Content(card.ContentProps{ Class: "p-4" }) {
+			<div class="flex justify-between items-start mb-4" @click="open = !open">
+				<div>
+					<div class="font-bold text-lg text-white">{ user.LineDisplayName }</div>
+					<div class="text-[10px] text-[#525252] font-mono uppercase tracking-tighter">{ user.UserID }</div>
+				</div>
+				<div class="flex items-center gap-2">
+					<span class="text-[10px] bg-[#27272A] px-2 py-1 rounded text-[#8E8E93]">{ fmt.Sprintf("%d位孩子", len(user.Children)) }</span>
+					<div class="text-[#8E8E93] transition-transform duration-200" :class="open ? 'rotate-90' : ''">
+						@icon.ChevronRight(icon.Props{Size: 20})
+					</div>
+				</div>
+			</div>
+			
+			<div class="grid grid-cols-4 gap-2 text-center border-t border-[#27272A] pt-4" @click="open = !open">
+				<div>
+					<div class="text-[10px] text-[#8E8E93] uppercase mb-1">預約</div>
+					<div class="font-mono text-sm">{ fmt.Sprintf("%d", user.TotalBookings) }</div>
+				</div>
+				<div>
+					<div class="text-[10px] text-[#8E8E93] uppercase mb-1">出席</div>
+					<div class="font-mono text-sm text-[#34D399]">{ fmt.Sprintf("%d", user.TotalAttended) }</div>
+				</div>
+				<div>
+					<div class="text-[10px] text-[#8E8E93] uppercase mb-1">請假</div>
+					<div class="font-mono text-sm text-[#F59E0B]">{ fmt.Sprintf("%d", user.TotalLeave) }</div>
+				</div>
+				<div>
+					<div class="text-[10px] text-[#8E8E93] uppercase mb-1">缺席</div>
+					<div class={ "font-mono text-sm " + cond(user.TotalAbsent > 0, "text-[#EF4444] font-bold", "") }>{ fmt.Sprintf("%d", user.TotalAbsent) }</div>
+				</div>
+			</div>
+
+			<!-- Mobile Children Detail -->
+			<div x-show="open" x-collapse class="mt-4 pt-4 border-t border-[#27272A]/50 space-y-4">
+				for _, child := range user.Children {
+					<div class="bg-[#000000]/40 p-3 rounded-lg border border-[#27272A]/30">
+						<div class="flex justify-between items-center mb-2">
+							<span class="text-sm font-bold text-[#FFD700]">{ child.ChildName }</span>
+							<span class="text-[10px] font-mono text-[#8E8E93]">{ fmt.Sprintf("出席率: %d%%", int(child.AttendanceRate*100)) }</span>
+						</div>
+						<div class="flex gap-4 text-[11px]">
+							<span class="text-[#8E8E93]">預約: { fmt.Sprintf("%d", child.Bookings) }</span>
+							<span class="text-[#34D399]">出席: { fmt.Sprintf("%d", child.Attended) }</span>
+							<span class="text-[#F59E0B]">請假: { fmt.Sprintf("%d", child.Leave) }</span>
+							<span class={ cond(child.Absent > 0, "text-[#EF4444]", "text-[#525252]") }>缺席: { fmt.Sprintf("%d", child.Absent) }</span>
+						</div>
+					</div>
+				}
+				<a href={ templ.URL(fmt.Sprintf("/v2/admin/users/%s", user.UserID)) } class="block w-full text-center py-2 text-xs font-bold text-[#60A5FA] bg-[#60A5FA]/10 rounded-lg">
+					查看完整歷史紀錄
+				</a>
+			</div>
+		}
+	}
+}

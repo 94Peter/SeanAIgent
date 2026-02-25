@@ -30,6 +30,13 @@ type Registry struct {
 	CreateLeave writeAppt.CreateLeaveUseCase
 	CancelLeave writeAppt.CancelLeaveUseCase
 
+	AdminCheckIn          writeAppt.AdminCheckInUseCase
+	AdminToggleCheckIn    writeAppt.AdminToggleCheckInUseCase
+	AdminCreateLeave      writeAppt.AdminCreateLeaveUseCase
+	AdminRestoreFromLeave writeAppt.AdminRestoreFromLeaveUseCase
+	AdminCreateWalkIn     writeAppt.AdminCreateWalkInUseCase
+	AdminQueryStudents    readStats.AdminQueryStudentsUseCase
+
 	QueryUserBookings core.ReadUseCase[readAppt.ReqQueryUserBookings, *readAppt.RespQueryUserBookings]
 	// FindBooking       core.ReadUseCase[readAppt.ReqFindBooking, *entity.AppointmentWithTrainDate]
 	GetUserMonthlyStats   readStats.GetUserMonthlyStatsUseCase

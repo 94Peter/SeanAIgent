@@ -23,6 +23,9 @@ type UserAppointment struct {
 	ChildName   string    `json:"child_name,omitempty"`
 	IsCheckedIn bool      `json:"is_checked_in"`
 	IsOnLeave   bool      `json:"is_on_leave"`
+	IsWalkIn    bool      `json:"is_walk_in"`
+	IsGuest     bool      `json:"is_guest"`
+	ContactInfo string    `json:"contact_info,omitempty"`
 }
 
 // 使用者角度的預約狀態

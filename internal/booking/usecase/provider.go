@@ -67,20 +67,56 @@ func ProvideUserQueryTrainByIDUC(
 
 func ProvideCreateApptUC(
 	repo Repository, cw CacheWorker,
-) core.WriteUseCase[writeAppt.ReqCreateAppt, []*entity.Appointment] {
+) writeAppt.CreateApptUseCase {
 	return core.WithWriteOTel(writeAppt.NewCreateApptUseCase(repo, cw))
 }
 
 func ProvideCancelApptUC(
 	repo Repository, cw CacheWorker,
-) core.WriteUseCase[writeAppt.ReqCancelAppt, *entity.Appointment] {
+) writeAppt.CancelApptUseCase {
 	return core.WithWriteOTel(writeAppt.NewCancelApptUseCase(repo, cw))
 }
 
 func ProvideCheckInUC(
+	adminUC writeAppt.AdminCheckInUseCase,
+) writeAppt.CheckInUseCase {
+	return core.WithWriteOTel(writeAppt.NewCheckInUseCase(adminUC))
+}
+
+func ProvideAdminCheckInUC(
 	repo Repository, cw CacheWorker,
-) core.WriteUseCase[writeAppt.ReqCheckIn, []*entity.Appointment] {
-	return core.WithWriteOTel(writeAppt.NewCheckInUseCase(repo, cw))
+) writeAppt.AdminCheckInUseCase {
+	return core.WithWriteOTel(writeAppt.NewAdminCheckInUseCase(repo, cw))
+}
+
+func ProvideAdminToggleCheckInUC(
+	repo Repository, cw CacheWorker,
+) writeAppt.AdminToggleCheckInUseCase {
+	return core.WithWriteOTel(writeAppt.NewAdminToggleCheckInUseCase(repo, cw))
+}
+
+func ProvideAdminCreateLeaveUC(
+	repo Repository, cw CacheWorker,
+) writeAppt.AdminCreateLeaveUseCase {
+	return core.WithWriteOTel(writeAppt.NewAdminCreateLeaveUseCase(repo, cw))
+}
+
+func ProvideAdminRestoreFromLeaveUC(
+	repo Repository, cw CacheWorker,
+) writeAppt.AdminRestoreFromLeaveUseCase {
+	return core.WithWriteOTel(writeAppt.NewAdminRestoreFromLeaveUseCase(repo, cw))
+}
+
+func ProvideAdminCreateWalkInUC(
+	repo Repository, cw CacheWorker,
+) writeAppt.AdminCreateWalkInUseCase {
+	return core.WithWriteOTel(writeAppt.NewAdminCreateWalkInUseCase(repo, cw))
+}
+
+func ProvideAdminQueryStudentsUC(
+	repo Repository,
+) readStats.AdminQueryStudentsUseCase {
+	return core.WithReadOTel(readStats.NewAdminQueryStudentsUseCase(repo))
 }
 
 func ProvideQueryUserBookingsUC(
@@ -91,13 +127,13 @@ func ProvideQueryUserBookingsUC(
 
 func ProvideCreateLeaveUC(
 	repo Repository, cw CacheWorker,
-) core.WriteUseCase[writeAppt.ReqCreateLeave, *entity.Appointment] {
+) writeAppt.CreateLeaveUseCase {
 	return core.WithWriteOTel(writeAppt.NewCreateLeaveUseCase(repo, cw))
 }
 
 func ProvideCancelLeaveUC(
 	repo Repository, cw CacheWorker,
-) core.WriteUseCase[writeAppt.ReqCancelLeave, *entity.Appointment] {
+) writeAppt.CancelLeaveUseCase {
 	return core.WithWriteOTel(writeAppt.NewCancelLeaveUseCase(repo, cw))
 }
 
@@ -158,9 +194,15 @@ var UseCaseSet = wire.NewSet(
 	ProvideCreateApptUC,
 	ProvideCancelApptUC,
 	ProvideCheckInUC,
+	ProvideAdminCheckInUC,
+	ProvideAdminToggleCheckInUC,
+	ProvideAdminCreateWalkInUC,
+	ProvideAdminQueryStudentsUC,
 	ProvideQueryUserBookingsUC,
 	ProvideCancelLeaveUC,
 	ProvideCreateLeaveUC,
+	ProvideAdminCreateLeaveUC,
+	ProvideAdminRestoreFromLeaveUC,
 
 	ProvideGetUserMonthlyStatsUC,
 	ProvideQueryTwoWeeksScheduleUC,

@@ -40,8 +40,11 @@ func getPipelineTrainDateHasApptState(q bson.M) mongo.Pipeline {
 						{"userId", "$$appt.user_id"},
 						{"userName", "$$appt.user_name"},
 						{"childName", "$$appt.child_name"},
-						{"isOnLeave", "$$appt.is_on_leave"},
-						{"isCheckedIn", "$$appt.is_checked_in"},
+						{"isOnLeave", bson.D{{"$eq", []interface{}{"$$appt.status", "CANCELLED_LEAVE"}}}},
+						{"isCheckedIn", bson.D{{"$eq", []interface{}{"$$appt.status", "ATTENDED"}}}},
+						{"isWalkIn", "$$appt.is_walk_in"},
+						{"isGuest", "$$appt.is_guest"},
+						{"contactInfo", "$$appt.contact_info"},
 						{"createdAt", "$$appt.created_at"},
 						// 如果還有其他不一致的欄位，在這裡進行轉換
 					}},

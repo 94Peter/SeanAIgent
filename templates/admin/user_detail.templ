@@ -1,0 +1,175 @@
+package admin
+
+import (
+	"fmt"
+	"seanAIgent/components/card"
+	"seanAIgent/components/icon"
+)
+
+type UserDetailModel struct {
+	UserID          string
+	LineDisplayName string
+	FilterStats     *UserOverallStats // Stats for the current filter
+	MonthlyRecords  []*UserMonthlyRecord
+	AvailableMonths []string // e.g., ["2026-02", "2026-01"]
+	CurrentMonth    string   // e.g., "2026-02" or "all"
+}
+
+type UserOverallStats struct {
+	TotalBookings int
+	TotalAttended int
+	TotalLeave    int
+	TotalAbsent   int
+	AttendanceRate float64
+}
+
+type UserMonthlyRecord struct {
+	MonthDisplay string // e.g., "2026年 2月"
+	MonthValue   string // e.g., "2026-02"
+	Bookings     []*ChildBookingRecord
+}
+
+type ChildBookingRecord struct {
+	ChildName string
+	Date      string // e.g., "02/24 (週二)"
+	Time      string // e.g., "14:00"
+	Location  string
+	Status    string // "Booked", "CheckedIn", "Leave", "Absent"
+}
+
+templ UserDetail(model *UserDetailModel) {
+	<div class="w-full min-h-screen bg-[#000000] text-white font-sans pb-20">
+		<!-- Admin Header with Back Button -->
+		<div class="sticky top-0 z-50 bg-[#121212]/80 backdrop-blur-md border-b border-[#27272A] p-4 flex items-center gap-4">
+			<a href="/v2/admin/users/report" class="p-2 -ml-2 text-[#8E8E93] hover:text-white transition-colors">
+				@icon.ChevronLeft(icon.Props{Size: 24})
+			</a>
+			<h1 class="text-lg font-bold">學員預約明細</h1>
+		</div>
+
+		<div class="p-4 space-y-6">
+			<!-- User Profile Card -->
+			@card.Card(card.Props{ Class: "bg-[#1C1C1E] border-[#27272A]" }) {
+				@card.Content(card.ContentProps{ Class: "p-6" }) {
+					<div class="flex items-center gap-4 mb-6">
+						<div class="w-16 h-16 rounded-full bg-gradient-to-br from-[#FFD700] to-[#B8860B] flex items-center justify-center text-black text-2xl font-bold">
+							{ model.LineDisplayName[0:1] }
+						</div>
+						<div>
+							<h2 class="text-2xl font-bold text-white">{ model.LineDisplayName }</h2>
+							<div class="flex items-center gap-2 mt-1">
+								<span class="text-xs px-2 py-0.5 rounded bg-[#FFD700] text-black font-bold uppercase tracking-wider">
+									if model.CurrentMonth == "all" || model.CurrentMonth == "" {
+										累積統計
+									} else {
+										{ model.CurrentMonth } 統計
+									}
+								</span>
+								<span class="text-[10px] text-[#525252] font-mono">ID: { model.UserID }</span>
+							</div>
+						</div>
+					</div>
+
+					<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-[#27272A]">
+						<div>
+							<div class="text-[10px] text-[#8E8E93] uppercase mb-1">預約次數</div>
+							<div class="text-xl font-mono font-bold">{ fmt.Sprintf("%d", model.FilterStats.TotalBookings) }</div>
+						</div>
+						<div>
+							<div class="text-[10px] text-[#8E8E93] uppercase mb-1">出席次數</div>
+							<div class="text-xl font-mono font-bold text-[#34D399]">{ fmt.Sprintf("%d", model.FilterStats.TotalAttended) }</div>
+						</div>
+						<div>
+							<div class="text-[10px] text-[#8E8E93] uppercase mb-1">請假紀錄</div>
+							<div class="text-xl font-mono font-bold text-[#F59E0B]">{ fmt.Sprintf("%d", model.FilterStats.TotalLeave) }</div>
+						</div>
+						<div>
+							<div class="text-[10px] text-[#8E8E93] uppercase mb-1">出席率</div>
+							<div class="text-xl font-mono font-bold text-[#60A5FA]">{ fmt.Sprintf("%d%%", int(model.FilterStats.AttendanceRate*100)) }</div>
+						</div>
+					</div>
+				}
+			}
+
+			<!-- Month Filter Container -->
+			<div class="space-y-3">
+				<label class="text-[10px] font-bold text-[#525252] uppercase tracking-widest ml-1">切換篩選月份</label>
+				<div class="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+					<a 
+						href={ templ.URL(fmt.Sprintf("/v2/admin/users/%s?month=all", model.UserID)) }
+						class={ "px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors " + cond(model.CurrentMonth == "all" || model.CurrentMonth == "", "bg-[#FFD700] text-black", "bg-[#1C1C1E] text-[#8E8E93] border border-[#27272A]") }
+					>
+						全部紀錄
+					</a>
+					for _, m := range model.AvailableMonths {
+						<a 
+							href={ templ.URL(fmt.Sprintf("/v2/admin/users/%s?month=%s", model.UserID, m)) }
+							class={ "px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors " + cond(model.CurrentMonth == m, "bg-[#FFD700] text-black", "bg-[#1C1C1E] text-[#8E8E93] border border-[#27272A]") }
+						>
+							{ m }
+						</a>
+					}
+				</div>
+			</div>
+
+			<!-- Monthly Booking Records -->
+			<div class="space-y-8 pt-2">
+				for _, month := range model.MonthlyRecords {
+					<div class="space-y-3">
+						<h3 class="text-sm font-bold text-[#FFD700] uppercase tracking-widest px-1 border-l-4 border-[#FFD700] pl-3">
+							{ month.MonthDisplay }
+						</h3>
+						<div class="space-y-2">
+							for _, rec := range month.Bookings {
+								@BookingRecordRow(rec)
+							}
+						</div>
+					</div>
+				}
+				if len(model.MonthlyRecords) == 0 {
+					<div class="text-center py-20 text-[#525252]">
+						<p>該月份無預約紀錄</p>
+					</div>
+				}
+			</div>
+		</div>
+	</div>
+}
+
+templ BookingRecordRow(rec *ChildBookingRecord) {
+	<div class="bg-[#1C1C1E] p-4 rounded-xl border border-[#27272A] flex items-center justify-between gap-4">
+		<div class="flex-grow">
+			<div class="flex items-center gap-2 mb-1">
+				<span class="text-sm font-bold text-white">{ rec.ChildName }</span>
+				<span class={ "text-[10px] px-1.5 py-0.5 rounded font-bold uppercase " + getStatusClasses(rec.Status) }>
+					{ rec.Status }
+				</span>
+			</div>
+			<div class="text-xs text-[#8E8E93] flex items-center gap-3">
+				<span class="font-mono">{ rec.Date } { rec.Time }</span>
+				<span class="flex items-center gap-1">
+					@icon.MapPin(icon.Props{Size: 10})
+					{ rec.Location }
+				</span>
+			</div>
+		</div>
+		<div class="text-right">
+			<!-- Reserved for potential action -->
+		</div>
+	</div>
+}
+
+func getStatusClasses(status string) string {
+	switch status {
+	case "Booked":
+		return "bg-[#60A5FA]/20 text-[#60A5FA] border border-[#60A5FA]/30"
+	case "CheckedIn":
+		return "bg-[#34D399]/20 text-[#34D399] border border-[#34D399]/30"
+	case "Leave":
+		return "bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/30"
+	case "Absent":
+		return "bg-[#EF4444]/20 text-[#EF4444] border border-[#EF4444]/30"
+	default:
+		return "bg-[#27272A] text-[#8E8E93]"
+	}
+}

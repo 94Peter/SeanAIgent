@@ -1,0 +1,161 @@
+package admin
+
+import (
+	"fmt"
+	"seanAIgent/components/card"
+	"seanAIgent/components/navigation"
+)
+
+type DashboardModel struct {
+	TodaySessions    []*SessionSummary
+	UpcomingSessions []*SessionSummary
+	PastSessions     []*SessionSummary
+}
+
+type SessionSummary struct {
+	ID                string
+	DateDisplay       string
+	TimeDisplay       string
+	Location          string
+	BookedCount       int
+	Capacity          int
+	AttendedCount     int
+	LeaveCount        int
+	PendingCount      int // Booked - Attended - Leave
+}
+
+templ AdminDashboard(model *DashboardModel) {
+	<div class="w-full min-h-screen bg-[#000000] text-white font-sans pb-20">
+		<!-- Navigation -->
+		<div class="sticky top-0 z-50 bg-[#121212] border-b border-[#27272A] p-4">
+			@navigation.NavTabs(navigation.Props{
+				Tabs: []navigation.Tab{
+					{Text: "訓練場次", URL: "/v2/admin/dashboard"},
+					{Text: "經營分析", URL: "/v2/admin/analytics"},
+					{Text: "數據月報表", URL: "/v2/admin/users/report"},
+				},
+				ActiveURL: "/v2/admin/dashboard",
+			})
+		</div>
+
+		<div class="p-4 space-y-10">
+			<!-- Section: Today -->
+			<section class="space-y-4">
+				<div class="flex items-center gap-2">
+					<div class="w-1.5 h-5 bg-[#FFD700] rounded-full"></div>
+					<h2 class="text-xl font-bold">今日場次 (Today)</h2>
+				</div>
+				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+					if len(model.TodaySessions) == 0 {
+						@EmptyState("今日無排定場次")
+					} else {
+						for _, s := range model.TodaySessions {
+							@SessionCard(s)
+						}
+					}
+				</div>
+			</section>
+
+			<!-- Section: Upcoming -->
+			<section class="space-y-4">
+				<div class="flex items-center gap-2">
+					<div class="w-1.5 h-5 bg-[#60A5FA] rounded-full"></div>
+					<h2 class="text-xl font-bold">未來 7 天 (Upcoming)</h2>
+				</div>
+				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+					if len(model.UpcomingSessions) == 0 {
+						@EmptyState("未來 7 天無預定場次")
+					} else {
+						for _, s := range model.UpcomingSessions {
+							@SessionCard(s)
+						}
+					}
+				</div>
+			</section>
+
+			<!-- Section: Past -->
+			<section class="space-y-4">
+				<div class="flex items-center gap-2">
+					<div class="w-1.5 h-5 bg-[#8E8E93] rounded-full"></div>
+					<h2 class="text-xl font-bold">過去 7 天 (Past)</h2>
+				</div>
+				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+					if len(model.PastSessions) == 0 {
+						@EmptyState("過去 7 天無歷史場次")
+					} else {
+						for _, s := range model.PastSessions {
+							@SessionCard(s)
+						}
+					}
+				</div>
+			</section>
+		</div>
+	</div>
+}
+
+templ EmptyState(msg string) {
+	<div class="col-span-full py-10 text-center bg-[#1C1C1E]/50 rounded-xl border border-dashed border-[#27272A]">
+		<p class="text-[#525252] text-sm font-bold uppercase tracking-widest">{ msg }</p>
+	</div>
+}
+
+templ SessionCard(s *SessionSummary) {
+	{{
+		occupancyPerc := float64(s.BookedCount) / float64(s.Capacity) * 100
+		progressBarColor := "bg-[#60A5FA]"
+		if s.BookedCount >= s.Capacity {
+			progressBarColor = "bg-[#FFD700]"
+		} else if s.BookedCount < 2 {
+			progressBarColor = "bg-[#EF4444]"
+		}
+	}}
+	<a href={ templ.URL(fmt.Sprintf("/v2/admin/checkin/%s", s.ID)) } class="block transition-transform active:scale-95">
+		@card.Card(card.Props{
+			Class: "bg-[#1C1C1E] border-[#27272A] hover:border-[#3A3A3C] transition-colors",
+		}) {
+			@card.Header() {
+				<div class="flex justify-between items-start">
+					<div>
+						<div class="text-xs font-bold text-[#8E8E93] uppercase">{ s.DateDisplay }</div>
+						@card.Title() {
+							<span class="text-white">{ s.TimeDisplay }</span>
+						}
+					</div>
+					<div class="px-2 py-1 rounded bg-[#27272A] text-[10px] font-bold text-[#8E8E93]">
+						{ s.Location }
+					</div>
+				</div>
+			}
+			@card.Content() {
+				<div class="space-y-4">
+					<!-- Progress Bar -->
+					<div class="space-y-1.5">
+						<div class="flex justify-between text-xs">
+							<span class="text-[#8E8E93]">預約人數</span>
+							<span class="text-white font-bold">{ fmt.Sprintf("%d/%d", s.BookedCount, s.Capacity) }</span>
+						</div>
+						<div class="w-full h-2 bg-[#27272A] rounded-full overflow-hidden">
+							<div class={ progressBarColor + " h-full transition-all duration-500" } style={ fmt.Sprintf("width: %f%%", occupancyPerc) }></div>
+						</div>
+					</div>
+
+					<!-- Stats Grid -->
+					<div class="grid grid-cols-3 gap-2 border-t border-[#27272A] pt-4">
+						<div class="text-center">
+							<div class="text-xs text-[#8E8E93] uppercase mb-1">已簽到</div>
+							<div class="text-2xl font-black text-[#34D399]">{ fmt.Sprintf("%d", s.AttendedCount) }</div>
+						</div>
+						<div class="text-center border-x border-[#27272A]">
+							<div class="text-xs text-[#8E8E93] uppercase mb-1">請假</div>
+							<div class="text-2xl font-black text-[#F59E0B]">{ fmt.Sprintf("%d", s.LeaveCount) }</div>
+						</div>
+						<div class="text-center">
+							<div class="text-xs text-[#8E8E93] uppercase mb-1">未到</div>
+							<div class="text-2xl font-black text-[#EF4444]">{ fmt.Sprintf("%d", s.PendingCount) }</div>
+						</div>
+					</div>
+				</div>
+			}
+		}
+	</a>
+}

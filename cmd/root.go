@@ -98,6 +98,9 @@ func initConfig() {
 }
 
 func initTracer(ctx context.Context) (func(ctx context.Context), error) {
+	if !viper.GetBool("http.tracer.enabled") {
+		return func(_ context.Context) {}, nil
+	}
 	service := viper.GetString("tracing.service")
 	if service == "" {
 		return nil, fmt.Errorf("tracing.service is required")
@@ -132,6 +135,9 @@ func newOtelTracer(ctx context.Context, service string) (*otelTracer, error) {
 		otlpmetricgrpc.WithEndpoint(endpoint),
 		otlpmetricgrpc.WithInsecure(),
 	)
+	if err != nil {
+		return nil, err
+	}
 	return &otelTracer{
 		exporter:       exporter,
 		resource:       getResource(service),
@@ -196,13 +202,11 @@ func (t *otelTracer) Start() (func(ctx context.Context), error) {
 	}
 
 	return func(ctx context.Context) {
-
 		if err := tp.Shutdown(ctx); err != nil {
 			log.Fatalf("Error shutting down tracer provider: %v", err)
 		}
 		if err := mp.Shutdown(ctx); err != nil {
 			log.Fatalf("Error shutting down meter provider: %v", err)
 		}
-
 	}, nil
 }

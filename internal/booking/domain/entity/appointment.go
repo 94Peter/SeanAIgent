@@ -56,15 +56,18 @@ func AppointmentStatusFromString(status string) (appointmentStatus, bool) {
 }
 
 type Appointment struct {
-	leave      VO_LeaveInfo
-	createdAt  time.Time
-	updateAt   time.Time
-	verifiedAt *time.Time
-	user       User
-	id         string
-	childName  string
-	trainingId string
-	status     appointmentStatus
+	leave       VO_LeaveInfo
+	createdAt   time.Time
+	updateAt    time.Time
+	verifiedAt  *time.Time
+	user        User
+	id          string
+	childName   string
+	trainingId  string
+	contactInfo string
+	status      appointmentStatus
+	isWalkIn    bool
+	isGuest     bool
 }
 
 func NewLeaveInfo(reason string, status leaveStatus, createdAt time.Time) VO_LeaveInfo {
@@ -83,6 +86,18 @@ type VO_LeaveInfo struct {
 
 func (l VO_LeaveInfo) IsEmpty() bool {
 	return l.status == LeaveStatusNone
+}
+
+func (leave VO_LeaveInfo) Reason() string {
+	return leave.reason
+}
+
+func (leave VO_LeaveInfo) Status() leaveStatus {
+	return leave.status
+}
+
+func (leave VO_LeaveInfo) CreatedAt() time.Time {
+	return leave.createdAt
 }
 
 func (a Appointment) Validate() error {
@@ -118,6 +133,19 @@ func WithCreateAppt(id, trainingID string, user User, childName string) apptOpt 
 		appt.status = StatusConfirmed
 		appt.createdAt = time.Now()
 		appt.updateAt = appt.createdAt
+	}
+}
+
+func WithWalkIn(isWalkIn bool) apptOpt {
+	return func(appt *Appointment) {
+		appt.isWalkIn = isWalkIn
+	}
+}
+
+func WithGuest(isGuest bool, contactInfo string) apptOpt {
+	return func(appt *Appointment) {
+		appt.isGuest = isGuest
+		appt.contactInfo = contactInfo
 	}
 }
 
@@ -206,25 +234,35 @@ func (a *Appointment) CancelAsMistake(userID string) error {
 	return nil
 }
 
-func (a *Appointment) MarkAsAttended(trainingStartTime time.Time) error {
-	// 規則：上課前 10 分鐘才開放點名
-	if time.Now().Before(trainingStartTime.Add(-10 * time.Minute)) {
+func (a *Appointment) AdminCheckIn(trainingStartTime time.Time) error {
+	now := time.Now()
+	// 規則：還沒到的課不能簽到 (必須晚於或等於課程開始時間)
+	if now.Before(trainingStartTime) {
 		return ErrAppointmentCheckInNotOpen
 	}
-	// 規則：課程結束3天內可以再補簽到
-	if time.Now().After(trainingStartTime.Add(3 * 24 * time.Hour)) {
+	// 規則：補簽只能補過去 7 天的課
+	if now.After(trainingStartTime.Add(7 * 24 * time.Hour)) {
 		return ErrAppointmentCheckInTooLate
 	}
-	// 規則：請假中無法簽到
-	if a.status == StatusCancelledLeave {
-		return ErrAppointmentOnLeave
-	}
 
+	a.status = StatusAttended
+	a.verifiedAt = &now
+	a.updateAt = now
+	a.leave = EmptyLeaveInfo // 簽到時自動清除請假狀態
+	return nil
+}
+
+func (a *Appointment) MarkAsAttended(trainingStartTime time.Time) error {
+	return a.AdminCheckIn(trainingStartTime)
+}
+
+func (a *Appointment) AdminMarkAsAttended() {
+	// Deprecated: use AdminCheckIn
 	now := time.Now()
 	a.status = StatusAttended
 	a.verifiedAt = &now
 	a.updateAt = now
-	return nil
+	a.leave = EmptyLeaveInfo
 }
 
 func (a *Appointment) AppendLeaveRecord(reason string, trainingStartTime time.Time) error {
@@ -251,6 +289,22 @@ func (a *Appointment) AppendLeaveRecord(reason string, trainingStartTime time.Ti
 	a.updateAt = time.Now()
 
 	return nil
+}
+
+func (a *Appointment) AdminAppendLeave(reason string) {
+	a.status = StatusCancelledLeave
+	a.leave = VO_LeaveInfo{
+		reason:    reason,
+		status:    LeaveStatusApproved,
+		createdAt: time.Now(),
+	}
+	a.updateAt = time.Now()
+}
+
+func (a *Appointment) AdminRestoreFromLeave() {
+	a.status = StatusConfirmed
+	a.leave = EmptyLeaveInfo
+	a.updateAt = time.Now()
 }
 
 func (a *Appointment) CancelLeave(userID string) error {
@@ -310,18 +364,18 @@ func (appt *Appointment) VerifiedAt() *time.Time {
 	return appt.verifiedAt
 }
 
+func (appt *Appointment) IsWalkIn() bool {
+	return appt.isWalkIn
+}
+
+func (appt *Appointment) IsGuest() bool {
+	return appt.isGuest
+}
+
+func (appt *Appointment) ContactInfo() string {
+	return appt.contactInfo
+}
+
 func (appt *Appointment) LeaveInfo() VO_LeaveInfo {
 	return appt.leave
-}
-
-func (leave VO_LeaveInfo) Reason() string {
-	return leave.reason
-}
-
-func (leave VO_LeaveInfo) Status() leaveStatus {
-	return leave.status
-}
-
-func (leave VO_LeaveInfo) CreatedAt() time.Time {
-	return leave.createdAt
 }

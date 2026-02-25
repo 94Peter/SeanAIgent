@@ -69,3 +69,11 @@ func GetBookingV2LiffId() string {
 func GetBookingV2LiffUrl() string {
 	return getLineLiff("booking_v2").LiffUrl
 }
+
+func GetAdminDashboardLiffId() string {
+	return getLineLiff("admin_dashboard").LiffId
+}
+
+func GetAdminDashboardLiffUrl() string {
+	return getLineLiff("admin_dashboard").LiffUrl
+}

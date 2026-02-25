@@ -453,7 +453,7 @@ func (api *v2BookingAPI) createBookingV2(c *gin.Context) {
 		ChildNames:  req.StudentNames,
 	})
 	if errUC != nil {
-		c.JSON(getStatus(errUC.Type()), gin.H{"success": false, "message": errUC.Message()})
+		c.JSON(GetStatus(errUC.Type()), gin.H{"success": false, "message": errUC.Message()})
 		return
 	}
 
@@ -519,7 +519,7 @@ func (api *v2BookingAPI) cancelBookingV2(c *gin.Context) {
 		UserID: userID,
 	})
 	if errUC != nil {
-		c.JSON(getStatus(errUC.Type()), gin.H{"success": false, "message": errUC.Message()})
+		c.JSON(GetStatus(errUC.Type()), gin.H{"success": false, "message": errUC.Message()})
 		return
 	}
 
@@ -578,7 +578,7 @@ func (api *v2BookingAPI) submitLeaveV2(c *gin.Context) {
 		Reason:        req.Reason,
 	})
 	if errUC != nil {
-		c.JSON(getStatus(errUC.Type()), gin.H{"success": false, "message": errUC.Message()})
+		c.JSON(GetStatus(errUC.Type()), gin.H{"success": false, "message": errUC.Message()})
 		return
 	}
 
@@ -621,7 +621,7 @@ func (api *v2BookingAPI) cancelLeaveV2(c *gin.Context) {
 		UserID: userID,
 	})
 	if errUC != nil {
-		c.JSON(getStatus(errUC.Type()), gin.H{"success": false, "message": errUC.Message()})
+		c.JSON(GetStatus(errUC.Type()), gin.H{"success": false, "message": errUC.Message()})
 		return
 	}
 

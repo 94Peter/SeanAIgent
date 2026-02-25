@@ -1,0 +1,286 @@
+package admin
+
+import (
+	"fmt"
+	"seanAIgent/components/icon"
+	"seanAIgent/components/csrf"
+)
+
+type CheckinPageModel struct {
+	SessionID     string
+	DateDisplay   string
+	TimeDisplay   string
+	Location      string
+	Capacity      int
+	Bookings      []*CheckinRecord
+}
+
+type CheckinRecord struct {
+	BookingID   string
+	ChildName   string
+	ParentName  string
+	Status      string // "Pending", "CheckedIn", "Leave"
+	IsWalkIn    bool
+	IsGuest     bool
+	ContactInfo string
+}
+
+templ AdminCheckin(model *CheckinPageModel) {
+	<style>
+		[x-cloak] { display: none !important; }
+		.htmx-indicator { display: none; }
+		.htmx-request .htmx-indicator { display: inline; }
+		.htmx-request.disabled { pointer-events: none; opacity: 0.6; }
+	</style>
+	<div class="w-full min-h-screen bg-[#000000] text-white font-sans pb-32" x-data="checkinManager()">
+		<!-- Sticky Header -->
+		<div class="sticky top-0 z-50 bg-[#121212]/95 backdrop-blur-md border-b border-[#27272A] p-4">
+			<div class="flex items-center justify-between mb-4">
+				<div class="flex items-center gap-3">
+					<a href="/v2/admin/dashboard" class="text-[#8E8E93] active:scale-90 transition-transform">
+						@icon.ChevronLeft(icon.Props{Size: 24})
+					</a>
+					<div>
+						<h1 class="text-lg font-bold text-[#FFD700]">{ model.DateDisplay }</h1>
+						<p class="text-[10px] text-[#8E8E93] uppercase tracking-tighter">{ model.Location } | { model.TimeDisplay }</p>
+					</div>
+				</div>
+				<button @click="showAddModal = true" class="bg-[#60A5FA] text-black px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-lg shadow-[#60A5FA]/20 active:scale-95 transition-all">
+					@icon.Plus(icon.Props{Size: 14})
+					<span class="text-xs font-black">臨時加人</span>
+				</button>
+			</div>
+			
+			<!-- Overall Stats Counter -->
+			<div class="flex gap-4" id="checkin-stats">
+				@CheckinStats(len(model.Bookings), 0, 0) // Initial count, logic handled by x-effect later or server
+			</div>
+		</div>
+
+		<div class="p-4 space-y-8">
+			<!-- Section: Regular & Walk-in List -->
+			<section class="space-y-3">
+				<div class="flex items-center gap-2 px-1">
+					<div class="w-1 h-4 bg-[#FFD700] rounded-full"></div>
+					<h2 class="text-sm font-bold text-[#8E8E93] uppercase tracking-widest">預約與點名清單</h2>
+				</div>
+				<div class="space-y-2" id="active-list">
+					for _, b := range model.Bookings {
+						if b.Status != "Leave" {
+							@CheckinRow(b)
+						}
+					}
+				</div>
+			</section>
+
+			<!-- Section: Leave List -->
+			<section class="space-y-3 pt-4 border-t border-[#27272A]">
+				<div class="flex items-center gap-2 px-1">
+					<div class="w-1 h-4 bg-[#F59E0B] rounded-full"></div>
+					<h2 class="text-sm font-bold text-[#8E8E93] uppercase tracking-widest">請假名單 (可還原)</h2>
+				</div>
+				<div class="space-y-2" id="leave-list">
+					for _, b := range model.Bookings {
+						if b.Status == "Leave" {
+							@LeaveRow(b)
+						}
+					}
+				</div>
+			</section>
+		</div>
+
+		<!-- Walk-in Modal -->
+		@AddStudentModal(model.SessionID)
+
+		<div style="display:none;">
+			@csrf.CSRF()
+		</div>
+
+		<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+		<script>
+			document.body.addEventListener('htmx:configRequest', (evt) => {
+				const csrfInput = document.querySelector('input[name="_csrf"]');
+				if (csrfInput) {
+					evt.detail.headers['X-CSRF-Token'] = csrfInput.value;
+				}
+			});
+
+			function checkinManager() {
+				return {
+					showAddModal: false,
+					init() {
+						this.updateStats();
+						document.body.addEventListener('htmx:afterOnLoad', () => {
+							this.updateStats();
+						});
+					},
+					updateStats() {
+						const checkedIn = document.querySelectorAll('[data-status="CheckedIn"]').length;
+						const leave = document.querySelectorAll('[data-status="Leave"]').length;
+						// Optional: Update UI stats if needed, but HTMX OOB might handle this better
+					}
+				}
+			}
+		</script>
+	</div>
+}
+
+templ CheckinStats(total, attended, leave int) {
+	<div class="flex-1 bg-[#1C1C1E] border border-[#27272A] p-2 rounded-xl text-center">
+		<div class="text-[9px] text-[#8E8E93] uppercase font-bold mb-0.5">預約總數</div>
+		<div class="text-xl font-black text-white">{ fmt.Sprintf("%d", total) }</div>
+	</div>
+	<div class="flex-1 bg-[#1C1C1E] border border-[#34D399]/30 p-2 rounded-xl text-center">
+		<div class="text-[9px] text-[#34D399] uppercase font-bold mb-0.5">現場簽到</div>
+		<div class="text-xl font-black text-[#34D399]">{ fmt.Sprintf("%d", attended) }</div>
+	</div>
+	<div class="flex-1 bg-[#1C1C1E] border border-[#F59E0B]/30 p-2 rounded-xl text-center">
+		<div class="text-[9px] text-[#F59E0B] uppercase font-bold mb-0.5">累計請假</div>
+		<div class="text-xl font-black text-[#F59E0B]">{ fmt.Sprintf("%d", leave) }</div>
+	</div>
+}
+
+templ CheckinRow(b *CheckinRecord) {
+	<div 
+		id={ "row-" + b.BookingID }
+		class={ "bg-[#1C1C1E] border rounded-2xl p-4 flex items-center justify-between transition-all " + cond(b.Status == "CheckedIn", "border-[#34D399]/50 bg-[#34D399]/5", "border-[#27272A]") }
+		data-status={ b.Status }
+	>
+		<div class="flex items-center gap-3">
+			<div class={ "w-12 h-12 rounded-full flex items-center justify-center font-black text-lg " + cond(b.IsGuest, "bg-[#FF6B6B] text-black", cond(b.IsWalkIn, "bg-[#60A5FA] text-black", "bg-[#27272A] text-[#8E8E93]")) }>
+				{ b.ChildName[0:1] }
+			</div>
+			<div>
+				<div class="flex items-center gap-2">
+					<span class="font-bold text-white text-lg">{ b.ChildName }</span>
+					if b.IsGuest {
+						<span class="text-[10px] text-[#FF6B6B] border border-[#FF6B6B] px-1.5 py-0.5 rounded font-bold">體驗</span>
+					}
+				</div>
+				<p class="text-[10px] text-[#525252]">{ b.ParentName } 的孩子</p>
+			</div>
+		</div>
+
+		<div class="flex gap-2">
+			<!-- Toggle Check-in -->
+			<button 
+				hx-post="/v2/admin/checkin/toggle"
+				hx-vals={ fmt.Sprintf(`{"bookingId": "%s"}`, b.BookingID) }
+				hx-target={ "#row-" + b.BookingID }
+				hx-swap="outerHTML"
+				class="w-14 h-14 rounded-2xl flex items-center justify-center transition-all active:scale-90"
+				:class={ cond(b.Status == "CheckedIn", "bg-[#34D399] text-black shadow-lg shadow-[#34D399]/20", "bg-[#27272A] text-[#525252]") }
+			>
+				@icon.Check(icon.Props{Size: 28})
+			</button>
+			<!-- Move to Leave -->
+			<button 
+				hx-post="/v2/admin/checkin/leave"
+				hx-vals={ fmt.Sprintf(`{"bookingId": "%s"}`, b.BookingID) }
+				hx-target={ "#row-" + b.BookingID }
+				hx-swap="delete"
+				class="w-14 h-14 rounded-2xl bg-[#27272A] text-[#525252] flex items-center justify-center active:scale-90 transition-all"
+			>
+				<span class="font-black text-xl">假</span>
+			</button>
+		</div>
+	</div>
+}
+
+templ LeaveRow(b *CheckinRecord) {
+	<div 
+		id={ "row-" + b.BookingID }
+		class="bg-[#1C1C1E]/40 border border-[#F59E0B]/30 rounded-2xl p-4 flex items-center justify-between"
+		data-status="Leave"
+	>
+		<div class="flex items-center gap-3 grayscale">
+			<div class="w-12 h-12 rounded-full bg-[#27272A] text-[#525252] flex items-center justify-center font-black text-lg">
+				{ b.ChildName[0:1] }
+			</div>
+			<div>
+				<span class="font-bold text-[#8E8E93] text-lg line-through">{ b.ChildName }</span>
+				<p class="text-[10px] text-[#525252]">已於 LINE 請假</p>
+			</div>
+		</div>
+
+		<button 
+			hx-post="/v2/admin/checkin/restore"
+			hx-vals={ fmt.Sprintf(`{"bookingId": "%s"}`, b.BookingID) }
+			hx-target={ "#row-" + b.BookingID }
+			hx-swap="delete"
+			class="bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20 px-4 py-3 rounded-xl font-bold text-sm active:scale-95 transition-all"
+		>
+			取消請假
+		</button>
+	</div>
+}
+
+templ AddStudentModal(sessionID string) {
+	<div x-show="showAddModal" x-cloak class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md" x-transition>
+		<div class="bg-[#1C1C1E] w-full max-w-md rounded-t-3xl sm:rounded-2xl border-t sm:border border-[#27272A] overflow-hidden shadow-2xl" @click.away="showAddModal = false">
+			<div class="p-6 border-b border-[#27272A] flex justify-between items-center">
+				<h3 class="font-black text-xl text-[#FFD700] uppercase">臨時加人管理</h3>
+				<button @click="showAddModal = false" class="bg-[#27272A] p-2 rounded-full text-[#8E8E93]">@icon.X(icon.Props{Size: 20})</button>
+			</div>
+			
+			<div x-data="{ tab: 'existing' }" class="p-6">
+				<!-- Tab Switcher -->
+				<div class="flex bg-[#000000] p-1 rounded-xl border border-[#27272A] mb-6">
+					<button @click="tab = 'existing'" :class="tab === 'existing' ? 'bg-[#27272A] text-white shadow-sm' : 'text-[#525252]'" class="flex-1 py-2.5 rounded-lg font-bold text-xs transition-all">現有學員</button>
+					<button @click="tab = 'new'" :class="tab === 'new' ? 'bg-[#27272A] text-white shadow-sm' : 'text-[#525252]'" class="flex-1 py-2.5 rounded-lg font-bold text-xs transition-all">新客體驗</button>
+				</div>
+
+				<!-- Content -->
+				<div x-show="tab === 'existing'" class="space-y-4">
+					<div class="relative">
+						<input 
+							type="text" 
+							name="q"
+							placeholder="搜尋學員姓名..." 
+							hx-get="/v2/admin/students/search"
+							hx-vals={ fmt.Sprintf(`{"sessionId": "%s"}`, sessionID) }
+							hx-trigger="keyup changed delay:300ms"
+							hx-target="#search-results"
+							class="w-full bg-[#000000] border border-[#27272A] rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-[#60A5FA] transition-colors"
+						>
+						<div class="absolute right-5 top-1/2 -translate-y-1/2 text-[#525252]">@icon.Search(icon.Props{Size: 20})</div>
+					</div>
+					<div class="max-h-64 overflow-y-auto space-y-2 pr-1" id="search-results">
+						<!-- HTMX results here -->
+						<div class="text-center py-10 text-[#525252] text-xs font-bold uppercase tracking-widest">請輸入姓名開始搜尋</div>
+					</div>
+				</div>
+
+				<div x-show="tab === 'new'" class="space-y-4">
+					<form 
+						hx-post="/v2/admin/checkin/walkin"
+						hx-on::after-request="showAddModal = false"
+						class="space-y-4"
+					>
+						<input type="hidden" name="trainDateId" value={ sessionID }>
+						<input type="text" name="childName" placeholder="孩子姓名" required class="w-full bg-[#000000] border border-[#27272A] rounded-2xl px-5 py-4 text-white focus:outline-none">
+						<input type="text" name="contactInfo" placeholder="家長電話 (必填)" required class="w-full bg-[#000000] border border-[#27272A] rounded-2xl px-5 py-4 text-white focus:outline-none">
+						<button type="submit" class="w-full bg-[#FFD700] text-black font-black py-5 rounded-2xl shadow-lg shadow-[#FFD700]/10 active:scale-95 transition-all text-sm uppercase mt-4">
+							確認加入並簽到
+						</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+templ SearchResultRow(id, child, parent, userId, sessionId string) {
+	<button 
+		hx-post="/v2/admin/checkin/walkin"
+		hx-vals={ fmt.Sprintf(`{"trainDateId": "%s", "childName": "%s", "userId": "%s", "parentName": "%s"}`, sessionId, child, userId, parent) }
+		hx-on::after-request="showAddModal = false"
+		class="w-full flex items-center justify-between p-4 bg-[#000000] border border-[#27272A] rounded-2xl hover:border-[#60A5FA] transition-all group"
+	>
+		<div class="text-left">
+			<div class="font-black text-white group-hover:text-[#60A5FA]">{ child }</div>
+			<div class="text-[10px] text-[#525252] font-bold">家長：{ parent }</div>
+		</div>
+		<div class="bg-[#60A5FA]/10 text-[#60A5FA] text-[10px] px-3 py-1.5 rounded-lg font-black uppercase tracking-tighter">加入並簽到</div>
+	</button>
+}

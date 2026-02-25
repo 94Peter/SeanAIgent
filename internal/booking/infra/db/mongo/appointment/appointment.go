@@ -73,6 +73,9 @@ func withDomainAppt(appt *entity.Appointment) apptOpt {
 		model.UpdateAt = appt.UpdateAt()
 		model.IsCheckedIn = (appt.VerifiedAt() != nil)
 		model.VerifyTime = appt.VerifiedAt()
+		model.IsWalkIn = appt.IsWalkIn()
+		model.IsGuest = appt.IsGuest()
+		model.ContactInfo = appt.ContactInfo()
 		if info := appt.LeaveInfo(); !info.IsEmpty() {
 			model.Leave = &leaveInfo{
 				Reason:    info.Reason(),
@@ -123,10 +126,13 @@ type appointment struct {
 }
 
 type V2Fields struct {
-	UpdateAt   time.Time  `bson:"update_at"`
-	VerifyTime *time.Time `bson:"verify_time,omitempty"`
-	Leave      *leaveInfo `bson:"leave,omitempty"`
-	Status     string     `bson:"status"`
+	UpdateAt    time.Time  `bson:"update_at"`
+	VerifyTime  *time.Time `bson:"verify_time,omitempty"`
+	Leave       *leaveInfo `bson:"leave,omitempty"`
+	Status      string     `bson:"status"`
+	IsWalkIn    bool       `bson:"is_walk_in"`
+	IsGuest     bool       `bson:"is_guest"`
+	ContactInfo string     `bson:"contact_info,omitempty"`
 }
 
 type V1_deprecatedFields struct {
@@ -173,6 +179,8 @@ func (s *appointment) toDomain() (*entity.Appointment, error) {
 		entity.WithUpdatedAt(s.UpdateAt),
 		entity.WithVerifiedAt(s.VerifyTime),
 		entity.WithLeaveInfo(leaveInfo),
+		entity.WithWalkIn(s.IsWalkIn),
+		entity.WithGuest(s.IsGuest, s.ContactInfo),
 	)
 }
 
@@ -317,6 +325,9 @@ func getUpdateFieldFromModel(appt *appointment) (bson.M, error) {
 		"is_checked_in":    appt.IsCheckedIn,
 		"is_on_leave":      appt.IsOnLeave,
 		"leave":            appt.Leave,
+		"is_walk_in":       appt.IsWalkIn,
+		"is_guest":         appt.IsGuest,
+		"contact_info":     appt.ContactInfo,
 	}
 	return updateField, nil
 }

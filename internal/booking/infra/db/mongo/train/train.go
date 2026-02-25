@@ -342,6 +342,33 @@ func (*trainRepoImpl) DeductCapacity(
 	return nil
 }
 
+func (*trainRepoImpl) AdminDeductCapacity(
+	ctx context.Context, trainingID string, count int,
+) repository.RepoError {
+	const op = "admin_deduct_capacity"
+	oid, err := bson.ObjectIDFromHex(trainingID)
+	if err != nil {
+		return newInvalidDocumentIDError(op, err)
+	}
+	// Admin version: NO $gte check, allows negative capacity
+	filter := bson.D{
+		{Key: "_id", Value: oid},
+	}
+	update := bson.D{
+		{Key: "$inc", Value: bson.D{{Key: "available_capacity", Value: -count}}},
+		{Key: "$set", Value: bson.D{{Key: "updated_at", Value: time.Now()}}},
+	}
+	doc, _ := newTrainDate()
+	updatedCount, err := mgo.UpdateOne(ctx, doc, filter, update)
+	if err != nil {
+		return newInternalError(op, err)
+	}
+	if updatedCount == 0 {
+		return newNotFoundError(op, fmt.Errorf("no document updated"))
+	}
+	return nil
+}
+
 func (*trainRepoImpl) IncreaseCapacity(
 	ctx context.Context, trainingID string, count int,
 ) repository.RepoError {

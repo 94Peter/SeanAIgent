@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 	"seanAIgent/internal/booking/transport/web/handler"
+	"seanAIgent/internal/booking/transport/web/handler/admin"
+	"seanAIgent/internal/booking/usecase"
 	"seanAIgent/locales"
 
 	"github.com/94peter/botreplyer"
@@ -21,6 +23,7 @@ func getApis(
 	bookingUseCaseSet handler.BookingUseCaseSet,
 	trainingUseCaseSet handler.TrainingUseCaseSet,
 	v2BookingUseCaseSet handler.V2BookingUseCaseSet,
+	registry *usecase.Registry,
 ) []handler.WebAPI {
 	return []handler.WebAPI{
 		handler.NewBookingApi(enableCSRF, bookingUseCaseSet),
@@ -28,6 +31,7 @@ func getApis(
 		handler.NewHealthApi(),
 		handler.NewComponentApi(),
 		handler.NewV2BookingApi(enableCSRF, v2BookingUseCaseSet),
+		admin.NewAdminApi(registry),
 	}
 }
 
@@ -35,6 +39,7 @@ func InitWeb(
 	bookingUseCaseSet handler.BookingUseCaseSet,
 	trainingUseCaseSet handler.TrainingUseCaseSet,
 	v2BookingUseCaseSet handler.V2BookingUseCaseSet,
+	registry *usecase.Registry,
 	cfg Config,
 ) WebService {
 	router := ezapi.NewRouterGroup()
@@ -44,6 +49,7 @@ func InitWeb(
 		bookingUseCaseSet,
 		trainingUseCaseSet,
 		v2BookingUseCaseSet,
+		registry,
 	)
 	for _, api := range apis {
 		api.InitRouter(router)
@@ -91,7 +97,7 @@ func (s *webService) Run(ctx context.Context) {
 		ezapi.WithPort(s.cfg.port),
 		ezapi.WithMiddleware(
 			lineMid.LineLiff(),
-			ezapi.I18n("zh-tw", locales.LocaleExist),
+			lineMid.I18n("zh-tw", locales.LocaleExist),
 			lineMid.CheckAdmin(botreplyer.GetFollowStore()),
 		),
 		ezapi.WithSession(

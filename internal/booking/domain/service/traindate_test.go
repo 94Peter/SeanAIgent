@@ -94,6 +94,13 @@ func (m *MockTrainRepository) DeductCapacity(ctx context.Context, trainingID str
 	}
 	return args.Get(0).(repository.RepoError)
 }
+func (m *MockTrainRepository) AdminDeductCapacity(ctx context.Context, trainingID string, count int) repository.RepoError {
+	args := m.Called(ctx, trainingID, count)
+	if args.Get(0) == nil {
+		return nil
+	}
+	return args.Get(0).(repository.RepoError)
+}
 func (m *MockTrainRepository) IncreaseCapacity(ctx context.Context, trainingID string, count int) repository.RepoError {
 	args := m.Called(ctx, trainingID, count)
 	if args.Get(0) == nil {
