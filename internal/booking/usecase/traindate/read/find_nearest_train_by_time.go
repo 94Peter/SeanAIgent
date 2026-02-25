@@ -30,7 +30,7 @@ func (uc *findNearestTrainByTimeUseCase) Execute(ctx context.Context, req ReqFin
 	*entity.TrainDateHasApptState, core.UseCaseError,
 ) {
 	trainDates, err := uc.repo.QueryTrainDateHasAppointmentState(
-		ctx, repository.NewFilterTrainDateByAfterTime(req.TimeAfter),
+		ctx, repository.NewFilterTrainDateByEndTime(req.TimeAfter),
 	)
 	if err != nil {
 		return nil, ErrFindNearestTrainByTimeFail.Wrap(err)
