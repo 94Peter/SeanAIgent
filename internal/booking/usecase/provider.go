@@ -119,6 +119,12 @@ func ProvideAdminQueryStudentsUC(
 	return core.WithReadOTel(readStats.NewAdminQueryStudentsUseCase(repo))
 }
 
+func ProvideAutoMarkAbsentUC(
+	repo Repository,
+) writeAppt.AutoMarkAbsentUseCase {
+	return core.WithWriteOTel(writeAppt.NewAutoMarkAbsentUseCase(repo))
+}
+
 func ProvideQueryUserBookingsUC(
 	repo Repository,
 ) core.ReadUseCase[readAppt.ReqQueryUserBookings, *readAppt.RespQueryUserBookings] {
@@ -198,6 +204,7 @@ var UseCaseSet = wire.NewSet(
 	ProvideAdminToggleCheckInUC,
 	ProvideAdminCreateWalkInUC,
 	ProvideAdminQueryStudentsUC,
+	ProvideAutoMarkAbsentUC,
 	ProvideQueryUserBookingsUC,
 	ProvideCancelLeaveUC,
 	ProvideCreateLeaveUC,

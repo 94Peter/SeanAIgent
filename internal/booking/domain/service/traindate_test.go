@@ -109,6 +109,14 @@ func (m *MockTrainRepository) IncreaseCapacity(ctx context.Context, trainingID s
 	return args.Get(0).(repository.RepoError)
 }
 
+func (m *MockTrainRepository) FindPastTrainDateIDs(ctx context.Context, cutoff time.Time, limit uint16) ([]string, repository.RepoError) {
+	args := m.Called(ctx, cutoff, limit)
+	if args.Get(0) == nil {
+		return nil, args.Get(1).(repository.RepoError)
+	}
+	return args.Get(0).([]string), nil
+}
+
 func (m *MockTrainRepository) CleanTrainCache(ctx context.Context, userID string) repository.RepoError {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {

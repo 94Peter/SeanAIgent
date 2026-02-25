@@ -378,3 +378,41 @@ func (*apptRepoImpl) UpdateManyAppts(
 	}
 	return nil
 }
+
+func (*apptRepoImpl) MarkAbsentByTrainIDs(ctx context.Context, trainDateIDs []string) (int64, repository.RepoError) {
+	const op = "mark_absent_by_train_ids"
+
+	if len(trainDateIDs) == 0 {
+		return 0, nil
+	}
+
+	oids := make([]bson.ObjectID, 0, len(trainDateIDs))
+	for _, id := range trainDateIDs {
+		oid, err := bson.ObjectIDFromHex(id)
+		if err != nil {
+			continue
+		}
+		oids = append(oids, oid)
+	}
+
+	appt, err := newModelAppt()
+	if err != nil {
+		return 0, newInternalError(op, err)
+	}
+	q := bson.D{
+		{Key: "training_date_id", Value: bson.D{{Key: "$in", Value: oids}}},
+		{Key: "status", Value: "CONFIRMED"},
+	}
+	update := bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "status", Value: "ABSENT"},
+			{Key: "update_at", Value: time.Now()},
+		}},
+	}
+	modifiedCount, err := mgo.UpdateMany(ctx, appt, q, update)
+	if err != nil {
+		return 0, newInternalError(op, err)
+	}
+
+	return modifiedCount, nil
+}

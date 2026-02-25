@@ -36,6 +36,7 @@ type Registry struct {
 	AdminRestoreFromLeave writeAppt.AdminRestoreFromLeaveUseCase
 	AdminCreateWalkIn     writeAppt.AdminCreateWalkInUseCase
 	AdminQueryStudents    readStats.AdminQueryStudentsUseCase
+	AutoMarkAbsent        writeAppt.AutoMarkAbsentUseCase
 
 	QueryUserBookings core.ReadUseCase[readAppt.ReqQueryUserBookings, *readAppt.RespQueryUserBookings]
 	// FindBooking       core.ReadUseCase[readAppt.ReqFindBooking, *entity.AppointmentWithTrainDate]

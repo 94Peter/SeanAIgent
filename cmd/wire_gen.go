@@ -51,6 +51,7 @@ func InitializeWeb() web.WebService {
 	adminRestoreFromLeaveUseCase := usecase.ProvideAdminRestoreFromLeaveUC(dbRepository, cacheWorker)
 	adminCreateWalkInUseCase := usecase.ProvideAdminCreateWalkInUC(dbRepository, cacheWorker)
 	adminQueryStudentsUseCase := usecase.ProvideAdminQueryStudentsUC(dbRepository)
+	autoMarkAbsentUseCase := usecase.ProvideAutoMarkAbsentUC(dbRepository)
 	readUseCase7 := usecase.ProvideQueryUserBookingsUC(dbRepository)
 	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
 	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
@@ -78,6 +79,7 @@ func InitializeWeb() web.WebService {
 		AdminRestoreFromLeave:  adminRestoreFromLeaveUseCase,
 		AdminCreateWalkIn:      adminCreateWalkInUseCase,
 		AdminQueryStudents:     adminQueryStudentsUseCase,
+		AutoMarkAbsent:         autoMarkAbsentUseCase,
 		QueryUserBookings:      readUseCase7,
 		GetUserMonthlyStats:    getUserMonthlyStatsUseCase,
 		QueryTwoWeeksSchedule:  queryTwoWeeksScheduleUseCase,
@@ -121,6 +123,7 @@ func InitializeMCP() mcp.Server {
 	adminRestoreFromLeaveUseCase := usecase.ProvideAdminRestoreFromLeaveUC(dbRepository, cacheWorker)
 	adminCreateWalkInUseCase := usecase.ProvideAdminCreateWalkInUC(dbRepository, cacheWorker)
 	adminQueryStudentsUseCase := usecase.ProvideAdminQueryStudentsUC(dbRepository)
+	autoMarkAbsentUseCase := usecase.ProvideAutoMarkAbsentUC(dbRepository)
 	readUseCase7 := usecase.ProvideQueryUserBookingsUC(dbRepository)
 	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
 	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
@@ -148,6 +151,7 @@ func InitializeMCP() mcp.Server {
 		AdminRestoreFromLeave:  adminRestoreFromLeaveUseCase,
 		AdminCreateWalkIn:      adminCreateWalkInUseCase,
 		AdminQueryStudents:     adminQueryStudentsUseCase,
+		AutoMarkAbsent:         autoMarkAbsentUseCase,
 		QueryUserBookings:      readUseCase7,
 		GetUserMonthlyStats:    getUserMonthlyStatsUseCase,
 		QueryTwoWeeksSchedule:  queryTwoWeeksScheduleUseCase,
@@ -188,6 +192,7 @@ func GetUseCaseRegistry() *usecase.Registry {
 	adminRestoreFromLeaveUseCase := usecase.ProvideAdminRestoreFromLeaveUC(dbRepository, cacheWorker)
 	adminCreateWalkInUseCase := usecase.ProvideAdminCreateWalkInUC(dbRepository, cacheWorker)
 	adminQueryStudentsUseCase := usecase.ProvideAdminQueryStudentsUC(dbRepository)
+	autoMarkAbsentUseCase := usecase.ProvideAutoMarkAbsentUC(dbRepository)
 	readUseCase7 := usecase.ProvideQueryUserBookingsUC(dbRepository)
 	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
 	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
@@ -215,6 +220,7 @@ func GetUseCaseRegistry() *usecase.Registry {
 		AdminRestoreFromLeave:  adminRestoreFromLeaveUseCase,
 		AdminCreateWalkIn:      adminCreateWalkInUseCase,
 		AdminQueryStudents:     adminQueryStudentsUseCase,
+		AutoMarkAbsent:         autoMarkAbsentUseCase,
 		QueryUserBookings:      readUseCase7,
 		GetUserMonthlyStats:    getUserMonthlyStatsUseCase,
 		QueryTwoWeeksSchedule:  queryTwoWeeksScheduleUseCase,

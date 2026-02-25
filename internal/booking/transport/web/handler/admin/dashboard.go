@@ -343,9 +343,35 @@ func (api *adminAPI) getAnalytics(c *gin.Context) {
 	})
 }
 
-func (api *adminAPI) getDashboard(c *gin.Context) {
+func checkUser(c *gin.Context, lineliffid string) bool {
+	userID := getUserID(c)
+	if userID == "" {
+		com := templates.Layout(
+			nil,
+			lineliffid,
+			&templates.OgMeta{
+				Title:       "訓練場次看板 | Sean AIgent",
+				Description: "即時監控訓練場次預約與簽到狀態",
+				Image:       "",
+			},
+		)
+
+		c.Render(http.StatusOK, handler.Renderer{
+			Ctx:       c.Request.Context(),
+			Status:    http.StatusOK,
+			Component: com,
+		})
+		return false
+	}
 	if !isAdmin(c) {
-		c.Status(http.StatusUnauthorized)
+		return false
+	}
+	return true
+}
+
+func (api *adminAPI) getDashboard(c *gin.Context) {
+	lineliffid := lineutil.GetAdminDashboardLiffId()
+	if !checkUser(c, lineliffid) {
 		return
 	}
 	now := time.Now()
@@ -404,7 +430,7 @@ func (api *adminAPI) getDashboard(c *gin.Context) {
 		UpcomingSessions: upcomingSessions,
 		PastSessions:     pastSessions,
 	}
-	lineliffid := lineutil.GetAdminDashboardLiffId()
+
 	com := templates.Layout(
 		admin.AdminDashboard(model),
 		lineliffid,
@@ -599,4 +625,8 @@ func (api *adminAPI) getUserReport(c *gin.Context) {
 
 func isAdmin(c *gin.Context) bool {
 	return mid.IsAdmin(c)
+}
+
+func getUserID(c *gin.Context) string {
+	return mid.GetLineLiffUserId(c)
 }

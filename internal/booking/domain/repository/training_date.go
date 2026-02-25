@@ -24,6 +24,8 @@ type TrainRepository interface {
 		ctx context.Context, userID string, filter FilterTrainDate,
 	) ([]*entity.TrainDateHasUserApptState, RepoError)
 
+	FindPastTrainDateIDs(ctx context.Context, cutoff time.Time, limit uint16) ([]string, RepoError)
+
 	// 檢查是否有重疊時段
 	// 邏輯：Find slots WHERE coach_id = ? AND start_time < req.end AND end_time > req.start
 	CheckOverlap(ctx context.Context, coachID string, tr entity.TimeRange) (bool, RepoError)
