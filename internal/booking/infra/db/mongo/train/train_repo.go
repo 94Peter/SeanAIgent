@@ -1,6 +1,7 @@
 package train
 
 import (
+	"context"
 	"fmt"
 	"seanAIgent/internal/booking/domain/repository"
 	"seanAIgent/internal/booking/infra/db/mongo/core"
@@ -40,6 +41,10 @@ func getQueryByFilterTrainDate(filter repository.FilterTrainDate) (bson.M, repos
 			fmt.Errorf("Filter not implemented: %T", f))
 	}
 	return q, nil
+}
+
+func (*trainRepoImpl) CleanTrainCache(ctx context.Context, userID string) repository.RepoError {
+	return nil
 }
 
 const repoName = "train"

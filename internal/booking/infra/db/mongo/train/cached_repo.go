@@ -15,7 +15,7 @@ type cachedTrainRepo struct {
 	delegate repository.TrainRepository
 	cache    *cache.Cache
 	sfGroup  *singleflight.Group
-	
+
 	// 用於紀錄每個用戶關聯的快取 Key，以便精準刪除
 	// key: string (userID), value: *sync.Map (key: cacheKey, value: struct{}{})
 	userKeys sync.Map
@@ -35,7 +35,7 @@ func (r *cachedTrainRepo) UserQueryTrainDateHasApptState(
 	if f, ok := filter.(repository.FilterTrainingDateByTimeRange); ok {
 		// 優化：改用字串拼接避免 fmt.Sprintf 的反射開銷
 		cacheKey := "schedule:" + userID + ":" + f.StartTime.Format("2006-01-02") + ":" + f.EndTime.Format("2006-01-02")
-		
+
 		// 紀錄 Key 關聯 (使用 sync.Map 降低鎖競爭)
 		actual, _ := r.userKeys.LoadOrStore(userID, &sync.Map{})
 		userMap := actual.(*sync.Map)
@@ -122,4 +122,7 @@ func (r *cachedTrainRepo) AdminDeductCapacity(ctx context.Context, trainingID st
 }
 func (r *cachedTrainRepo) IncreaseCapacity(ctx context.Context, trainingID string, count int) repository.RepoError {
 	return r.delegate.IncreaseCapacity(ctx, trainingID, count)
+}
+func (r *cachedTrainRepo) FindPastTrainDateIDs(ctx context.Context, cutoff time.Time, limit uint16) ([]string, repository.RepoError) {
+	return r.delegate.FindPastTrainDateIDs(ctx, cutoff, limit)
 }

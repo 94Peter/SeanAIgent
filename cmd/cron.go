@@ -16,53 +16,88 @@ import (
 	"github.com/spf13/viper"
 )
 
+type CronTask struct {
+	Name string `mapstructure:"name"`
+	Spec string `mapstructure:"spec"`
+	Path string `mapstructure:"path"` // 內部 API 路徑
+	URL  string `mapstructure:"url"`  // 外部 Webhook URL
+}
+
 // cronCmd represents the cron command
 var cronCmd = &cobra.Command{
 	Use:   "cron",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "執行定時背景任務 (由 YAML 設定驅動)",
+	Long:  `讀取設定檔中的 cron.tasks 區塊，定時呼叫內部 API 或外部 Webhook 執行任務。`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// 1. 初始化 Cron
-		c := cron.New()
-		spec := "0 0 1,15 * *"
+		// 1. 讀取設定
+		baseURL := viper.GetString("cron.base_url")
+		if baseURL == "" {
+			baseURL = "http://localhost:8080"
+		}
 
-		_, err := c.AddFunc(spec, func() {
-			fmt.Println("執行定時任務...")
-			triggerWebhook(viper.GetString("cron.user_stats_notify_url"))
-		})
-
+		var tasks []CronTask
+		err := viper.UnmarshalKey("cron.tasks", &tasks)
 		if err != nil {
-			fmt.Println("Cron 任務添加失敗:", err)
+			fmt.Printf("讀取 Cron 任務設定失敗: %v\n", err)
 			return
 		}
 
-		// 2. 啟動 Cron
-		c.Start()
-		fmt.Printf("服務已啟動，排程: %s。按 Ctrl+C 結束...\n", spec)
+		if len(tasks) == 0 {
+			fmt.Println("未偵測到任何排程任務，請檢查設定檔中的 cron.tasks 區塊。")
+			return
+		}
 
-		// 3. 設定訊號監聽
-		// 建立一個頻道來接收訊號
+		// 2. 初始化 Cron (使用秒級精確度或標準分級精確度，這裡使用標準)
+		c := cron.New()
+
+		for _, task := range tasks {
+			task := task // 閉包捕獲
+			if task.Spec == "" {
+				fmt.Printf("跳過任務 [%s]: 缺少 spec 排程設定。\n", task.Name)
+				continue
+			}
+
+			var targetURL string
+			if task.Path != "" {
+				targetURL = baseURL + task.Path
+			} else if task.URL != "" {
+				targetURL = task.URL
+			}
+
+			if targetURL == "" {
+				fmt.Printf("跳過任務 [%s]: 缺少 path 或 url 設定。\n", task.Name)
+				continue
+			}
+
+			_, err := c.AddFunc(task.Spec, func() {
+				fmt.Printf("[%s] 開始執行任務: %s -> %s\n", time.Now().Format("2006-01-02 15:04:05"), task.Name, targetURL)
+				triggerAPI(targetURL)
+			})
+
+			if err != nil {
+				fmt.Printf("註冊任務 [%s] 失敗: %v\n", task.Name, err)
+			} else {
+				fmt.Printf("已註冊任務 [%s], 排程: %s\n", task.Name, task.Spec)
+			}
+		}
+
+		// 3. 啟動 Cron
+		c.Start()
+		fmt.Println("Cron 服務已啟動，按 Ctrl+C 結束...")
+
+		// 4. 設定訊號監聽
 		sigChan := make(chan os.Signal, 1)
-		// 監聽 SIGINT (Ctrl+C) 和 SIGTERM (Docker stop)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-		// 4. 阻塞主線程，直到收到訊號
+		// 5. 阻塞主線程
 		sig := <-sigChan
-		fmt.Printf("\n收到訊號: %v，正在關閉服務...\n", sig)
+		fmt.Printf("\n收到訊號: %v，正在關閉排程服務...\n", sig)
 
-		// 5. 優雅關閉 Cron
-		// Stop() 會回傳一個 Context，可以用來等待所有執行中的任務結束
-		ctx := c.Stop()
-
-		// 等待任務完成（可選：設定超時強制結束）
+		// 6. 優雅關閉
+		stopCtx := c.Stop()
 		select {
-		case <-ctx.Done():
-			fmt.Println("所有任務已完成，程式正式退出。")
+		case <-stopCtx.Done():
+			fmt.Println("所有執行中任務已完成，程式正式退出。")
 		case <-time.After(30 * time.Second):
 			fmt.Println("關閉超時，強制退出。")
 		}
@@ -70,38 +105,36 @@ to quickly create a Cobra application.`,
 }
 
 func init() {
-	serveCmd.AddCommand(cronCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// cronCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// cronCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.AddCommand(cronCmd)
 }
 
-// 發送空 Body 的 POST 請求
-func triggerWebhook(url string) {
-	// 建議建立自定義 Client 並設定超時，避免永久等待
+// 統一發送 POST 請求
+func triggerAPI(url string) {
 	client := &http.Client{
-		Timeout: 15 * time.Second,
+		Timeout: 60 * time.Second,
 	}
 
-	// 第三個參數傳入 nil 代表空 Body
-	resp, err := client.Post(url, "application/json", nil)
+	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
-		fmt.Printf("[%s] 請求發送失敗: %v\n", time.Now().Format("15:04:05"), err)
+		fmt.Printf("建立請求失敗: %v\n", err)
 		return
 	}
-	// 務必關閉 Body 以釋放資源
+
+	// 這裡可以預留統一的 Secret 驗證
+	// if secret := viper.GetString("cron.secret"); secret != "" {
+	//     req.Header.Set("X-Cron-Secret", secret)
+	// }
+
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("API 執行失敗: %v\n", err)
+		return
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-		fmt.Printf("[%s] API 觸發成功，狀態碼: %d\n", time.Now().Format("15:04:05"), resp.StatusCode)
+		fmt.Printf("任務執行成功 (HTTP %d)\n", resp.StatusCode)
 	} else {
-		fmt.Printf("[%s] API 回傳失敗，狀態碼: %d\n", time.Now().Format("15:04:05"), resp.StatusCode)
+		fmt.Printf("任務執行失敗 (HTTP %d)\n", resp.StatusCode)
 	}
 }

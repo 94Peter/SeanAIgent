@@ -395,8 +395,31 @@ func (*trainRepoImpl) IncreaseCapacity(
 	return nil
 }
 
-func (*trainRepoImpl) CleanTrainCache(ctx context.Context, userID string) repository.RepoError {
-	return nil
+func (*trainRepoImpl) FindPastTrainDateIDs(ctx context.Context, cutoff time.Time, limit uint16) ([]string, repository.RepoError) {
+	const op = "find_past_train_date_ids"
+	modelTrainDates, err := newTrainDate()
+	if err != nil {
+		return nil, newInternalError(op, err)
+	}
+	q := bson.M{
+		"end_date": bson.M{"$lt": cutoff},
+	}
+	if limit <= 0 {
+		limit = core.DefaultLimit
+	}
+	docs, err := mgo.Find(ctx, modelTrainDates, q, limit)
+	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
+		return nil, newInternalError(op, err)
+	}
+	if len(docs) == 0 {
+		return nil, nil
+	}
+
+	ids := make([]string, 0, len(docs))
+	for _, doc := range docs {
+		ids = append(ids, doc.ID.Hex())
+	}
+	return ids, nil
 }
 
 func (*trainRepoImpl) UpdateManyTrainDates(

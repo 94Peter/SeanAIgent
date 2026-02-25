@@ -10,9 +10,9 @@ type appointmentStatus string
 type leaveStatus string
 
 const (
-	StatusConfirmed appointmentStatus = "CONFIRMED" // 已預約
-	StatusAttended  appointmentStatus = "ATTENDED"  // 已出席
-	// StatusAbsent         appointmentStatus = "ABSENT"          // 缺席
+	StatusConfirmed      appointmentStatus = "CONFIRMED"       // 已預約
+	StatusAttended       appointmentStatus = "ATTENDED"        // 已出席
+	StatusAbsent         appointmentStatus = "ABSENT"          // 缺席
 	StatusCancelled      appointmentStatus = "CANCELLED"       // 10分鐘內誤按取消
 	StatusCancelledLeave appointmentStatus = "CANCELLED_LEAVE" // 已請假
 
@@ -24,10 +24,10 @@ const (
 
 var (
 	apptStatusTrans = map[string]appointmentStatus{
-		string(StatusConfirmed): StatusConfirmed,
-		string(StatusAttended):  StatusAttended,
-		// string(StatusAbsent):         StatusAbsent,
-		// string(StatusCancelled):      StatusCancelled,
+		string(StatusConfirmed):      StatusConfirmed,
+		string(StatusAttended):       StatusAttended,
+		string(StatusAbsent):         StatusAbsent,
+		string(StatusCancelled):      StatusCancelled,
 		string(StatusCancelledLeave): StatusCancelledLeave,
 	}
 

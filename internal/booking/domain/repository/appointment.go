@@ -65,6 +65,8 @@ type AppointmentRepository interface {
 	FindApptByID(ctx context.Context, id string) (*entity.Appointment, RepoError)
 	FindApptsByFilter(ctx context.Context, filter FilterAppointment) ([]*entity.Appointment, RepoError)
 
+	MarkAbsentByTrainIDs(ctx context.Context, trainDateIDs []string) (int64, RepoError)
+
 	PageFindApptsWithTrainDateByFilterAndTrainFilter(
 		ctx context.Context,
 		filter FilterAppointment,

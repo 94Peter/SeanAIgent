@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"seanAIgent/internal/booking/transport/web/handler"
 	"seanAIgent/internal/booking/transport/web/handler/admin"
+	"seanAIgent/internal/booking/transport/web/handler/cron"
 	"seanAIgent/internal/booking/usecase"
 	"seanAIgent/locales"
 
@@ -32,6 +33,7 @@ func getApis(
 		handler.NewComponentApi(),
 		handler.NewV2BookingApi(enableCSRF, v2BookingUseCaseSet),
 		admin.NewAdminApi(registry),
+		cron.NewCronApi(registry),
 	}
 }
 
