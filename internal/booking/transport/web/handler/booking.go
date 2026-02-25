@@ -208,7 +208,7 @@ func (api *bookingAPI) bookingSummary(c *gin.Context) {
 		},
 	)
 	if err != nil {
-		errorHandler(c, err)
+		ErrorHandler(c, err)
 		return
 	}
 
@@ -690,15 +690,8 @@ func (api *bookingAPI) getCheckinPage(c *gin.Context) {
 					ErrorMessage: "無法載入簽到列表，請稍後再試。",
 				}
 			} else {
-				if checkinList.EndDate.Before(queryTime) &&
-					checkinList.StartDate.Sub(queryTime) > 10*time.Minute {
-					viewModel = &checkin.CheckinPageModel{
-						ErrorMessage: "該時段尚未到達",
-					}
-				} else {
-					// Transform to view model
-					viewModel = modelToCheckinPageModel(checkinList)
-				}
+				// Transform to view model
+				viewModel = modelToCheckinPageModel(checkinList)
 			}
 		}
 	}
@@ -766,6 +759,11 @@ func (api *bookingAPI) submitCheckin(c *gin.Context) {
 }
 
 func modelToCheckinPageModel(data *entity.TrainDateHasApptState) *checkin.CheckinPageModel {
+	if data == nil {
+		return &checkin.CheckinPageModel{
+			ErrorMessage: "查無資料",
+		}
+	}
 	leaveCount := 0
 	for _, appt := range data.UserAppointments {
 		if appt.IsOnLeave {

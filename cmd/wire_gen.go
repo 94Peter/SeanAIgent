@@ -40,11 +40,17 @@ func InitializeWeb() web.WebService {
 	readUseCase5 := usecase.ProvideAdminQueryTrainRangeUC(dbRepository)
 	readUseCase6 := usecase.ProvideAdminQueryRecentTrainUC(dbRepository)
 	cacheWorker := usecase.NewCacheWorker(dbRepository)
-	writeUseCase3 := usecase.ProvideCreateApptUC(dbRepository, cacheWorker)
-	writeUseCase4 := usecase.ProvideCheckInUC(dbRepository, cacheWorker)
-	writeUseCase5 := usecase.ProvideCancelApptUC(dbRepository, cacheWorker)
-	writeUseCase6 := usecase.ProvideCreateLeaveUC(dbRepository, cacheWorker)
-	writeUseCase7 := usecase.ProvideCancelLeaveUC(dbRepository, cacheWorker)
+	createApptUseCase := usecase.ProvideCreateApptUC(dbRepository, cacheWorker)
+	adminCheckInUseCase := usecase.ProvideAdminCheckInUC(dbRepository, cacheWorker)
+	checkInUseCase := usecase.ProvideCheckInUC(adminCheckInUseCase)
+	cancelApptUseCase := usecase.ProvideCancelApptUC(dbRepository, cacheWorker)
+	createLeaveUseCase := usecase.ProvideCreateLeaveUC(dbRepository, cacheWorker)
+	cancelLeaveUseCase := usecase.ProvideCancelLeaveUC(dbRepository, cacheWorker)
+	adminToggleCheckInUseCase := usecase.ProvideAdminToggleCheckInUC(dbRepository, cacheWorker)
+	adminCreateLeaveUseCase := usecase.ProvideAdminCreateLeaveUC(dbRepository, cacheWorker)
+	adminRestoreFromLeaveUseCase := usecase.ProvideAdminRestoreFromLeaveUC(dbRepository, cacheWorker)
+	adminCreateWalkInUseCase := usecase.ProvideAdminCreateWalkInUC(dbRepository, cacheWorker)
+	adminQueryStudentsUseCase := usecase.ProvideAdminQueryStudentsUC(dbRepository)
 	readUseCase7 := usecase.ProvideQueryUserBookingsUC(dbRepository)
 	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
 	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
@@ -61,11 +67,17 @@ func InitializeWeb() web.WebService {
 		UserQueryTrainByID:     readUseCase4,
 		AdminQueryTrainRange:   readUseCase5,
 		AdminQueryRecentTrain:  readUseCase6,
-		CreateAppt:             writeUseCase3,
-		CheckIn:                writeUseCase4,
-		CancelAppt:             writeUseCase5,
-		CreateLeave:            writeUseCase6,
-		CancelLeave:            writeUseCase7,
+		CreateAppt:             createApptUseCase,
+		CheckIn:                checkInUseCase,
+		CancelAppt:             cancelApptUseCase,
+		CreateLeave:            createLeaveUseCase,
+		CancelLeave:            cancelLeaveUseCase,
+		AdminCheckIn:           adminCheckInUseCase,
+		AdminToggleCheckIn:     adminToggleCheckInUseCase,
+		AdminCreateLeave:       adminCreateLeaveUseCase,
+		AdminRestoreFromLeave:  adminRestoreFromLeaveUseCase,
+		AdminCreateWalkIn:      adminCreateWalkInUseCase,
+		AdminQueryStudents:     adminQueryStudentsUseCase,
 		QueryUserBookings:      readUseCase7,
 		GetUserMonthlyStats:    getUserMonthlyStatsUseCase,
 		QueryTwoWeeksSchedule:  queryTwoWeeksScheduleUseCase,
@@ -77,7 +89,7 @@ func InitializeWeb() web.WebService {
 	trainingUseCaseSet := handler.NewTrainingUseCaseSet(registry)
 	v2BookingUseCaseSet := handler.NewV2BookingUseCaseSet(registry)
 	config := ProvideWebConfig()
-	webService := web.InitWeb(bookingUseCaseSet, trainingUseCaseSet, v2BookingUseCaseSet, config)
+	webService := web.InitWeb(bookingUseCaseSet, trainingUseCaseSet, v2BookingUseCaseSet, registry, config)
 	return webService
 }
 
@@ -98,11 +110,17 @@ func InitializeMCP() mcp.Server {
 	readUseCase5 := usecase.ProvideAdminQueryTrainRangeUC(dbRepository)
 	readUseCase6 := usecase.ProvideAdminQueryRecentTrainUC(dbRepository)
 	cacheWorker := usecase.NewCacheWorker(dbRepository)
-	writeUseCase3 := usecase.ProvideCreateApptUC(dbRepository, cacheWorker)
-	writeUseCase4 := usecase.ProvideCheckInUC(dbRepository, cacheWorker)
-	writeUseCase5 := usecase.ProvideCancelApptUC(dbRepository, cacheWorker)
-	writeUseCase6 := usecase.ProvideCreateLeaveUC(dbRepository, cacheWorker)
-	writeUseCase7 := usecase.ProvideCancelLeaveUC(dbRepository, cacheWorker)
+	createApptUseCase := usecase.ProvideCreateApptUC(dbRepository, cacheWorker)
+	adminCheckInUseCase := usecase.ProvideAdminCheckInUC(dbRepository, cacheWorker)
+	checkInUseCase := usecase.ProvideCheckInUC(adminCheckInUseCase)
+	cancelApptUseCase := usecase.ProvideCancelApptUC(dbRepository, cacheWorker)
+	createLeaveUseCase := usecase.ProvideCreateLeaveUC(dbRepository, cacheWorker)
+	cancelLeaveUseCase := usecase.ProvideCancelLeaveUC(dbRepository, cacheWorker)
+	adminToggleCheckInUseCase := usecase.ProvideAdminToggleCheckInUC(dbRepository, cacheWorker)
+	adminCreateLeaveUseCase := usecase.ProvideAdminCreateLeaveUC(dbRepository, cacheWorker)
+	adminRestoreFromLeaveUseCase := usecase.ProvideAdminRestoreFromLeaveUC(dbRepository, cacheWorker)
+	adminCreateWalkInUseCase := usecase.ProvideAdminCreateWalkInUC(dbRepository, cacheWorker)
+	adminQueryStudentsUseCase := usecase.ProvideAdminQueryStudentsUC(dbRepository)
 	readUseCase7 := usecase.ProvideQueryUserBookingsUC(dbRepository)
 	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
 	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
@@ -119,11 +137,17 @@ func InitializeMCP() mcp.Server {
 		UserQueryTrainByID:     readUseCase4,
 		AdminQueryTrainRange:   readUseCase5,
 		AdminQueryRecentTrain:  readUseCase6,
-		CreateAppt:             writeUseCase3,
-		CheckIn:                writeUseCase4,
-		CancelAppt:             writeUseCase5,
-		CreateLeave:            writeUseCase6,
-		CancelLeave:            writeUseCase7,
+		CreateAppt:             createApptUseCase,
+		CheckIn:                checkInUseCase,
+		CancelAppt:             cancelApptUseCase,
+		CreateLeave:            createLeaveUseCase,
+		CancelLeave:            cancelLeaveUseCase,
+		AdminCheckIn:           adminCheckInUseCase,
+		AdminToggleCheckIn:     adminToggleCheckInUseCase,
+		AdminCreateLeave:       adminCreateLeaveUseCase,
+		AdminRestoreFromLeave:  adminRestoreFromLeaveUseCase,
+		AdminCreateWalkIn:      adminCreateWalkInUseCase,
+		AdminQueryStudents:     adminQueryStudentsUseCase,
 		QueryUserBookings:      readUseCase7,
 		GetUserMonthlyStats:    getUserMonthlyStatsUseCase,
 		QueryTwoWeeksSchedule:  queryTwoWeeksScheduleUseCase,
@@ -153,11 +177,17 @@ func GetUseCaseRegistry() *usecase.Registry {
 	readUseCase5 := usecase.ProvideAdminQueryTrainRangeUC(dbRepository)
 	readUseCase6 := usecase.ProvideAdminQueryRecentTrainUC(dbRepository)
 	cacheWorker := usecase.NewCacheWorker(dbRepository)
-	writeUseCase3 := usecase.ProvideCreateApptUC(dbRepository, cacheWorker)
-	writeUseCase4 := usecase.ProvideCheckInUC(dbRepository, cacheWorker)
-	writeUseCase5 := usecase.ProvideCancelApptUC(dbRepository, cacheWorker)
-	writeUseCase6 := usecase.ProvideCreateLeaveUC(dbRepository, cacheWorker)
-	writeUseCase7 := usecase.ProvideCancelLeaveUC(dbRepository, cacheWorker)
+	createApptUseCase := usecase.ProvideCreateApptUC(dbRepository, cacheWorker)
+	adminCheckInUseCase := usecase.ProvideAdminCheckInUC(dbRepository, cacheWorker)
+	checkInUseCase := usecase.ProvideCheckInUC(adminCheckInUseCase)
+	cancelApptUseCase := usecase.ProvideCancelApptUC(dbRepository, cacheWorker)
+	createLeaveUseCase := usecase.ProvideCreateLeaveUC(dbRepository, cacheWorker)
+	cancelLeaveUseCase := usecase.ProvideCancelLeaveUC(dbRepository, cacheWorker)
+	adminToggleCheckInUseCase := usecase.ProvideAdminToggleCheckInUC(dbRepository, cacheWorker)
+	adminCreateLeaveUseCase := usecase.ProvideAdminCreateLeaveUC(dbRepository, cacheWorker)
+	adminRestoreFromLeaveUseCase := usecase.ProvideAdminRestoreFromLeaveUC(dbRepository, cacheWorker)
+	adminCreateWalkInUseCase := usecase.ProvideAdminCreateWalkInUC(dbRepository, cacheWorker)
+	adminQueryStudentsUseCase := usecase.ProvideAdminQueryStudentsUC(dbRepository)
 	readUseCase7 := usecase.ProvideQueryUserBookingsUC(dbRepository)
 	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
 	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
@@ -174,11 +204,17 @@ func GetUseCaseRegistry() *usecase.Registry {
 		UserQueryTrainByID:     readUseCase4,
 		AdminQueryTrainRange:   readUseCase5,
 		AdminQueryRecentTrain:  readUseCase6,
-		CreateAppt:             writeUseCase3,
-		CheckIn:                writeUseCase4,
-		CancelAppt:             writeUseCase5,
-		CreateLeave:            writeUseCase6,
-		CancelLeave:            writeUseCase7,
+		CreateAppt:             createApptUseCase,
+		CheckIn:                checkInUseCase,
+		CancelAppt:             cancelApptUseCase,
+		CreateLeave:            createLeaveUseCase,
+		CancelLeave:            cancelLeaveUseCase,
+		AdminCheckIn:           adminCheckInUseCase,
+		AdminToggleCheckIn:     adminToggleCheckInUseCase,
+		AdminCreateLeave:       adminCreateLeaveUseCase,
+		AdminRestoreFromLeave:  adminRestoreFromLeaveUseCase,
+		AdminCreateWalkIn:      adminCreateWalkInUseCase,
+		AdminQueryStudents:     adminQueryStudentsUseCase,
 		QueryUserBookings:      readUseCase7,
 		GetUserMonthlyStats:    getUserMonthlyStatsUseCase,
 		QueryTwoWeeksSchedule:  queryTwoWeeksScheduleUseCase,

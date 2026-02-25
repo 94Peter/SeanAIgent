@@ -1,0 +1,159 @@
+package admin
+
+import (
+	"fmt"
+	"encoding/json"
+	"seanAIgent/components/card"
+	"seanAIgent/components/navigation"
+)
+
+func toJSON(v interface{}) string {
+	b, _ := json.Marshal(v)
+	return string(b)
+}
+
+type AnalyticsModel struct {
+	HistoricalStats []*MonthlyStat
+	Metrics         *BusinessMetrics
+}
+
+type MonthlyStat struct {
+	Month         string `json:"month"`
+	BookedCount   int    `json:"bookedCount"`
+	AttendedCount int    `json:"attendedCount"`
+}
+
+type BusinessMetrics struct {
+	AvgAttendanceRate float64
+	RetentionRate     float64
+	ActiveStudents    int
+	RevenueGrowth     float64
+}
+
+templ AdminAnalytics(model *AnalyticsModel) {
+	<div class="w-full min-h-screen bg-[#000000] text-white font-sans pb-20">
+		<!-- Navigation -->
+		<div class="sticky top-0 z-50 bg-[#121212] border-b border-[#27272A] p-4">
+			@navigation.NavTabs(navigation.Props{
+				Tabs: []navigation.Tab{
+					{Text: "訓練場次", URL: "/v2/admin/dashboard"},
+					{Text: "經營分析", URL: "/v2/admin/analytics"},
+					{Text: "數據月報表", URL: "/v2/admin/users/report"},
+				},
+				ActiveURL: "/v2/admin/analytics",
+			})
+		</div>
+
+		<div class="p-4 space-y-8">
+			<header>
+				<h1 class="text-2xl font-bold text-[#FFD700]">經營管理分析</h1>
+				<p class="text-sm text-[#8E8E93]">過去 12 個月經營數據與趨勢分析</p>
+			</header>
+
+			<!-- Metric Cards -->
+			<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+				@MetricCard("平均出席率", fmt.Sprintf("%.1f%%", model.Metrics.AvgAttendanceRate*100), "text-[#34D399]", "反映教學品質與學員熱度")
+				@MetricCard("學員留存率", fmt.Sprintf("%.1f%%", model.Metrics.RetentionRate*100), "text-[#60A5FA]", "核心經營指標，越高越穩健")
+				@MetricCard("活躍學員數", fmt.Sprintf("%d", model.Metrics.ActiveStudents), "text-[#FFD700]", "本月至少參加一次的學員")
+				@MetricCard("營收成長趨勢", fmt.Sprintf("%+.1f%%", model.Metrics.RevenueGrowth), cond(model.Metrics.RevenueGrowth >= 0, "text-[#34D399]", "text-[#EF4444]"), "相較於上個月的成長幅度")
+			</div>
+
+			<!-- Chart Area -->
+			@card.Card(card.Props{ Class: "bg-[#1C1C1E] border-[#27272A] p-6" }) {
+				<div class="h-[400px] w-full">
+					<canvas id="historicalChart" data-stats={ toJSON(model.HistoricalStats) }></canvas>
+				</div>
+			}
+		</div>
+
+		<!-- Chart.js Setup -->
+		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+		<script>
+			document.addEventListener('DOMContentLoaded', function() {
+				const canvas = document.getElementById('historicalChart');
+				if (!canvas) return;
+
+				const ctx = canvas.getContext('2d');
+				const stats = JSON.parse(canvas.getAttribute('data-stats') || '[]');
+				
+				const labels = stats.map(s => s.month);
+				const bookedData = stats.map(s => s.bookedCount);
+				const attendedData = stats.map(s => s.attendedCount);
+
+				new Chart(ctx, {
+					type: 'line',
+					data: {
+						labels: labels,
+						datasets: [
+							{
+								label: '預約數',
+								data: bookedData,
+								borderColor: '#60A5FA',
+								backgroundColor: 'rgba(96, 165, 250, 0.1)',
+								borderWidth: 2,
+								tension: 0.3,
+								fill: true
+							},
+							{
+								label: '簽到數',
+								data: attendedData,
+								borderColor: '#34D399',
+								backgroundColor: 'rgba(52, 211, 153, 0.1)',
+								borderWidth: 2,
+								tension: 0.3,
+								fill: true
+							}
+						]
+					},
+					options: {
+						responsive: true,
+						maintainAspectRatio: false,
+						interaction: {
+							mode: 'index',
+							intersect: false,
+						},
+						scales: {
+							y: {
+								beginAtZero: true,
+								grid: {
+									color: '#27272A'
+								},
+								ticks: {
+									color: '#8E8E93'
+								}
+							},
+							x: {
+								grid: {
+									display: false
+								},
+								ticks: {
+									color: '#8E8E93'
+								}
+							}
+						},
+						plugins: {
+							legend: {
+								position: 'top',
+								labels: {
+									color: '#FFFFFF',
+									boxWidth: 12,
+									font: { size: 12 }
+								}
+							}
+						}
+					}
+				});
+			});
+		</script>
+	</div>
+}
+
+templ MetricCard(label, value, valueClass, description string) {
+	@card.Card(card.Props{ Class: "bg-[#1C1C1E] border-[#27272A] p-4 flex flex-col justify-between" }) {
+		<div>
+			<div class="text-[10px] text-[#8E8E93] uppercase font-bold tracking-widest mb-1">{ label }</div>
+			<div class={ "text-2xl font-mono font-bold " + valueClass }>{ value }</div>
+		</div>
+		<div class="text-[10px] text-[#525252] mt-2 leading-tight">{ description }</div>
+	}
+}

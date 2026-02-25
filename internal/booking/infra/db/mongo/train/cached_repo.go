@@ -117,6 +117,9 @@ func (r *cachedTrainRepo) HasAnyOverlap(ctx context.Context, coachID string, tr 
 func (r *cachedTrainRepo) DeductCapacity(ctx context.Context, trainingID string, count int) repository.RepoError {
 	return r.delegate.DeductCapacity(ctx, trainingID, count)
 }
+func (r *cachedTrainRepo) AdminDeductCapacity(ctx context.Context, trainingID string, count int) repository.RepoError {
+	return r.delegate.AdminDeductCapacity(ctx, trainingID, count)
+}
 func (r *cachedTrainRepo) IncreaseCapacity(ctx context.Context, trainingID string, count int) repository.RepoError {
 	return r.delegate.IncreaseCapacity(ctx, trainingID, count)
 }

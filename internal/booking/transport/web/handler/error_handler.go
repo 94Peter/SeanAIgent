@@ -7,22 +7,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func errorHandler(c *gin.Context, err uccore.UseCaseError) {
+func ErrorHandler(c *gin.Context, err uccore.UseCaseError) {
 	if err == nil {
 		return
 	}
 
-	appErr := err.(uccore.UseCaseError)
-	c.JSON(getStatus(appErr.Type()), gin.H{
-		"error":    appErr.Error(),
-		"category": appErr.Category(),
-		"code":     appErr.Code(),
-		"kind":     appErr.Kind(),
-		"message":  appErr.Message(),
+	c.JSON(GetStatus(err.Type()), gin.H{
+		"error":    err.Error(),
+		"category": err.Category(),
+		"code":     err.Code(),
+		"kind":     err.Kind(),
+		"message":  err.Message(),
 	})
 }
 
-func getStatus(typ uccore.ErrorType) int {
+func GetStatus(typ uccore.ErrorType) int {
 	switch typ {
 	case uccore.ErrInternal:
 		return http.StatusInternalServerError
@@ -32,6 +31,10 @@ func getStatus(typ uccore.ErrorType) int {
 		return http.StatusNotFound
 	case uccore.ErrConflict:
 		return http.StatusConflict
+	case uccore.ErrForbidden:
+		return http.StatusForbidden
+	case uccore.ErrPermissionDenied:
+		return http.StatusUnauthorized
 	default:
 		return http.StatusInternalServerError
 	}
