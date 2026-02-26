@@ -14,6 +14,7 @@ import (
 func getPipelineTrainDateHasApptState(q bson.M) mongo.Pipeline {
 	pipeline := mongo.Pipeline{
 		{{"$match", q}},
+		{{"$sort", bson.D{{"start_date", 1}}}},
 		{{"$lookup", bson.D{
 			{"from", "appointment"},
 			{"localField", "_id"},
