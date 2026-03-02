@@ -224,7 +224,7 @@ func (api *bookingAPI) bookingSummary(c *gin.Context) {
 
 	var message buffer.Buffer
 	message.WriteString("✨ 點擊下方連結開始預約，加入我們一起進步！\n\n")
-	message.WriteString(fmt.Sprintf("👉 %s\n\n", lineutil.GetBookingLiffUrl()))
+	message.WriteString(fmt.Sprintf("👉 %s\n\n", lineutil.GetBookingV2LiffUrl()))
 	message.WriteString("📋 課程預約與出席名單\n")
 	message.WriteString("-------------------\n")
 	for _, td := range viewTrainingDate {
