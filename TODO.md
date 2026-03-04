@@ -30,9 +30,9 @@
 - [x] 在 `AutoMarkAbsent` (Cron) 成功後發送事件
 
 ### Phase 4: Cron 自動化校準
-- [ ] 註冊 `POST /cron/sync-all-stats` API 節點
-- [ ] 在 `cmd/cron.go` 設定定期排程 (建議每天 03:00)
-- [ ] 實作校準邏輯: 掃描過去 30 天內有變動的用戶並重新聚合
+- [x] 註冊 `POST /cron/sync-all-stats` API 節點
+- [x] 在 `cmd/cron.go` 設定定期排程 (建議每天 03:00)
+- [x] 實作校準邏輯: 掃描過去 30 天內有變動的用戶並重新聚合
 
 ### Phase 5: 報表功能對接
 - [ ] 重構 `getUserReport` (學員月報表): 改從快照表讀取 + Server-side 分頁
