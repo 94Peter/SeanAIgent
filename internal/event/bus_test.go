@@ -51,7 +51,7 @@ func TestEventSystemOptimization(t *testing.T) {
 		}
 
 		// 使用泛型包裝器，自動處理 Unmarshal
-		sub := NewTypedSubscriber("stats_processor", handler)
+		sub := NewTypedSubscriber("stats_processor", topic, handler)
 		bus.Subscribe(topic, sub)
 
 		wg.Wait()

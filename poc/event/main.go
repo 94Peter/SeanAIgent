@@ -20,6 +20,8 @@ func main() {
 	fmt.Println("🚀 Sean AIgent Event System POC")
 	fmt.Println("================================")
 
+	topic := "booking.appt_changed"
+
 	// 2. 初始化環境 (這裡使用簡單的內存 Store 做展示)
 	store := NewMemStore()
 	bus := event.NewBus(store)
@@ -28,6 +30,7 @@ func main() {
 	// 3. 定義訂閱者 (例如：經營分析模組)
 	statsSubscriber := event.NewTypedSubscriber(
 		"stats_processor_v1",
+		topic,
 		func(ctx context.Context, e event.Event, p AppointmentStatusChanged) error {
 			fmt.Printf("📊 [統計模組] 收到事件 %s: 學員 %s 狀態變更為 %s\n", 
 				e.ID(), p.UserID, p.NewStatus)
@@ -41,6 +44,7 @@ func main() {
 	// 4. 定義另一個訂閱者 (例如：通知模組)
 	notifySubscriber := event.NewTypedSubscriber(
 		"notify_service_v1",
+		topic,
 		func(ctx context.Context, e event.Event, p AppointmentStatusChanged) error {
 			fmt.Printf("🔔 [通知模組] 發送 LINE 推播給 %s: 您的預約 %s 已更新！\n", p.UserID, p.BookingID)
 			return nil
@@ -48,7 +52,6 @@ func main() {
 	)
 
 	// 5. 註冊訂閱
-	topic := "booking.appt_changed"
 	bus.Subscribe(topic, statsSubscriber)
 	bus.Subscribe(topic, notifySubscriber)
 

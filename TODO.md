@@ -25,9 +25,9 @@
 - [x] 實作 `BatchSyncMonthlyStatsUseCase` (供手動或 Cron 全量校準使用)
 
 ### Phase 3: 狀態連動 (透過事件)
-- [ ] 在 `AdminBatchUpdateAttendance` 成功後發送事件
-- [ ] 在 `AdminCreateWalkIn` (現場加人) 成功後發送事件
-- [ ] 在 `AutoMarkAbsent` (Cron) 成功後發送事件
+- [x] 在 `AdminBatchUpdateAttendance` 成功後發送事件
+- [x] 在 `AdminCreateWalkIn` (現場加人) 成功後發送事件
+- [x] 在 `AutoMarkAbsent` (Cron) 成功後發送事件
 
 ### Phase 4: Cron 自動化校準
 - [ ] 註冊 `POST /cron/sync-all-stats` API 節點

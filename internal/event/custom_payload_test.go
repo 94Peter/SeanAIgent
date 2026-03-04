@@ -56,7 +56,7 @@ func TestCustomMarshalerUnmarshaler(t *testing.T) {
 		return nil
 	}
 
-	sub := NewTypedSubscriber("custom_sub", handler)
+	sub := NewTypedSubscriber("custom_sub", topic, handler)
 	bus.Subscribe(topic, sub)
 
 	wg.Wait()
@@ -96,7 +96,7 @@ func TestCustomMarshalerUnmarshalerPointer(t *testing.T) {
 		return nil
 	}
 
-	sub := NewTypedSubscriber[*CustomPayload]("pointer_sub", handler)
+	sub := NewTypedSubscriber[*CustomPayload]("pointer_sub", topic, handler)
 	bus.Subscribe(topic, sub)
 
 	wg.Wait()

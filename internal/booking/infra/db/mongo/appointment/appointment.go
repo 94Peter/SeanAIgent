@@ -379,11 +379,11 @@ func (*apptRepoImpl) UpdateManyAppts(
 	return nil
 }
 
-func (*apptRepoImpl) MarkAbsentByTrainIDs(ctx context.Context, trainDateIDs []string) (int64, repository.RepoError) {
+func (*apptRepoImpl) MarkAbsentByTrainIDs(ctx context.Context, trainDateIDs []string) ([]string, repository.RepoError) {
 	const op = "mark_absent_by_train_ids"
 
 	if len(trainDateIDs) == 0 {
-		return 0, nil
+		return nil, nil
 	}
 
 	oids := make([]bson.ObjectID, 0, len(trainDateIDs))
@@ -395,13 +395,36 @@ func (*apptRepoImpl) MarkAbsentByTrainIDs(ctx context.Context, trainDateIDs []st
 		oids = append(oids, oid)
 	}
 
+	// 1. 找出受影響的用戶 ID
+	filter := bson.M{
+		"training_date_id": bson.M{"$in": oids},
+		"status":           "CONFIRMED",
+	}
+	
+	cursor, err := mgo.GetDatabase().Collection(appointmentCollectionName).Find(ctx, filter, options.Find().SetProjection(bson.M{"user_id": 1}))
+	if err != nil {
+		return nil, newInternalError(op, err)
+	}
+	defer cursor.Close(ctx)
+
+	userIDMap := make(map[string]struct{})
+	for cursor.Next(ctx) {
+		var doc struct {
+			UserID string `bson:"user_id"`
+		}
+		if err := cursor.Decode(&doc); err == nil && doc.UserID != "" {
+			userIDMap[doc.UserID] = struct{}{}
+		}
+	}
+
+	if len(userIDMap) == 0 {
+		return nil, nil
+	}
+
+	// 2. 執行批次更新
 	appt, err := newModelAppt()
 	if err != nil {
-		return 0, newInternalError(op, err)
-	}
-	q := bson.D{
-		{Key: "training_date_id", Value: bson.D{{Key: "$in", Value: oids}}},
-		{Key: "status", Value: "CONFIRMED"},
+		return nil, newInternalError(op, err)
 	}
 	update := bson.D{
 		{Key: "$set", Value: bson.D{
@@ -409,10 +432,18 @@ func (*apptRepoImpl) MarkAbsentByTrainIDs(ctx context.Context, trainDateIDs []st
 			{Key: "update_at", Value: time.Now()},
 		}},
 	}
-	modifiedCount, err := mgo.UpdateMany(ctx, appt, q, update)
+	_, err = mgo.UpdateMany(ctx, appt, bson.D{
+		{Key: "training_date_id", Value: bson.D{{Key: "$in", Value: oids}}},
+		{Key: "status", Value: "CONFIRMED"},
+	}, update)
 	if err != nil {
-		return 0, newInternalError(op, err)
+		return nil, newInternalError(op, err)
 	}
 
-	return modifiedCount, nil
+	userIDs := make([]string, 0, len(userIDMap))
+	for uid := range userIDMap {
+		userIDs = append(userIDs, uid)
+	}
+
+	return userIDs, nil
 }
