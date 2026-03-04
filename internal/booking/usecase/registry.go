@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"seanAIgent/internal/booking/domain"
 	"seanAIgent/internal/booking/domain/entity"
 	readAppt "seanAIgent/internal/booking/usecase/appointment/read"
 	writeAppt "seanAIgent/internal/booking/usecase/appointment/write"
@@ -58,7 +57,7 @@ type Registry struct {
 func (r *Registry) Start(ctx context.Context) {
 	if r.Bus != nil {
 		for _, s := range r.Subscribers {
-			r.Bus.Subscribe(domain.TopicAppointmentStatusChanged, s)
+			r.Bus.Subscribe(s.Topic(), s)
 		}
 	}
 }

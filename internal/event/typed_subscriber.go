@@ -13,19 +13,22 @@ import (
 type TypedHandler[T any] func(ctx context.Context, e Event, payload T) error
 
 // NewTypedSubscriber 建立一個強型別的訂閱者
-func NewTypedSubscriber[T any](id string, handler TypedHandler[T]) Subscriber {
+func NewTypedSubscriber[T any](id, topic string, handler TypedHandler[T]) Subscriber {
 	return &typedSubscriber[T]{
 		id:      id,
+		topic:   topic,
 		handler: handler,
 	}
 }
 
 type typedSubscriber[T any] struct {
 	id      string
+	topic   string
 	handler TypedHandler[T]
 }
 
-func (s *typedSubscriber[T]) ID() string { return s.id }
+func (s *typedSubscriber[T]) ID() string    { return s.id }
+func (s *typedSubscriber[T]) Topic() string { return s.topic }
 
 func (s *typedSubscriber[T]) Handle(ctx context.Context, e Event) error {
 	var payload T

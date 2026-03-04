@@ -26,6 +26,7 @@ type Unmarshaler interface {
 // Subscriber 定義了訂閱者介面
 type Subscriber interface {
 	ID() string
+	Topic() string
 	Handle(ctx context.Context, e Event) error
 }
 

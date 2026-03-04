@@ -45,5 +45,5 @@ func NewCacheSubscriber(repo repository.TrainRepository, statsRepo repository.St
 		return nil
 	}
 
-	return event.NewTypedSubscriber("cache_worker_v2", handler)
+	return event.NewTypedSubscriber("cache_worker_v2", domain.TopicAppointmentStatusChanged, handler)
 }

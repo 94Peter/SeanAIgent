@@ -203,10 +203,11 @@ func ProvideBatchSyncMonthlyStatsUC(
 func ProvideSubscribers(
 	repo Repository,
 ) []event.Subscriber {
-	return []event.Subscriber{
+	subs := []event.Subscriber{
 		infra.NewCacheSubscriber(repo, repo),
-		infra.NewUserMonthlyStatsSubscriber(repo, repo),
 	}
+	subs = append(subs, infra.NewUserMonthlyStatsSubscriber(repo, repo)...)
+	return subs
 }
 
 var UseCaseSet = wire.NewSet(

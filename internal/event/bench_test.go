@@ -99,12 +99,13 @@ func BenchmarkEventSystem(b *testing.B) {
 
 func BenchmarkTypedSubscriberHandle(b *testing.B) {
 	ctx := context.Background()
+	topic := "topic"
 	
 	b.Run("Handle_JSON", func(b *testing.B) {
 		handler := func(ctx context.Context, e Event, p JSONPayload) error { return nil }
-		sub := NewTypedSubscriber("sub_id", handler)
+		sub := NewTypedSubscriber("sub_id", topic, handler)
 		payload := JSONPayload{ID: 12345678, Name: "Peter Parker", Email: "peter.parker@starkindustries.com"}
-		evt := NewTypedEvent("evt_id", "topic", payload)
+		evt := NewTypedEvent("evt_id", topic, payload)
 		
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
@@ -114,9 +115,9 @@ func BenchmarkTypedSubscriberHandle(b *testing.B) {
 
 	b.Run("Handle_Custom_Manual", func(b *testing.B) {
 		handler := func(ctx context.Context, e Event, p FastPayload) error { return nil }
-		sub := NewTypedSubscriber("sub_id", handler)
+		sub := NewTypedSubscriber("sub_id", topic, handler)
 		payload := FastPayload{ID: 12345678, Name: "Peter Parker", Email: "peter.parker@starkindustries.com"}
-		evt := NewTypedEvent("evt_id", "topic", payload)
+		evt := NewTypedEvent("evt_id", topic, payload)
 		
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
