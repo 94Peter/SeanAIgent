@@ -114,3 +114,7 @@ func (r *cachedStatsRepo) GetHistoricalAnalytics(ctx context.Context, monthsLimi
 	}
 	return res.([]*entity.MonthlyBusinessStat), nil
 }
+
+func (r *cachedStatsRepo) FindUserMonthlyStats(ctx context.Context, userID string) ([]*entity.UserMonthlyStat, repository.RepoError) {
+	return r.delegate.FindUserMonthlyStats(ctx, userID)
+}

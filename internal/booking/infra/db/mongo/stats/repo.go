@@ -18,6 +18,9 @@ type statsRepoImpl struct {
 func getQueryByFilterUserApptStats(
 	filter repository.FilterUserApptStats,
 ) (bson.M, repository.RepoError) {
+	if filter == nil {
+		return bson.M{}, nil
+	}
 	var q bson.M
 	switch f := filter.(type) {
 	case repository.FilterUserApptStatsByTrainTimeRange:

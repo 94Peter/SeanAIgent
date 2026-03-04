@@ -68,6 +68,7 @@ func InitializeWeb() (web.WebService, error) {
 	batchSyncMonthlyStatsUseCase := usecase.ProvideBatchSyncMonthlyStatsUC(dbRepository)
 	queryMonthlyUserReportsUseCase := usecase.ProvideQueryMonthlyUserReportsUC(dbRepository)
 	getBusinessAnalyticsUseCase := usecase.ProvideGetBusinessAnalyticsUC(dbRepository)
+	getUserDetailUseCase := usecase.ProvideGetUserDetailUC(dbRepository)
 	v := usecase.ProvideSubscribers(dbRepository)
 	idempotencyManager := usecase.ProvideIdempotencyManager()
 	registry := &usecase.Registry{
@@ -101,6 +102,7 @@ func InitializeWeb() (web.WebService, error) {
 		BatchSyncMonthlyStats:      batchSyncMonthlyStatsUseCase,
 		QueryMonthlyUserReports:    queryMonthlyUserReportsUseCase,
 		GetBusinessAnalytics:       getBusinessAnalyticsUseCase,
+		GetUserDetail:              getUserDetailUseCase,
 		Bus:                        bus,
 		Subscribers:                v,
 		IdempotencyManager:         idempotencyManager,
@@ -155,6 +157,7 @@ func InitializeMCP() (mcp.Server, error) {
 	batchSyncMonthlyStatsUseCase := usecase.ProvideBatchSyncMonthlyStatsUC(dbRepository)
 	queryMonthlyUserReportsUseCase := usecase.ProvideQueryMonthlyUserReportsUC(dbRepository)
 	getBusinessAnalyticsUseCase := usecase.ProvideGetBusinessAnalyticsUC(dbRepository)
+	getUserDetailUseCase := usecase.ProvideGetUserDetailUC(dbRepository)
 	v := usecase.ProvideSubscribers(dbRepository)
 	idempotencyManager := usecase.ProvideIdempotencyManager()
 	registry := &usecase.Registry{
@@ -188,6 +191,7 @@ func InitializeMCP() (mcp.Server, error) {
 		BatchSyncMonthlyStats:      batchSyncMonthlyStatsUseCase,
 		QueryMonthlyUserReports:    queryMonthlyUserReportsUseCase,
 		GetBusinessAnalytics:       getBusinessAnalyticsUseCase,
+		GetUserDetail:              getUserDetailUseCase,
 		Bus:                        bus,
 		Subscribers:                v,
 		IdempotencyManager:         idempotencyManager,
@@ -239,6 +243,7 @@ func GetUseCaseRegistry() (*usecase.Registry, error) {
 	batchSyncMonthlyStatsUseCase := usecase.ProvideBatchSyncMonthlyStatsUC(dbRepository)
 	queryMonthlyUserReportsUseCase := usecase.ProvideQueryMonthlyUserReportsUC(dbRepository)
 	getBusinessAnalyticsUseCase := usecase.ProvideGetBusinessAnalyticsUC(dbRepository)
+	getUserDetailUseCase := usecase.ProvideGetUserDetailUC(dbRepository)
 	v := usecase.ProvideSubscribers(dbRepository)
 	idempotencyManager := usecase.ProvideIdempotencyManager()
 	registry := &usecase.Registry{
@@ -272,6 +277,7 @@ func GetUseCaseRegistry() (*usecase.Registry, error) {
 		BatchSyncMonthlyStats:      batchSyncMonthlyStatsUseCase,
 		QueryMonthlyUserReports:    queryMonthlyUserReportsUseCase,
 		GetBusinessAnalytics:       getBusinessAnalyticsUseCase,
+		GetUserDetail:              getUserDetailUseCase,
 		Bus:                        bus,
 		Subscribers:                v,
 		IdempotencyManager:         idempotencyManager,
