@@ -64,9 +64,8 @@ func (uc *createLeaveUseCase) Execute(
 
 	err = appt.AppendLeaveRecord(req.Reason, trainDate.Period().Start())
 	if err != nil {
-		return nil, ErrCreateLeaveFail.Wrap(err)
+		return nil, core.NewUseCaseError("CREATE_LEAVE", "DOMAIN_FAIL", "目前時間不允許執行請假操作", core.ErrInvalidInput).Wrap(err)
 	}
-	//
 
 	// increase training date capacity
 	err = uc.repo.IncreaseCapacity(ctx, trainDate.ID(), 1)

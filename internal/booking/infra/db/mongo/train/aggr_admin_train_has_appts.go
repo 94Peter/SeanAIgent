@@ -42,6 +42,7 @@ func getPipelineTrainDateHasApptState(q bson.M) mongo.Pipeline {
 						{"childName", "$$appt.child_name"},
 						{"isOnLeave", bson.D{{"$eq", []interface{}{"$$appt.status", "CANCELLED_LEAVE"}}}},
 						{"isCheckedIn", bson.D{{"$eq", []interface{}{"$$appt.status", "ATTENDED"}}}},
+						{"isAbsent", bson.D{{"$eq", []interface{}{"$$appt.status", "ABSENT"}}}},
 						{"isWalkIn", "$$appt.is_walk_in"},
 						{"isGuest", "$$appt.is_guest"},
 						{"contactInfo", "$$appt.contact_info"},

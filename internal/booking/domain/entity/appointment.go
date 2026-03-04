@@ -234,35 +234,38 @@ func (a *Appointment) CancelAsMistake(userID string) error {
 	return nil
 }
 
-func (a *Appointment) AdminCheckIn(trainingStartTime time.Time) error {
+func (a *Appointment) validateOperationTime(trainingStartTime time.Time) error {
 	now := time.Now()
-	// 規則：還沒到的課不能簽到 (必須晚於或等於課程開始時間)
-	if now.Before(trainingStartTime) {
+	// 規則 1：開課前 30 分鐘內方可進行出席狀態變更
+	if now.Before(trainingStartTime.Add(-30 * time.Minute)) {
 		return ErrAppointmentCheckInNotOpen
 	}
-	// 規則：補簽只能補過去 7 天的課
+	// 規則 2：補登/補改只能在 7 天內
 	if now.After(trainingStartTime.Add(7 * 24 * time.Hour)) {
 		return ErrAppointmentCheckInTooLate
 	}
-
-	a.status = StatusAttended
-	a.verifiedAt = &now
-	a.updateAt = now
-	a.leave = EmptyLeaveInfo // 簽到時自動清除請假狀態
 	return nil
 }
 
-func (a *Appointment) MarkAsAttended(trainingStartTime time.Time) error {
-	return a.AdminCheckIn(trainingStartTime)
-}
-
-func (a *Appointment) AdminMarkAsAttended() {
-	// Deprecated: use AdminCheckIn
-	now := time.Now()
+func (a *Appointment) AdminCheckIn(trainingStartTime time.Time) error {
+	if err := a.validateOperationTime(trainingStartTime); err != nil {
+		return err
+	}
 	a.status = StatusAttended
+	now := time.Now()
 	a.verifiedAt = &now
 	a.updateAt = now
 	a.leave = EmptyLeaveInfo
+	return nil
+}
+
+func (a *Appointment) AdminMarkAsAbsent(trainingStartTime time.Time) error {
+	if err := a.validateOperationTime(trainingStartTime); err != nil {
+		return err
+	}
+	a.status = StatusAbsent
+	a.updateAt = time.Now()
+	return nil
 }
 
 func (a *Appointment) AppendLeaveRecord(reason string, trainingStartTime time.Time) error {
@@ -291,7 +294,10 @@ func (a *Appointment) AppendLeaveRecord(reason string, trainingStartTime time.Ti
 	return nil
 }
 
-func (a *Appointment) AdminAppendLeave(reason string) {
+func (a *Appointment) AdminAppendLeave(reason string, trainingStartTime time.Time) error {
+	if err := a.validateOperationTime(trainingStartTime); err != nil {
+		return err
+	}
 	a.status = StatusCancelledLeave
 	a.leave = VO_LeaveInfo{
 		reason:    reason,
@@ -299,12 +305,17 @@ func (a *Appointment) AdminAppendLeave(reason string) {
 		createdAt: time.Now(),
 	}
 	a.updateAt = time.Now()
+	return nil
 }
 
-func (a *Appointment) AdminRestoreFromLeave() {
+func (a *Appointment) AdminRestoreFromLeave(trainingStartTime time.Time) error {
+	if err := a.validateOperationTime(trainingStartTime); err != nil {
+		return err
+	}
 	a.status = StatusConfirmed
 	a.leave = EmptyLeaveInfo
 	a.updateAt = time.Now()
+	return nil
 }
 
 func (a *Appointment) CancelLeave(userID string) error {

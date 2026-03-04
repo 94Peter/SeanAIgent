@@ -16,13 +16,6 @@ import (
 	"seanAIgent/components/table"
 )
 
-func cond(condition bool, trueVal, falseVal string) string {
-	if condition {
-		return trueVal
-	}
-	return falseVal
-}
-
 type UserReportModel struct {
 	Year      int
 	Month     int
@@ -92,7 +85,7 @@ func UserReport(model *UserReportModel) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d年 %d月數據報表", model.Year, model.Month))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 61, Col: 116}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 54, Col: 116}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -408,7 +401,7 @@ func UserReport(model *UserReportModel) templ.Component {
 								var templ_7745c5c3_Var17 string
 								templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("expandedUser === '%s' ? 'rotate-90' : ''", user.UserID))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 101, Col: 149}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 94, Col: 149}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 								if templ_7745c5c3_Err != nil {
@@ -429,7 +422,7 @@ func UserReport(model *UserReportModel) templ.Component {
 								var templ_7745c5c3_Var18 string
 								templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(user.LineDisplayName)
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 105, Col: 68}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 98, Col: 68}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 								if templ_7745c5c3_Err != nil {
@@ -442,7 +435,7 @@ func UserReport(model *UserReportModel) templ.Component {
 								var templ_7745c5c3_Var19 string
 								templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(user.UserID)
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 106, Col: 75}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 99, Col: 75}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 								if templ_7745c5c3_Err != nil {
@@ -481,7 +474,7 @@ func UserReport(model *UserReportModel) templ.Component {
 								var templ_7745c5c3_Var21 string
 								templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", user.TotalBookings))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 110, Col: 87}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 103, Col: 87}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 								if templ_7745c5c3_Err != nil {
@@ -520,7 +513,7 @@ func UserReport(model *UserReportModel) templ.Component {
 								var templ_7745c5c3_Var23 string
 								templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", user.TotalAttended))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 111, Col: 102}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 104, Col: 102}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 								if templ_7745c5c3_Err != nil {
@@ -559,7 +552,7 @@ func UserReport(model *UserReportModel) templ.Component {
 								var templ_7745c5c3_Var25 string
 								templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", user.TotalLeave))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 112, Col: 99}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 105, Col: 99}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 								if templ_7745c5c3_Err != nil {
@@ -616,7 +609,7 @@ func UserReport(model *UserReportModel) templ.Component {
 								var templ_7745c5c3_Var29 string
 								templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", user.TotalAbsent))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 115, Col: 47}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 108, Col: 47}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 								if templ_7745c5c3_Err != nil {
@@ -681,7 +674,7 @@ func UserReport(model *UserReportModel) templ.Component {
 								var templ_7745c5c3_Var32 templ.SafeURL
 								templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(fmt.Sprintf("/v2/admin/users/%s", user.UserID)))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 122, Col: 76}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 115, Col: 76}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 								if templ_7745c5c3_Err != nil {
@@ -715,7 +708,7 @@ func UserReport(model *UserReportModel) templ.Component {
 						var templ_7745c5c3_Var33 string
 						templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("expandedUser === '%s'", user.UserID))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 128, Col: 69}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 121, Col: 69}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 						if templ_7745c5c3_Err != nil {
@@ -728,7 +721,7 @@ func UserReport(model *UserReportModel) templ.Component {
 						var templ_7745c5c3_Var34 string
 						templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("expandedUser === '%s'", user.UserID))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 130, Col: 72}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 123, Col: 72}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 						if templ_7745c5c3_Err != nil {
@@ -746,7 +739,7 @@ func UserReport(model *UserReportModel) templ.Component {
 							var templ_7745c5c3_Var35 string
 							templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(child.ChildName)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 134, Col: 82}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 127, Col: 82}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 							if templ_7745c5c3_Err != nil {
@@ -759,7 +752,7 @@ func UserReport(model *UserReportModel) templ.Component {
 							var templ_7745c5c3_Var36 string
 							templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", child.Bookings))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 135, Col: 85}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 128, Col: 85}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 							if templ_7745c5c3_Err != nil {
@@ -772,7 +765,7 @@ func UserReport(model *UserReportModel) templ.Component {
 							var templ_7745c5c3_Var37 string
 							templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", child.Attended))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 136, Col: 85}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 129, Col: 85}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 							if templ_7745c5c3_Err != nil {
@@ -785,7 +778,7 @@ func UserReport(model *UserReportModel) templ.Component {
 							var templ_7745c5c3_Var38 string
 							templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", child.Leave))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 137, Col: 82}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 130, Col: 82}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 							if templ_7745c5c3_Err != nil {
@@ -820,7 +813,7 @@ func UserReport(model *UserReportModel) templ.Component {
 							var templ_7745c5c3_Var41 string
 							templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", child.Absent))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 138, Col: 134}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 131, Col: 134}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 							if templ_7745c5c3_Err != nil {
@@ -930,7 +923,7 @@ func AttendanceProgress(rate float64) templ.Component {
 		var templ_7745c5c3_Var45 string
 		templ_7745c5c3_Var45, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(fmt.Sprintf("width: %d%%", int(rate*100)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 170, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 163, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 		if templ_7745c5c3_Err != nil {
@@ -943,7 +936,7 @@ func AttendanceProgress(rate float64) templ.Component {
 		var templ_7745c5c3_Var46 string
 		templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d%%", int(rate*100)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 173, Col: 89}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 166, Col: 89}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 		if templ_7745c5c3_Err != nil {
@@ -1009,7 +1002,7 @@ func UserAccountMobileCard(user *UserAccountStat) templ.Component {
 				var templ_7745c5c3_Var50 string
 				templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(user.LineDisplayName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 187, Col: 69}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 180, Col: 69}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 				if templ_7745c5c3_Err != nil {
@@ -1022,7 +1015,7 @@ func UserAccountMobileCard(user *UserAccountStat) templ.Component {
 				var templ_7745c5c3_Var51 string
 				templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(user.UserID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 188, Col: 95}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 181, Col: 95}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 				if templ_7745c5c3_Err != nil {
@@ -1035,7 +1028,7 @@ func UserAccountMobileCard(user *UserAccountStat) templ.Component {
 				var templ_7745c5c3_Var52 string
 				templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d位孩子", len(user.Children)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 191, Col: 125}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 184, Col: 125}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 				if templ_7745c5c3_Err != nil {
@@ -1056,7 +1049,7 @@ func UserAccountMobileCard(user *UserAccountStat) templ.Component {
 				var templ_7745c5c3_Var53 string
 				templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", user.TotalBookings))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 201, Col: 75}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 194, Col: 75}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 				if templ_7745c5c3_Err != nil {
@@ -1069,7 +1062,7 @@ func UserAccountMobileCard(user *UserAccountStat) templ.Component {
 				var templ_7745c5c3_Var54 string
 				templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", user.TotalAttended))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 205, Col: 90}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 198, Col: 90}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 				if templ_7745c5c3_Err != nil {
@@ -1082,7 +1075,7 @@ func UserAccountMobileCard(user *UserAccountStat) templ.Component {
 				var templ_7745c5c3_Var55 string
 				templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", user.TotalLeave))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 209, Col: 87}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 202, Col: 87}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 				if templ_7745c5c3_Err != nil {
@@ -1117,7 +1110,7 @@ func UserAccountMobileCard(user *UserAccountStat) templ.Component {
 				var templ_7745c5c3_Var58 string
 				templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", user.TotalAbsent))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 213, Col: 139}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 206, Col: 139}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var58))
 				if templ_7745c5c3_Err != nil {
@@ -1135,7 +1128,7 @@ func UserAccountMobileCard(user *UserAccountStat) templ.Component {
 					var templ_7745c5c3_Var59 string
 					templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.JoinStringErrs(child.ChildName)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 222, Col: 71}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 215, Col: 71}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var59))
 					if templ_7745c5c3_Err != nil {
@@ -1148,7 +1141,7 @@ func UserAccountMobileCard(user *UserAccountStat) templ.Component {
 					var templ_7745c5c3_Var60 string
 					templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("出席率: %d%%", int(child.AttendanceRate*100)))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 223, Col: 121}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 216, Col: 121}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 					if templ_7745c5c3_Err != nil {
@@ -1161,7 +1154,7 @@ func UserAccountMobileCard(user *UserAccountStat) templ.Component {
 					var templ_7745c5c3_Var61 string
 					templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", child.Bookings))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 226, Col: 79}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 219, Col: 79}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var61))
 					if templ_7745c5c3_Err != nil {
@@ -1174,7 +1167,7 @@ func UserAccountMobileCard(user *UserAccountStat) templ.Component {
 					var templ_7745c5c3_Var62 string
 					templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", child.Attended))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 227, Col: 79}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 220, Col: 79}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var62))
 					if templ_7745c5c3_Err != nil {
@@ -1187,7 +1180,7 @@ func UserAccountMobileCard(user *UserAccountStat) templ.Component {
 					var templ_7745c5c3_Var63 string
 					templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", child.Leave))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 228, Col: 76}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 221, Col: 76}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var63))
 					if templ_7745c5c3_Err != nil {
@@ -1222,7 +1215,7 @@ func UserAccountMobileCard(user *UserAccountStat) templ.Component {
 					var templ_7745c5c3_Var66 string
 					templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", child.Absent))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 229, Col: 123}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 222, Col: 123}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var66))
 					if templ_7745c5c3_Err != nil {
@@ -1240,7 +1233,7 @@ func UserAccountMobileCard(user *UserAccountStat) templ.Component {
 				var templ_7745c5c3_Var67 templ.SafeURL
 				templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(fmt.Sprintf("/v2/admin/users/%s", user.UserID)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 233, Col: 71}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 226, Col: 71}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var67))
 				if templ_7745c5c3_Err != nil {

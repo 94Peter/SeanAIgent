@@ -24,31 +24,33 @@ import (
 
 func NewAdminApi(registry *usecase.Registry) handler.WebAPI {
 	return &adminAPI{
-		adminQueryTrainRangeUC:  registry.AdminQueryTrainRange,
-		findTrainHasApptsByIdUC: registry.FindTrainHasApptsById,
-		adminCheckInUC:          registry.AdminCheckIn,
-		adminToggleCheckInUC:    registry.AdminToggleCheckIn,
-		adminCreateLeaveUC:      registry.AdminCreateLeave,
-		adminRestoreFromLeaveUC: registry.AdminRestoreFromLeave,
-		adminCreateWalkInUC:     registry.AdminCreateWalkIn,
-		adminQueryStudentsUC:    registry.AdminQueryStudents,
-		queryAllUserApptStatsUC: registry.QueryAllUserApptStats,
-		getUserMonthlyStatsUC:   registry.GetUserMonthlyStats,
+		adminQueryTrainRangeUC:       registry.AdminQueryTrainRange,
+		findTrainHasApptsByIdUC:      registry.FindTrainHasApptsById,
+		adminCheckInUC:               registry.AdminCheckIn,
+		adminToggleCheckInUC:         registry.AdminToggleCheckIn,
+		adminCreateLeaveUC:           registry.AdminCreateLeave,
+		adminRestoreFromLeaveUC:      registry.AdminRestoreFromLeave,
+		adminCreateWalkInUC:          registry.AdminCreateWalkIn,
+		adminQueryStudentsUC:         registry.AdminQueryStudents,
+		adminBatchUpdateAttendanceUC: registry.AdminBatchUpdateAttendance,
+		queryAllUserApptStatsUC:      registry.QueryAllUserApptStats,
+		getUserMonthlyStatsUC:        registry.GetUserMonthlyStats,
 	}
 }
 
 type adminAPI struct {
-	adminQueryTrainRangeUC  uccore.ReadUseCase[readTrain.ReqAdminQueryTrainRange, []*entity.TrainDateHasApptState]
-	findTrainHasApptsByIdUC uccore.ReadUseCase[readTrain.ReqFindTrainHasApptsById, *entity.TrainDateHasApptState]
-	adminCheckInUC          writeAppt.AdminCheckInUseCase
-	adminToggleCheckInUC    writeAppt.AdminToggleCheckInUseCase
-	adminCreateLeaveUC      writeAppt.AdminCreateLeaveUseCase
-	adminRestoreFromLeaveUC writeAppt.AdminRestoreFromLeaveUseCase
-	adminCreateWalkInUC     writeAppt.AdminCreateWalkInUseCase
-	adminQueryStudentsUC    readStats.AdminQueryStudentsUseCase
-	queryAllUserApptStatsUC uccore.ReadUseCase[readStats.ReqQueryAllUserApptStats, []*entity.UserApptStats]
-	getUserMonthlyStatsUC   readStats.GetUserMonthlyStatsUseCase
-	once                    sync.Once
+	adminQueryTrainRangeUC       uccore.ReadUseCase[readTrain.ReqAdminQueryTrainRange, []*entity.TrainDateHasApptState]
+	findTrainHasApptsByIdUC      uccore.ReadUseCase[readTrain.ReqFindTrainHasApptsById, *entity.TrainDateHasApptState]
+	adminCheckInUC               writeAppt.AdminCheckInUseCase
+	adminToggleCheckInUC         writeAppt.AdminToggleCheckInUseCase
+	adminCreateLeaveUC           writeAppt.AdminCreateLeaveUseCase
+	adminRestoreFromLeaveUC      writeAppt.AdminRestoreFromLeaveUseCase
+	adminCreateWalkInUC          writeAppt.AdminCreateWalkInUseCase
+	adminQueryStudentsUC         readStats.AdminQueryStudentsUseCase
+	adminBatchUpdateAttendanceUC writeAppt.AdminBatchUpdateAttendanceUseCase
+	queryAllUserApptStatsUC      uccore.ReadUseCase[readStats.ReqQueryAllUserApptStats, []*entity.UserApptStats]
+	getUserMonthlyStatsUC        readStats.GetUserMonthlyStatsUseCase
+	once                         sync.Once
 }
 
 func (api *adminAPI) InitRouter(r ezapi.Router) {
@@ -69,6 +71,7 @@ func (api *adminAPI) adminGroup(r ezapi.Router) {
 	r.POST("/v2/admin/checkin/leave", api.createLeave)
 	r.POST("/v2/admin/checkin/restore", api.restoreFromLeave)
 	r.POST("/v2/admin/checkin/walkin", api.createWalkIn)
+	r.POST("/v2/admin/checkin/batch-update", api.batchUpdateAttendance)
 	r.GET("/v2/admin/students/search", api.searchStudents)
 
 	r.GET("/v2/admin/users/report", api.getUserReport)
@@ -83,6 +86,8 @@ func apptToRecord(appt *entity.Appointment) *admin.CheckinRecord {
 		status = "CheckedIn"
 	} else if appt.Status() == entity.StatusCancelledLeave {
 		status = "Leave"
+	} else if appt.Status() == entity.StatusAbsent {
+		status = "Absent"
 	}
 	return &admin.CheckinRecord{
 		BookingID:   appt.ID(),
@@ -113,6 +118,8 @@ func (api *adminAPI) getCheckinPage(c *gin.Context) {
 			status = "CheckedIn"
 		} else if appt.IsOnLeave {
 			status = "Leave"
+		} else if appt.IsAbsent {
+			status = "Absent"
 		}
 
 		bookings = append(bookings, &admin.CheckinRecord{
@@ -133,6 +140,7 @@ func (api *adminAPI) getCheckinPage(c *gin.Context) {
 		Location:    trainData.Location,
 		Capacity:    trainData.Capacity,
 		Bookings:    bookings,
+		IsStarted:   time.Now().After(trainData.StartDate),
 	}
 
 	com := templates.Layout(
@@ -164,7 +172,7 @@ func (api *adminAPI) toggleCheckin(c *gin.Context) {
 	}
 
 	bookingID := c.PostForm("bookingId")
-	appt, err := api.adminToggleCheckInUC.Execute(c.Request.Context(), writeAppt.ReqAdminToggleCheckIn{
+	_, err := api.adminToggleCheckInUC.Execute(c.Request.Context(), writeAppt.ReqAdminToggleCheckIn{
 		BookingID: bookingID,
 	})
 	if err != nil {
@@ -172,10 +180,8 @@ func (api *adminAPI) toggleCheckin(c *gin.Context) {
 		return
 	}
 
-	// Return updated row AND stats OOB
-	c.Writer.Header().Set("Content-Type", "text/html; charset=utf-8")
-	admin.CheckinRow(apptToRecord(appt)).Render(c.Request.Context(), c.Writer)
-	api.renderStatsOOB(c, appt.TrainingID())
+	// In batch mode, we don't return row fragments anymore as state is managed by Alpine.js
+	c.Status(http.StatusOK)
 }
 
 func (api *adminAPI) createLeave(c *gin.Context) {
@@ -185,7 +191,7 @@ func (api *adminAPI) createLeave(c *gin.Context) {
 	}
 
 	bookingID := c.PostForm("bookingId")
-	appt, err := api.adminCreateLeaveUC.Execute(c.Request.Context(), writeAppt.ReqAdminCreateLeave{
+	_, err := api.adminCreateLeaveUC.Execute(c.Request.Context(), writeAppt.ReqAdminCreateLeave{
 		BookingID: bookingID,
 		Reason:    "教練現場標記請假",
 	})
@@ -194,13 +200,7 @@ func (api *adminAPI) createLeave(c *gin.Context) {
 		return
 	}
 
-	// Use hx-swap-oob to add to leave list
-	c.Writer.Header().Set("Content-Type", "text/html; charset=utf-8")
-	fmt.Fprintf(c.Writer, "<div hx-swap-oob=\"afterbegin:#leave-list\">")
-	admin.LeaveRow(apptToRecord(appt)).Render(c.Request.Context(), c.Writer)
-	fmt.Fprintf(c.Writer, "</div>")
-
-	api.renderStatsOOB(c, appt.TrainingID())
+	c.Status(http.StatusOK)
 }
 
 func (api *adminAPI) restoreFromLeave(c *gin.Context) {
@@ -210,7 +210,7 @@ func (api *adminAPI) restoreFromLeave(c *gin.Context) {
 	}
 
 	bookingID := c.PostForm("bookingId")
-	appt, err := api.adminRestoreFromLeaveUC.Execute(c.Request.Context(), writeAppt.ReqAdminRestoreFromLeave{
+	_, err := api.adminRestoreFromLeaveUC.Execute(c.Request.Context(), writeAppt.ReqAdminRestoreFromLeave{
 		BookingID: bookingID,
 	})
 	if err != nil {
@@ -218,12 +218,7 @@ func (api *adminAPI) restoreFromLeave(c *gin.Context) {
 		return
 	}
 
-	c.Writer.Header().Set("Content-Type", "text/html; charset=utf-8")
-	fmt.Fprintf(c.Writer, "<div hx-swap-oob=\"afterbegin:#active-list\">")
-	admin.CheckinRow(apptToRecord(appt)).Render(c.Request.Context(), c.Writer)
-	fmt.Fprintf(c.Writer, "</div>")
-
-	api.renderStatsOOB(c, appt.TrainingID())
+	c.Status(http.StatusOK)
 }
 
 func (api *adminAPI) createWalkIn(c *gin.Context) {
@@ -238,41 +233,45 @@ func (api *adminAPI) createWalkIn(c *gin.Context) {
 		return
 	}
 
-	appt, err := api.adminCreateWalkInUC.Execute(c.Request.Context(), req)
+	if _, err := api.adminCreateWalkInUC.Execute(c.Request.Context(), req); err != nil {
+		handler.ErrorHandler(c, err)
+		return
+	}
+
+	// Prepend to list using the NEW batch row component
+	c.Writer.Header().Set("Content-Type", "text/html; charset=utf-8")
+	// Note: We wrap it in a special div to tell Alpine.js to pick it up or just refresh
+	// For simplicity in batch mode, we tell the page to refresh after walk-in to re-sync Alpine state
+	c.Writer.Header().Set("HX-Refresh", "true")
+	c.Status(http.StatusOK)
+}
+
+func (api *adminAPI) renderStatsOOB(c *gin.Context, sessionID string) {
+	// Deprecated in batch mode: stats are calculated locally by Alpine.js
+}
+
+func (api *adminAPI) batchUpdateAttendance(c *gin.Context) {
+	if !mid.IsAdmin(c) {
+		c.Status(http.StatusUnauthorized)
+		return
+	}
+
+	var req writeAppt.ReqAdminBatchUpdateAttendance
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	count, err := api.adminBatchUpdateAttendanceUC.Execute(c.Request.Context(), req)
 	if err != nil {
 		handler.ErrorHandler(c, err)
 		return
 	}
 
-	// Prepend to active list
-	c.Writer.Header().Set("Content-Type", "text/html; charset=utf-8")
-	fmt.Fprintf(c.Writer, "<div hx-swap-oob=\"afterbegin:#active-list\">")
-	admin.CheckinRow(apptToRecord(appt)).Render(c.Request.Context(), c.Writer)
-	fmt.Fprintf(c.Writer, "</div>")
-
-	api.renderStatsOOB(c, appt.TrainingID())
-}
-
-func (api *adminAPI) renderStatsOOB(c *gin.Context, sessionID string) {
-	trainData, err := api.findTrainHasApptsByIdUC.Execute(c.Request.Context(), readTrain.ReqFindTrainHasApptsById{
-		TrainID: sessionID,
+	c.JSON(http.StatusOK, gin.H{
+		"success":       true,
+		"updated_count": count,
 	})
-	if err != nil {
-		return
-	}
-	var attended, leave int
-	for _, appt := range trainData.UserAppointments {
-		if appt.IsCheckedIn {
-			attended++
-		}
-		if appt.IsOnLeave {
-			leave++
-		}
-	}
-	// Wrap in container with hx-swap-oob to replace #checkin-stats
-	fmt.Fprintf(c.Writer, "<div id=\"checkin-stats\" hx-swap-oob=\"true\" class=\"flex gap-4\">")
-	admin.CheckinStats(len(trainData.UserAppointments), attended, leave).Render(c.Request.Context(), c.Writer)
-	fmt.Fprintf(c.Writer, "</div>")
 }
 
 func (api *adminAPI) searchStudents(c *gin.Context) {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"seanAIgent/components/icon"
 	"seanAIgent/components/csrf"
+	"encoding/json"
 )
 
 type CheckinPageModel struct {
@@ -13,26 +14,37 @@ type CheckinPageModel struct {
 	Location      string
 	Capacity      int
 	Bookings      []*CheckinRecord
+	IsStarted     bool
 }
 
 type CheckinRecord struct {
 	BookingID   string
 	ChildName   string
 	ParentName  string
-	Status      string // "Pending", "CheckedIn", "Leave"
+	Status      string // "Pending", "CheckedIn", "Leave", "Absent"
 	IsWalkIn    bool
 	IsGuest     bool
 	ContactInfo string
 }
 
+func (m *CheckinPageModel) GetInitialJSON() string {
+	data := make(map[string]string)
+	for _, b := range m.Bookings {
+		data[b.BookingID] = b.Status
+	}
+	b, _ := json.Marshal(data)
+	return string(b)
+}
+
 templ AdminCheckin(model *CheckinPageModel) {
 	<style>
 		[x-cloak] { display: none !important; }
-		.htmx-indicator { display: none; }
-		.htmx-request .htmx-indicator { display: inline; }
-		.htmx-request.disabled { pointer-events: none; opacity: 0.6; }
+		.btn-status-active { @apply scale-95 opacity-100 ring-2 ring-white/20; }
 	</style>
-	<div class="w-full min-h-screen bg-[#000000] text-white font-sans pb-32" x-data="checkinManager()">
+	<div 
+		class="w-full min-h-screen bg-[#000000] text-white font-sans pb-32" 
+		x-data={ fmt.Sprintf("checkinManager(%s, '%s', %t)", model.GetInitialJSON(), model.SessionID, model.IsStarted) }
+	>
 		<!-- Sticky Header -->
 		<div class="sticky top-0 z-50 bg-[#121212]/95 backdrop-blur-md border-b border-[#27272A] p-4">
 			<div class="flex items-center justify-between mb-4">
@@ -41,52 +53,74 @@ templ AdminCheckin(model *CheckinPageModel) {
 						@icon.ChevronLeft(icon.Props{Size: 24})
 					</a>
 					<div>
-						<h1 class="text-lg font-bold text-[#FFD700]">{ model.DateDisplay }</h1>
+						<div class="flex items-center gap-2">
+							<h1 class="text-lg font-bold text-[#FFD700]">{ model.DateDisplay }</h1>
+							if !model.IsStarted {
+								<span class="bg-[#525252] text-white text-[8px] px-1.5 py-0.5 rounded font-black uppercase">未開課</span>
+							}
+						</div>
 						<p class="text-[10px] text-[#8E8E93] uppercase tracking-tighter">{ model.Location } | { model.TimeDisplay }</p>
 					</div>
 				</div>
-				<button @click="showAddModal = true" class="bg-[#60A5FA] text-black px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-lg shadow-[#60A5FA]/20 active:scale-95 transition-all">
-					@icon.Plus(icon.Props{Size: 14})
-					<span class="text-xs font-black">臨時加人</span>
-				</button>
+				
+				<div class="flex gap-2">
+					<button 
+						@click="submitBatch()"
+						:disabled="!hasChanges || !isStarted"
+						:class="(hasChanges && isStarted) ? 'bg-[#34D399] text-black shadow-lg shadow-[#34D399]/20' : 'bg-[#27272A] text-[#525252] opacity-50 cursor-not-allowed'"
+						class="px-4 py-2 rounded-xl flex items-center gap-2 transition-all active:scale-95"
+					>
+						<template x-if="submitting">
+							<span class="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin"></span>
+						</template>
+						<span class="text-sm font-black uppercase">儲存變更</span>
+					</button>
+					<button @click="showAddModal = true" class="bg-[#27272A] text-white p-2 rounded-xl active:scale-95 border border-[#3F3F46]">
+						@icon.Plus(icon.Props{Size: 20})
+					</button>
+				</div>
 			</div>
 			
-			<!-- Overall Stats Counter -->
-			<div class="flex gap-4" id="checkin-stats">
-				@CheckinStats(len(model.Bookings), 0, 0) // Initial count, logic handled by x-effect later or server
+			<!-- Overall Stats Counter (Calculated Locally) -->
+			<div class="grid grid-cols-4 gap-2">
+				<div class="bg-[#1C1C1E] border border-[#27272A] p-2 rounded-xl text-center">
+					<div class="text-[8px] text-[#8E8E93] uppercase font-bold mb-0.5">總預約</div>
+					<div class="text-lg font-black text-white" x-text="stats.total">0</div>
+				</div>
+				<div class="bg-[#1C1C1E] border border-[#34D399]/30 p-2 rounded-xl text-center">
+					<div class="text-[8px] text-[#34D399] uppercase font-bold mb-0.5">簽到</div>
+					<div class="text-lg font-black text-[#34D399]" x-text="stats.attended">0</div>
+				</div>
+				<div class="bg-[#1C1C1E] border border-[#F59E0B]/30 p-2 rounded-xl text-center">
+					<div class="text-[8px] text-[#F59E0B] uppercase font-bold mb-0.5">請假</div>
+					<div class="text-lg font-black text-[#F59E0B]" x-text="stats.leave">0</div>
+				</div>
+				<div class="bg-[#1C1C1E] border border-[#EF4444]/30 p-2 rounded-xl text-center">
+					<div class="text-[8px] text-[#EF4444] uppercase font-bold mb-0.5">缺席</div>
+					<div class="text-lg font-black text-[#EF4444]" x-text="stats.absent">0</div>
+				</div>
 			</div>
 		</div>
 
-		<div class="p-4 space-y-8">
-			<!-- Section: Regular & Walk-in List -->
-			<section class="space-y-3">
-				<div class="flex items-center gap-2 px-1">
-					<div class="w-1 h-4 bg-[#FFD700] rounded-full"></div>
-					<h2 class="text-sm font-bold text-[#8E8E93] uppercase tracking-widest">預約與點名清單</h2>
+		<div class="p-4 space-y-6">
+			<div class="space-y-3">
+				<div class="flex items-center justify-between px-1">
+					<div class="flex items-center gap-2">
+						<div class="w-1 h-4 bg-[#FFD700] rounded-full"></div>
+						<h2 class="text-sm font-bold text-[#8E8E93] uppercase tracking-widest">點名名冊</h2>
+					</div>
+					<template x-if="!isStarted">
+						<span class="text-[10px] text-[#FF6B6B] font-bold">課程開始後方可點名</span>
+					</template>
+					<span class="text-[10px] text-[#525252]" x-show="hasChanges && isStarted">有尚未儲存的更動...</span>
 				</div>
-				<div class="space-y-2" id="active-list">
-					for _, b := range model.Bookings {
-						if b.Status != "Leave" {
-							@CheckinRow(b)
-						}
-					}
-				</div>
-			</section>
 
-			<!-- Section: Leave List -->
-			<section class="space-y-3 pt-4 border-t border-[#27272A]">
-				<div class="flex items-center gap-2 px-1">
-					<div class="w-1 h-4 bg-[#F59E0B] rounded-full"></div>
-					<h2 class="text-sm font-bold text-[#8E8E93] uppercase tracking-widest">請假名單 (可還原)</h2>
-				</div>
-				<div class="space-y-2" id="leave-list">
+				<div class="space-y-2">
 					for _, b := range model.Bookings {
-						if b.Status == "Leave" {
-							@LeaveRow(b)
-						}
+						@BatchCheckinRow(b)
 					}
 				</div>
-			</section>
+			</div>
 		</div>
 
 		<!-- Walk-in Modal -->
@@ -105,19 +139,72 @@ templ AdminCheckin(model *CheckinPageModel) {
 				}
 			});
 
-			function checkinManager() {
+			function checkinManager(initialData, sessionId, isStarted) {
 				return {
+					attendance: initialData,
+					original: JSON.parse(JSON.stringify(initialData)),
+					sessionId: sessionId,
+					isStarted: isStarted,
 					showAddModal: false,
-					init() {
-						this.updateStats();
-						document.body.addEventListener('htmx:afterOnLoad', () => {
-							this.updateStats();
-						});
+					submitting: false,
+					
+					get hasChanges() {
+						return JSON.stringify(this.attendance) !== JSON.stringify(this.original);
 					},
-					updateStats() {
-						const checkedIn = document.querySelectorAll('[data-status="CheckedIn"]').length;
-						const leave = document.querySelectorAll('[data-status="Leave"]').length;
-						// Optional: Update UI stats if needed, but HTMX OOB might handle this better
+
+					get stats() {
+						const vals = Object.values(this.attendance);
+						return {
+							total: vals.length,
+							attended: vals.filter(v => v === 'CheckedIn').length,
+							leave: vals.filter(v => v === 'Leave').length,
+							absent: vals.filter(v => v === 'Absent').length
+						};
+					},
+
+					setStatus(id, status) {
+						if (!this.isStarted) return;
+						// Toggle logic: if clicking the same status, revert to Pending
+						if (this.attendance[id] === status) {
+							this.attendance[id] = 'Pending';
+						} else {
+							this.attendance[id] = status;
+						}
+					},
+
+					async submitBatch() {
+						if (this.submitting || !this.isStarted) return;
+						this.submitting = true;
+						
+						const updates = Object.entries(this.attendance)
+							.filter(([id, status]) => status !== this.original[id])
+							.map(([id, status]) => ({ bookingId: id, status: status }));
+
+						try {
+							const response = await fetch('/v2/admin/checkin/batch-update', {
+								method: 'POST',
+								headers: {
+									'Content-Type': 'application/json',
+									'X-CSRF-Token': document.querySelector('input[name="_csrf"]').value
+								},
+								body: JSON.stringify({
+									sessionId: this.sessionId,
+									updates: updates
+								})
+							});
+
+							if (response.ok) {
+								this.original = JSON.parse(JSON.stringify(this.attendance));
+								window.location.reload(); // Refresh to get fresh data
+							} else {
+								const data = await response.json();
+								alert(data.message || '儲存失敗，請檢查時間限制');
+							}
+						} catch (e) {
+							alert('儲存出錯');
+						} finally {
+							this.submitting = false;
+						}
 					}
 				}
 			}
@@ -125,26 +212,10 @@ templ AdminCheckin(model *CheckinPageModel) {
 	</div>
 }
 
-templ CheckinStats(total, attended, leave int) {
-	<div class="flex-1 bg-[#1C1C1E] border border-[#27272A] p-2 rounded-xl text-center">
-		<div class="text-[9px] text-[#8E8E93] uppercase font-bold mb-0.5">預約總數</div>
-		<div class="text-xl font-black text-white">{ fmt.Sprintf("%d", total) }</div>
-	</div>
-	<div class="flex-1 bg-[#1C1C1E] border border-[#34D399]/30 p-2 rounded-xl text-center">
-		<div class="text-[9px] text-[#34D399] uppercase font-bold mb-0.5">現場簽到</div>
-		<div class="text-xl font-black text-[#34D399]">{ fmt.Sprintf("%d", attended) }</div>
-	</div>
-	<div class="flex-1 bg-[#1C1C1E] border border-[#F59E0B]/30 p-2 rounded-xl text-center">
-		<div class="text-[9px] text-[#F59E0B] uppercase font-bold mb-0.5">累計請假</div>
-		<div class="text-xl font-black text-[#F59E0B]">{ fmt.Sprintf("%d", leave) }</div>
-	</div>
-}
-
-templ CheckinRow(b *CheckinRecord) {
+templ BatchCheckinRow(b *CheckinRecord) {
 	<div 
-		id={ "row-" + b.BookingID }
-		class={ "bg-[#1C1C1E] border rounded-2xl p-4 flex items-center justify-between transition-all " + cond(b.Status == "CheckedIn", "border-[#34D399]/50 bg-[#34D399]/5", "border-[#27272A]") }
-		data-status={ b.Status }
+		class="bg-[#1C1C1E] border border-[#27272A] rounded-2xl p-4 flex items-center justify-between transition-all"
+		:class={ fmt.Sprintf("attendance['%s'] === 'CheckedIn' ? 'border-[#34D399]/50 bg-[#34D399]/5' : (attendance['%s'] === 'Leave' || attendance['%s'] === 'Absent' ? 'opacity-60 border-dashed' : '')", b.BookingID, b.BookingID, b.BookingID) }
 	>
 		<div class="flex items-center gap-3">
 			<div class={ "w-12 h-12 rounded-full flex items-center justify-center font-black text-lg " + cond(b.IsGuest, "bg-[#FF6B6B] text-black", cond(b.IsWalkIn, "bg-[#60A5FA] text-black", "bg-[#27272A] text-[#8E8E93]")) }>
@@ -161,57 +232,32 @@ templ CheckinRow(b *CheckinRecord) {
 			</div>
 		</div>
 
-		<div class="flex gap-2">
-			<!-- Toggle Check-in -->
+		<div class="flex gap-1.5 bg-black/40 p-1.5 rounded-2xl border border-white/5" :class="!isStarted ? 'opacity-20 grayscale pointer-events-none' : ''">
+			<!-- Attended -->
 			<button 
-				hx-post="/v2/admin/checkin/toggle"
-				hx-vals={ fmt.Sprintf(`{"bookingId": "%s"}`, b.BookingID) }
-				hx-target={ "#row-" + b.BookingID }
-				hx-swap="outerHTML"
-				class="w-14 h-14 rounded-2xl flex items-center justify-center transition-all active:scale-90"
-				:class={ cond(b.Status == "CheckedIn", "bg-[#34D399] text-black shadow-lg shadow-[#34D399]/20", "bg-[#27272A] text-[#525252]") }
+				@click={ fmt.Sprintf("setStatus('%s', 'CheckedIn')", b.BookingID) }
+				class="w-11 h-11 rounded-xl flex items-center justify-center transition-all"
+				:class={ fmt.Sprintf("attendance['%s'] === 'CheckedIn' ? 'bg-[#34D399] text-black shadow-lg shadow-[#34D399]/20 scale-95' : 'text-[#525252] hover:bg-white/5'", b.BookingID) }
 			>
-				@icon.Check(icon.Props{Size: 28})
+				@icon.Check(icon.Props{Size: 22})
 			</button>
-			<!-- Move to Leave -->
+			<!-- Leave -->
 			<button 
-				hx-post="/v2/admin/checkin/leave"
-				hx-vals={ fmt.Sprintf(`{"bookingId": "%s"}`, b.BookingID) }
-				hx-target={ "#row-" + b.BookingID }
-				hx-swap="delete"
-				class="w-14 h-14 rounded-2xl bg-[#27272A] text-[#525252] flex items-center justify-center active:scale-90 transition-all"
+				@click={ fmt.Sprintf("setStatus('%s', 'Leave')", b.BookingID) }
+				class="w-11 h-11 rounded-xl flex items-center justify-center transition-all"
+				:class={ fmt.Sprintf("attendance['%s'] === 'Leave' ? 'bg-[#F59E0B] text-black scale-95' : 'text-[#525252] hover:bg-white/5'", b.BookingID) }
 			>
-				<span class="font-black text-xl">假</span>
+				<span class="font-black text-sm">假</span>
+			</button>
+			<!-- Absent -->
+			<button 
+				@click={ fmt.Sprintf("setStatus('%s', 'Absent')", b.BookingID) }
+				class="w-11 h-11 rounded-xl flex items-center justify-center transition-all"
+				:class={ fmt.Sprintf("attendance['%s'] === 'Absent' ? 'bg-[#EF4444] text-white scale-95' : 'text-[#525252] hover:bg-white/5'", b.BookingID) }
+			>
+				<span class="font-black text-sm">缺</span>
 			</button>
 		</div>
-	</div>
-}
-
-templ LeaveRow(b *CheckinRecord) {
-	<div 
-		id={ "row-" + b.BookingID }
-		class="bg-[#1C1C1E]/40 border border-[#F59E0B]/30 rounded-2xl p-4 flex items-center justify-between"
-		data-status="Leave"
-	>
-		<div class="flex items-center gap-3 grayscale">
-			<div class="w-12 h-12 rounded-full bg-[#27272A] text-[#525252] flex items-center justify-center font-black text-lg">
-				{ b.ChildName[0:1] }
-			</div>
-			<div>
-				<span class="font-bold text-[#8E8E93] text-lg line-through">{ b.ChildName }</span>
-				<p class="text-[10px] text-[#525252]">已於 LINE 請假</p>
-			</div>
-		</div>
-
-		<button 
-			hx-post="/v2/admin/checkin/restore"
-			hx-vals={ fmt.Sprintf(`{"bookingId": "%s"}`, b.BookingID) }
-			hx-target={ "#row-" + b.BookingID }
-			hx-swap="delete"
-			class="bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20 px-4 py-3 rounded-xl font-bold text-sm active:scale-95 transition-all"
-		>
-			取消請假
-		</button>
 	</div>
 }
 

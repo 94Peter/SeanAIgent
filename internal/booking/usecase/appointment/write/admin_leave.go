@@ -32,13 +32,20 @@ func (uc *adminCreateLeaveUseCase) Execute(ctx context.Context, req ReqAdminCrea
 		return nil, ErrCheckInApptNotFound.Wrap(err)
 	}
 
-	appt.AdminAppendLeave(req.Reason)
+	train, err := uc.repo.FindTrainDateByID(ctx, appt.TrainingID())
+	if err != nil {
+		return nil, ErrCheckInTrainNotFound.Wrap(err)
+	}
+
+	if err := appt.AdminAppendLeave(req.Reason, train.Period().Start()); err != nil {
+		return nil, core.NewUseCaseError("ADMIN_LEAVE", "DOMAIN_FAIL", "無法執行請假操作", core.ErrInvalidInput).Wrap(err)
+	}
 
 	if err := uc.repo.UpdateAppt(ctx, appt); err != nil {
 		return nil, ErrCheckInUpdateApptFail.Wrap(err)
 	}
 
-	uc.cw.Clean(appt.User().UserID(), appt.TrainingID())
+	uc.cw.CleanSync(ctx, appt.User().UserID(), appt.TrainingID(), train.Period().Start())
 	return appt, nil
 }
 
@@ -67,12 +74,19 @@ func (uc *adminRestoreFromLeaveUseCase) Execute(ctx context.Context, req ReqAdmi
 		return nil, ErrCheckInApptNotFound.Wrap(err)
 	}
 
-	appt.AdminRestoreFromLeave()
+	train, err := uc.repo.FindTrainDateByID(ctx, appt.TrainingID())
+	if err != nil {
+		return nil, ErrCheckInTrainNotFound.Wrap(err)
+	}
+
+	if err := appt.AdminRestoreFromLeave(train.Period().Start()); err != nil {
+		return nil, core.NewUseCaseError("ADMIN_RESTORE", "DOMAIN_FAIL", "無法還原預約狀態", core.ErrInvalidInput).Wrap(err)
+	}
 
 	if err := uc.repo.UpdateAppt(ctx, appt); err != nil {
 		return nil, ErrCheckInUpdateApptFail.Wrap(err)
 	}
 
-	uc.cw.Clean(appt.User().UserID(), appt.TrainingID())
+	uc.cw.CleanSync(ctx, appt.User().UserID(), appt.TrainingID(), train.Period().Start())
 	return appt, nil
 }

@@ -71,47 +71,47 @@ func TestAppointment_CancelAsMistake(t *testing.T) {
 	})
 }
 
-func TestAppointment_MarkAsAttended(t *testing.T) {
+func TestAppointment_AdminCheckIn(t *testing.T) {
 	user, _ := NewUser("u1", "User")
 	now := time.Now()
 
-	t.Run("Success", func(t *testing.T) {
+	t.Run("Success_OnTime", func(t *testing.T) {
 		appt, _ := NewAppointment(WithCreateAppt("a1", "t1", user, "Child"))
-		// Training starts in 5 mins (within 10min window)
-		trainStart := now.Add(5 * time.Minute)
+		// Training started 5 mins ago
+		trainStart := now.Add(-5 * time.Minute)
 		
-		err := appt.MarkAsAttended(trainStart)
+		err := appt.AdminCheckIn(trainStart)
 		require.NoError(t, err)
 		assert.Equal(t, StatusAttended, appt.Status())
 		assert.NotNil(t, appt.VerifiedAt())
 	})
 
+	t.Run("Success_Buffer30Mins", func(t *testing.T) {
+		appt, _ := NewAppointment(WithCreateAppt("a1", "t1", user, "Child"))
+		// Training starts in 20 mins (allowed within 30min buffer)
+		trainStart := now.Add(20 * time.Minute)
+		
+		err := appt.AdminCheckIn(trainStart)
+		require.NoError(t, err)
+		assert.Equal(t, StatusAttended, appt.Status())
+	})
+
 	t.Run("Fail_TooEarly", func(t *testing.T) {
 		appt, _ := NewAppointment(WithCreateAppt("a1", "t1", user, "Child"))
-		// Training starts in 20 mins (too early)
-		trainStart := now.Add(20 * time.Minute)
+		// Training starts in 40 mins (too early, outside 30min buffer)
+		trainStart := now.Add(40 * time.Minute)
 
-		err := appt.MarkAsAttended(trainStart)
+		err := appt.AdminCheckIn(trainStart)
 		assert.ErrorIs(t, err, ErrAppointmentCheckInNotOpen)
 	})
 
 	t.Run("Fail_TooLate", func(t *testing.T) {
 		appt, _ := NewAppointment(WithCreateAppt("a1", "t1", user, "Child"))
-		// Training started 4 days ago (max 3 days)
-		trainStart := now.Add(-4 * 24 * time.Hour)
+		// Training started 8 days ago (limit is 7 days)
+		trainStart := now.Add(-8 * 24 * time.Hour)
 
-		err := appt.MarkAsAttended(trainStart)
+		err := appt.AdminCheckIn(trainStart)
 		assert.ErrorIs(t, err, ErrAppointmentCheckInTooLate)
-	})
-
-	t.Run("Fail_OnLeave", func(t *testing.T) {
-		appt, _ := NewAppointment(WithCreateAppt("a1", "t1", user, "Child"))
-		// Set to Leave
-		WithStatus(StatusCancelledLeave)(appt)
-
-		trainStart := now.Add(5 * time.Minute)
-		err := appt.MarkAsAttended(trainStart)
-		assert.ErrorIs(t, err, ErrAppointmentOnLeave)
 	})
 }
 
