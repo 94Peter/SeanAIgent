@@ -15,10 +15,17 @@ import (
 
 	"github.com/google/wire"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/94peter/vulpes/db/mgo"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-func InitializeWeb() web.WebService {
+func ProvideDatabase() *mongo.Database {
+	return mgo.GetDatabase()
+}
+
+func InitializeWeb() (web.WebService, error) {
 	wire.Build(
+		ProvideDatabase,
 		// 1. 提供資料庫與 Repo (內含 wire.Bind 介面綁定)
 		db.InfraSet,
 
@@ -37,7 +44,7 @@ func InitializeWeb() web.WebService {
 		// 5. 提供 WebService
 		web.InitWeb,
 	)
-	return nil
+	return nil, nil
 }
 
 func toolSet() []server.ServerTool {
@@ -49,8 +56,9 @@ func toolSet() []server.ServerTool {
 	}
 }
 
-func InitializeMCP() mcp.Server {
+func InitializeMCP() (mcp.Server, error) {
 	wire.Build(
+		ProvideDatabase,
 		// 1. 提供資料庫與 Repo (內含 wire.Bind 介面綁定)
 		db.InfraSet,
 
@@ -63,14 +71,15 @@ func InitializeMCP() mcp.Server {
 		// 4. 提供 MCP 需要的 UseCaseSet
 		mcp.InitMcpServer,
 	)
-	return nil
+	return nil, nil
 }
 
-func GetUseCaseRegistry() *usecase.Registry {
+func GetUseCaseRegistry() (*usecase.Registry, error) {
 	wire.Build(
+		ProvideDatabase,
 		db.InfraSet,
 		service.NewTrainDateService,
 		usecase.UseCaseSet,
 	)
-	return nil
+	return nil, nil
 }

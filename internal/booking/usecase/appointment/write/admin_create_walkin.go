@@ -3,8 +3,12 @@ package write
 import (
 	"context"
 	"errors"
+	"time"
+
+	"seanAIgent/internal/booking/domain"
 	"seanAIgent/internal/booking/domain/entity"
 	"seanAIgent/internal/booking/usecase/core"
+	"seanAIgent/internal/event"
 )
 
 type ReqAdminCreateWalkIn struct {
@@ -17,13 +21,13 @@ type ReqAdminCreateWalkIn struct {
 
 type AdminCreateWalkInUseCase core.WriteUseCase[ReqAdminCreateWalkIn, *entity.Appointment]
 
-func NewAdminCreateWalkInUseCase(repo adminCheckInUseCaseRepo, cw cacheWorker) AdminCreateWalkInUseCase {
-	return &adminCreateWalkInUseCase{repo: repo, cw: cw}
+func NewAdminCreateWalkInUseCase(repo adminCheckInUseCaseRepo, bus event.Bus) AdminCreateWalkInUseCase {
+	return &adminCreateWalkInUseCase{repo: repo, bus: bus}
 }
 
 type adminCreateWalkInUseCase struct {
 	repo adminCheckInUseCaseRepo
-	cw   cacheWorker
+	bus  event.Bus
 }
 
 func (uc *adminCreateWalkInUseCase) Name() string {
@@ -62,6 +66,7 @@ func (uc *adminCreateWalkInUseCase) Execute(ctx context.Context, req ReqAdminCre
 		return nil, ErrCreateApptNewDomainEntityFail.Wrap(domainErr)
 	}
 
+	oldStatus := appt.Status().String()
 	// 4. Admin auto-checkin (with consolidated constraints)
 	if err := appt.AdminCheckIn(train.Period().Start()); err != nil {
 		if errors.Is(err, entity.ErrAppointmentCheckInNotOpen) {
@@ -82,6 +87,20 @@ func (uc *adminCreateWalkInUseCase) Execute(ctx context.Context, req ReqAdminCre
 		return nil, ErrCreateApptSaveApptFail.Wrap(err)
 	}
 
-	uc.cw.Clean(userID, req.TrainDateID)
+	// 手動清理快取
+	_ = uc.repo.CleanTrainCache(ctx, userID)
+	_ = uc.repo.CleanStatsCache(ctx, userID, train.Period().Start().Year(), int(train.Period().Start().Month()))
+
+	// 發送領域事件
+	evt := event.NewTypedEvent(uc.repo.GenerateID(), domain.TopicAppointmentStatusChanged, domain.AppointmentStatusChanged{
+		BookingID:  appt.ID(),
+		UserID:     userID,
+		TrainingID: req.TrainDateID,
+		OldStatus:  oldStatus,
+		NewStatus:  appt.Status().String(),
+		OccurredAt: time.Now(),
+	})
+	uc.bus.Publish(ctx, evt)
+
 	return appt, nil
 }

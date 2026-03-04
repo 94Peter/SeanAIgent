@@ -4,9 +4,11 @@ import (
 	"context"
 	"time"
 
+	"seanAIgent/internal/booking/domain"
 	"seanAIgent/internal/booking/domain/entity"
 	"seanAIgent/internal/booking/domain/repository"
 	"seanAIgent/internal/booking/usecase/core"
+	"seanAIgent/internal/event"
 )
 
 type ReqCreateAppt struct {
@@ -24,22 +26,16 @@ type createApptUseCaseRepo interface {
 	repository.StatsRepository
 }
 
-// 加入 CacheWorker 介面定義或直接使用
-type cacheWorker interface {
-	Clean(uid string, tid string)
-	CleanSync(ctx context.Context, uid string, tid string, startTime time.Time)
-}
-
-func NewCreateApptUseCase(repo createApptUseCaseRepo, cw cacheWorker) CreateApptUseCase {
+func NewCreateApptUseCase(repo createApptUseCaseRepo, bus event.Bus) CreateApptUseCase {
 	return &createApptUseCase{
 		repo: repo,
-		cw:   cw,
+		bus:  bus,
 	}
 }
 
 type createApptUseCase struct {
 	repo createApptUseCaseRepo
-	cw   cacheWorker
+	bus  event.Bus
 }
 
 func (uc *createApptUseCase) Name() string {
@@ -79,8 +75,22 @@ func (uc *createApptUseCase) Execute(
 		return nil, ErrCreateApptSaveApptFail.Wrap(err)
 	}
 
-	// 使用同步清理，確保跳轉頁面後資料一致
-	uc.cw.CleanSync(ctx, req.User.UserID(), req.TrainDateID, trainDate.Period().Start())
+	// 暫時保留同步清理邏輯以確保即時性，改為手動呼叫 repo 清理
+	_ = uc.repo.CleanTrainCache(ctx, req.User.UserID())
+	_ = uc.repo.CleanStatsCache(ctx, req.User.UserID(), trainDate.Period().Start().Year(), int(trainDate.Period().Start().Month()))
+
+	// 發送領域事件
+	for _, appt := range appointments {
+		evt := event.NewTypedEvent(uc.repo.GenerateID(), domain.TopicAppointmentStatusChanged, domain.AppointmentStatusChanged{
+			BookingID:  appt.ID(),
+			UserID:     appt.User().UserID(),
+			TrainingID: appt.TrainingID(),
+			OldStatus:  "",
+			NewStatus:  appt.Status().String(),
+			OccurredAt: time.Now(),
+		})
+		uc.bus.Publish(ctx, evt)
+	}
 
 	return appointments, nil
 }

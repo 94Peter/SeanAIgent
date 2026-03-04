@@ -64,7 +64,10 @@ to quickly create a Cobra application.`,
 		}()
 		cancel()
 
-		mcpServer := InitializeMCP()
+		mcpServer, err := InitializeMCP()
+		if err != nil {
+			log.Fatalf("InitializeMCP fail: %v", err)
+		}
 		mcpServer.Start()
 	},
 }

@@ -3,10 +3,13 @@ package write
 import (
 	"context"
 	"errors"
+	"time"
 
+	"seanAIgent/internal/booking/domain"
 	"seanAIgent/internal/booking/domain/entity"
 	"seanAIgent/internal/booking/domain/repository"
 	"seanAIgent/internal/booking/usecase/core"
+	"seanAIgent/internal/event"
 )
 
 // AdminCheckInUseCase handles bulk check-in from coach management dashboard.
@@ -24,16 +27,16 @@ type adminCheckInUseCaseRepo interface {
 	repository.StatsRepository
 }
 
-func NewAdminCheckInUseCase(repo adminCheckInUseCaseRepo, cw cacheWorker) AdminCheckInUseCase {
+func NewAdminCheckInUseCase(repo adminCheckInUseCaseRepo, bus event.Bus) AdminCheckInUseCase {
 	return &adminCheckInUseCase{
 		repo: repo,
-		cw:   cw,
+		bus:  bus,
 	}
 }
 
 type adminCheckInUseCase struct {
 	repo adminCheckInUseCaseRepo
-	cw   cacheWorker
+	bus  event.Bus
 }
 
 func (uc *adminCheckInUseCase) Name() string {
@@ -63,11 +66,23 @@ func (uc *adminCheckInUseCase) Execute(
 
 	for _, id := range req.CheckedInBookingIDs {
 		if a, ok := apptMap[id]; ok {
+			oldStatus := a.Status().String()
 			if err := a.AdminCheckIn(train.Period().Start()); err != nil {
 				return nil, ErrCheckInDomainError.Wrap(err)
 			}
 			updated = append(updated, a)
 			affectedUserIDs[a.User().UserID()] = struct{}{}
+
+			// 發送領域事件
+			evt := event.NewTypedEvent(uc.repo.GenerateID(), domain.TopicAppointmentStatusChanged, domain.AppointmentStatusChanged{
+				BookingID:  a.ID(),
+				UserID:     a.User().UserID(),
+				TrainingID: a.TrainingID(),
+				OldStatus:  oldStatus,
+				NewStatus:  a.Status().String(),
+				OccurredAt: time.Now(),
+			})
+			uc.bus.Publish(ctx, evt)
 		}
 	}
 
@@ -75,9 +90,10 @@ func (uc *adminCheckInUseCase) Execute(
 		if err := uc.repo.UpdateManyAppts(ctx, updated); err != nil {
 			return nil, ErrCheckInUpdateApptFail.Wrap(err)
 		}
-		// Use CleanSync to ensure consistency across V1 and V2
+		// 手動清理快取
 		for uid := range affectedUserIDs {
-			uc.cw.CleanSync(ctx, uid, req.TrainDateID, train.Period().Start())
+			_ = uc.repo.CleanTrainCache(ctx, uid)
+			_ = uc.repo.CleanStatsCache(ctx, uid, train.Period().Start().Year(), int(train.Period().Start().Month()))
 		}
 	}
 
@@ -91,13 +107,13 @@ type ReqAdminToggleCheckIn struct {
 
 type AdminToggleCheckInUseCase core.WriteUseCase[ReqAdminToggleCheckIn, *entity.Appointment]
 
-func NewAdminToggleCheckInUseCase(repo adminCheckInUseCaseRepo, cw cacheWorker) AdminToggleCheckInUseCase {
-	return &adminToggleCheckInUseCase{repo: repo, cw: cw}
+func NewAdminToggleCheckInUseCase(repo adminCheckInUseCaseRepo, bus event.Bus) AdminToggleCheckInUseCase {
+	return &adminToggleCheckInUseCase{repo: repo, bus: bus}
 }
 
 type adminToggleCheckInUseCase struct {
 	repo adminCheckInUseCaseRepo
-	cw   cacheWorker
+	bus  event.Bus
 }
 
 func (uc *adminToggleCheckInUseCase) Name() string {
@@ -115,6 +131,7 @@ func (uc *adminToggleCheckInUseCase) Execute(ctx context.Context, req ReqAdminTo
 		return nil, ErrCheckInTrainNotFound.Wrap(err)
 	}
 
+	oldStatus := appt.Status().String()
 	if appt.Status() == entity.StatusAttended {
 		if err := appt.AdminRestoreFromLeave(train.Period().Start()); err != nil {
 			return nil, ErrCheckInDomainError.Wrap(err)
@@ -135,7 +152,20 @@ func (uc *adminToggleCheckInUseCase) Execute(ctx context.Context, req ReqAdminTo
 		return nil, ErrCheckInUpdateApptFail.Wrap(err)
 	}
 
-	// Use CleanSync for immediate feedback in V1/V2
-	uc.cw.CleanSync(ctx, appt.User().UserID(), appt.TrainingID(), train.Period().Start())
+	// 手動清理快取
+	_ = uc.repo.CleanTrainCache(ctx, appt.User().UserID())
+	_ = uc.repo.CleanStatsCache(ctx, appt.User().UserID(), train.Period().Start().Year(), int(train.Period().Start().Month()))
+
+	// 發送領域事件
+	evt := event.NewTypedEvent(uc.repo.GenerateID(), domain.TopicAppointmentStatusChanged, domain.AppointmentStatusChanged{
+		BookingID:  appt.ID(),
+		UserID:     appt.User().UserID(),
+		TrainingID: appt.TrainingID(),
+		OldStatus:  oldStatus,
+		NewStatus:  appt.Status().String(),
+		OccurredAt: time.Now(),
+	})
+	uc.bus.Publish(ctx, evt)
+
 	return appt, nil
 }

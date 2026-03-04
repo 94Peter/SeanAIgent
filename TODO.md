@@ -1,10 +1,11 @@
 # Sean AIgent 開發進度追蹤 (TODO)
 
 ## 🏗️ 系統架構：事件驅動非同步流 (Event-Driven Stream)
-- [ ] 定義 `DomainEvent` 介面與基本事件結構
-- [ ] 實作內部的 `EventDispatcher` (基於 Go Channels & Registry 模式)
-- [ ] 重構現有 UseCase，改為發送 `AppointmentStatusChanged` 事件
-- [ ] 將 `CacheWorker` 轉型為事件訂閱者 (Subscriber)
+- [x] 定義 `Event` 介面與基本事件結構 (`TypedEvent`)
+- [x] 實作內部的 `EventBus` (基於 Go Channels & Registry 模式，含進度追趕與 Recover 機制)
+- [x] 實作事件持久化儲存 `EventStore` (MongoDB)
+- [x] 重構現有 UseCase，改為發送 `AppointmentStatusChanged` 等領域事件
+- [x] 將 `CacheWorker` 轉型為事件訂閱者 (Subscriber)
 
 ## 📊 經營分析與數據報表優化 (預聚合快照表方案)
 
@@ -41,4 +42,5 @@
 ---
 
 ## ✅ 已完成項目
+- [x] **事件系統效能優化**：支援自定義 `Marshaler` / `Unmarshaler`，實作 `sync.Once` 延遲序列化，大幅降低記憶體與 CPU 消耗。
 - [x] V2 管理看板、批次提交點名、自動缺席判定 Cron 等

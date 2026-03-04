@@ -137,8 +137,14 @@ to quickly create a Cobra application.`,
 		var webService web.WebService
 
 		// v2 initialization
-		webService = InitializeWeb()
-		registry := GetUseCaseRegistry()
+		webService, err = InitializeWeb()
+		if err != nil {
+			log.Fatalf("InitializeWeb fail: %v", err)
+		}
+		registry, err := GetUseCaseRegistry()
+		if err != nil {
+			log.Fatalf("GetUseCaseRegistry fail: %v", err)
+		}
 		dbRepo := db.NewDbRepoAndIdGenerate()
 		userApptStatsNotify = notification.NewUserApptStatsNotifier(dbRepo)
 
