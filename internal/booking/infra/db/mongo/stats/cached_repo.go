@@ -67,3 +67,15 @@ func (r *cachedStatsRepo) CleanStatsCache(ctx context.Context, userID string, ye
 	r.cache.Delete(cacheKey)
 	return r.delegate.CleanStatsCache(ctx, userID, year, month)
 }
+
+func (r *cachedStatsRepo) UpsertUserMonthlyStats(ctx context.Context, stat *entity.UserMonthlyStat) repository.RepoError {
+	// 直接委派，寫入操作不需要快取
+	return r.delegate.UpsertUserMonthlyStats(ctx, stat)
+}
+
+func (r *cachedStatsRepo) FindMonthlyStats(
+	ctx context.Context, year, month int, skip, limit int64, search string,
+) ([]*entity.UserMonthlyStat, int64, repository.RepoError) {
+	// 列表查詢暫不快取，因為分頁與搜尋條件組合較多
+	return r.delegate.FindMonthlyStats(ctx, year, month, skip, limit, search)
+}
