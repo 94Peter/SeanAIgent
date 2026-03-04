@@ -73,9 +73,22 @@ func (r *cachedStatsRepo) UpsertUserMonthlyStats(ctx context.Context, stat *enti
 	return r.delegate.UpsertUserMonthlyStats(ctx, stat)
 }
 
+func (r *cachedStatsRepo) UpsertManyUserMonthlyStats(ctx context.Context, stats []*entity.UserMonthlyStat) repository.RepoError {
+	return r.delegate.UpsertManyUserMonthlyStats(ctx, stats)
+}
+
 func (r *cachedStatsRepo) FindMonthlyStats(
 	ctx context.Context, year, month int, skip, limit int64, search string,
 ) ([]*entity.UserMonthlyStat, int64, repository.RepoError) {
 	// 列表查詢暫不快取，因為分頁與搜尋條件組合較多
 	return r.delegate.FindMonthlyStats(ctx, year, month, skip, limit, search)
+}
+
+func (r *cachedStatsRepo) AggregateUserMonthlyStats(ctx context.Context, userID string, year, month int) (*entity.UserMonthlyStat, repository.RepoError) {
+	// 聚合運算直接走底層
+	return r.delegate.AggregateUserMonthlyStats(ctx, userID, year, month)
+}
+
+func (r *cachedStatsRepo) AggregateAllUsersMonthlyStats(ctx context.Context, year, month int) ([]*entity.UserMonthlyStat, repository.RepoError) {
+	return r.delegate.AggregateAllUsersMonthlyStats(ctx, year, month)
 }

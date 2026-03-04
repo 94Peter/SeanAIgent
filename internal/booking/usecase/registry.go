@@ -8,6 +8,7 @@ import (
 	writeAppt "seanAIgent/internal/booking/usecase/appointment/write"
 	"seanAIgent/internal/booking/usecase/core"
 	readStats "seanAIgent/internal/booking/usecase/stats/read"
+	writeStats "seanAIgent/internal/booking/usecase/stats/write"
 	readTrain "seanAIgent/internal/booking/usecase/traindate/read"
 	writeTrain "seanAIgent/internal/booking/usecase/traindate/write"
 	"seanAIgent/internal/event"
@@ -46,6 +47,8 @@ type Registry struct {
 	GetUserMonthlyStats   readStats.GetUserMonthlyStatsUseCase
 	QueryTwoWeeksSchedule readTrain.QueryTwoWeeksScheduleUseCase
 	QueryAllUserApptStats core.ReadUseCase[readStats.ReqQueryAllUserApptStats, []*entity.UserApptStats]
+
+	BatchSyncMonthlyStats writeStats.BatchSyncMonthlyStatsUseCase
 
 	Bus                event.Bus
 	Subscribers        []event.Subscriber

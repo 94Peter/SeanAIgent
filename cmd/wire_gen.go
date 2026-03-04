@@ -65,6 +65,7 @@ func InitializeWeb() (web.WebService, error) {
 	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
 	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
 	readUseCase8 := usecase.ProvideQueryAllUserApptStatsUC(dbRepository)
+	batchSyncMonthlyStatsUseCase := usecase.ProvideBatchSyncMonthlyStatsUC(dbRepository)
 	v := usecase.ProvideSubscribers(dbRepository)
 	idempotencyManager := usecase.ProvideIdempotencyManager()
 	registry := &usecase.Registry{
@@ -95,6 +96,7 @@ func InitializeWeb() (web.WebService, error) {
 		GetUserMonthlyStats:        getUserMonthlyStatsUseCase,
 		QueryTwoWeeksSchedule:      queryTwoWeeksScheduleUseCase,
 		QueryAllUserApptStats:      readUseCase8,
+		BatchSyncMonthlyStats:      batchSyncMonthlyStatsUseCase,
 		Bus:                        bus,
 		Subscribers:                v,
 		IdempotencyManager:         idempotencyManager,
@@ -146,6 +148,7 @@ func InitializeMCP() (mcp.Server, error) {
 	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
 	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
 	readUseCase8 := usecase.ProvideQueryAllUserApptStatsUC(dbRepository)
+	batchSyncMonthlyStatsUseCase := usecase.ProvideBatchSyncMonthlyStatsUC(dbRepository)
 	v := usecase.ProvideSubscribers(dbRepository)
 	idempotencyManager := usecase.ProvideIdempotencyManager()
 	registry := &usecase.Registry{
@@ -176,6 +179,7 @@ func InitializeMCP() (mcp.Server, error) {
 		GetUserMonthlyStats:        getUserMonthlyStatsUseCase,
 		QueryTwoWeeksSchedule:      queryTwoWeeksScheduleUseCase,
 		QueryAllUserApptStats:      readUseCase8,
+		BatchSyncMonthlyStats:      batchSyncMonthlyStatsUseCase,
 		Bus:                        bus,
 		Subscribers:                v,
 		IdempotencyManager:         idempotencyManager,
@@ -224,6 +228,7 @@ func GetUseCaseRegistry() (*usecase.Registry, error) {
 	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
 	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
 	readUseCase8 := usecase.ProvideQueryAllUserApptStatsUC(dbRepository)
+	batchSyncMonthlyStatsUseCase := usecase.ProvideBatchSyncMonthlyStatsUC(dbRepository)
 	v := usecase.ProvideSubscribers(dbRepository)
 	idempotencyManager := usecase.ProvideIdempotencyManager()
 	registry := &usecase.Registry{
@@ -254,6 +259,7 @@ func GetUseCaseRegistry() (*usecase.Registry, error) {
 		GetUserMonthlyStats:        getUserMonthlyStatsUseCase,
 		QueryTwoWeeksSchedule:      queryTwoWeeksScheduleUseCase,
 		QueryAllUserApptStats:      readUseCase8,
+		BatchSyncMonthlyStats:      batchSyncMonthlyStatsUseCase,
 		Bus:                        bus,
 		Subscribers:                v,
 		IdempotencyManager:         idempotencyManager,

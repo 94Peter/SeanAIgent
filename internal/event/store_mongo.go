@@ -99,6 +99,9 @@ func (s *mongoEventStore) FindUnprocessedEvents(ctx context.Context, subscriberI
 		if err := cursor.Decode(&doc); err != nil {
 			return nil, err
 		}
+		// 加入日誌觀察資料內容
+		// fmt.Printf("EventStore: loading event %s, data len: %d\n", doc.ID, len(doc.Data))
+		
 		events = append(events, &genericEvent{
 			id:         doc.ID,
 			topic:      doc.Topic,
