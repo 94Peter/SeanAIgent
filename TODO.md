@@ -35,12 +35,13 @@
 - [x] 實作校準邏輯: 掃描過去 30 天內有變動的用戶並重新聚合
 
 ### Phase 5: 報表功能對接
-- [ ] 重構 `getUserReport` (學員月報表): 改從快照表讀取 + Server-side 分頁
-- [ ] 重構 `getAnalytics` (經營分析看板): 使用快照表計算趨勢
-- [ ] 實作 CSV 匯出功能 (基於快照表)
+- [x] 重構 `getUserReport` (學員月報表): 改從快照表讀取 + Server-side 分頁
+- [x] 重構 `getAnalytics` (經營分析看板): 使用快照表計算趨勢
+- [x] 實作 CSV 匯出功能 (基於快照表)
 
 ---
 
 ## ✅ 已完成項目
 - [x] **事件系統效能優化**：支援自定義 `Marshaler` / `Unmarshaler`，實作 `sync.Once` 延遲序列化，大幅降低記憶體與 CPU 消耗。
+- [x] **修復領域事件序列化 Bug**：移除了 `domain.event.go` 中無效的空 `Marshal`/`Unmarshal` 實作，修復了導致事件 Payload 為空的嚴重問題。
 - [x] V2 管理看板、批次提交點名、自動缺席判定 Cron 等

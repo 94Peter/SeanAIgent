@@ -35,6 +35,8 @@ func NewAdminApi(registry *usecase.Registry) handler.WebAPI {
 		adminBatchUpdateAttendanceUC: registry.AdminBatchUpdateAttendance,
 		queryAllUserApptStatsUC:      registry.QueryAllUserApptStats,
 		getUserMonthlyStatsUC:        registry.GetUserMonthlyStats,
+		queryMonthlyUserReportsUC:    registry.QueryMonthlyUserReports,
+		getBusinessAnalyticsUC:       registry.GetBusinessAnalytics,
 	}
 }
 
@@ -50,6 +52,8 @@ type adminAPI struct {
 	adminBatchUpdateAttendanceUC writeAppt.AdminBatchUpdateAttendanceUseCase
 	queryAllUserApptStatsUC      uccore.ReadUseCase[readStats.ReqQueryAllUserApptStats, []*entity.UserApptStats]
 	getUserMonthlyStatsUC        readStats.GetUserMonthlyStatsUseCase
+	queryMonthlyUserReportsUC    readStats.QueryMonthlyUserReportsUseCase
+	getBusinessAnalyticsUC       readStats.GetBusinessAnalyticsUseCase
 	once                         sync.Once
 }
 
@@ -298,26 +302,29 @@ func (api *adminAPI) searchStudents(c *gin.Context) {
 }
 
 func (api *adminAPI) getAnalytics(c *gin.Context) {
-	historicalStats := []*admin.MonthlyStat{
-		{Month: "2025-03", BookedCount: 120, AttendedCount: 95},
-		{Month: "2025-04", BookedCount: 135, AttendedCount: 110},
-		{Month: "2025-05", BookedCount: 150, AttendedCount: 125},
-		{Month: "2025-06", BookedCount: 180, AttendedCount: 140},
-		{Month: "2025-07", BookedCount: 210, AttendedCount: 185},
-		{Month: "2025-08", BookedCount: 190, AttendedCount: 170},
-		{Month: "2025-09", BookedCount: 220, AttendedCount: 200},
-		{Month: "2025-10", BookedCount: 240, AttendedCount: 210},
-		{Month: "2025-11", BookedCount: 230, AttendedCount: 205},
-		{Month: "2025-12", BookedCount: 260, AttendedCount: 230},
-		{Month: "2026-01", BookedCount: 200, AttendedCount: 180},
-		{Month: "2026-02", BookedCount: 215, AttendedCount: 195},
+	resp, err := api.getBusinessAnalyticsUC.Execute(c.Request.Context(), readStats.ReqGetBusinessAnalytics{
+		MonthsLimit: 12,
+	})
+	if err != nil {
+		handler.ErrorHandler(c, err)
+		return
+	}
+
+	historicalStats := make([]*admin.MonthlyStat, 0, len(resp.HistoricalStats))
+	for i := len(resp.HistoricalStats) - 1; i >= 0; i-- {
+		s := resp.HistoricalStats[i]
+		historicalStats = append(historicalStats, &admin.MonthlyStat{
+			Month:         fmt.Sprintf("%d-%02d", s.Year, s.Month),
+			BookedCount:   s.TotalBookings,
+			AttendedCount: s.AttendedCount,
+		})
 	}
 
 	metrics := &admin.BusinessMetrics{
-		AvgAttendanceRate: 0.88,
-		RetentionRate:     0.92,
-		ActiveStudents:    45,
-		RevenueGrowth:     7.5,
+		AvgAttendanceRate: resp.Metrics.AvgAttendanceRate,
+		RetentionRate:     resp.Metrics.RetentionRate,
+		ActiveStudents:    resp.Metrics.ActiveStudents,
+		RevenueGrowth:     resp.Metrics.RevenueGrowth,
 	}
 
 	model := &admin.AnalyticsModel{
@@ -552,57 +559,70 @@ func (api *adminAPI) getUserDetail(c *gin.Context) {
 }
 
 func (api *adminAPI) getUserReport(c *gin.Context) {
+	now := time.Now()
+	yearStr := c.DefaultQuery("year", fmt.Sprintf("%d", now.Year()))
+	monthStr := c.DefaultQuery("month", fmt.Sprintf("%d", int(now.Month())))
+	pageStr := c.DefaultQuery("page", "1")
+	search := c.Query("search")
+
+	var year, month int
+	var page int64
+	fmt.Sscanf(yearStr, "%d", &year)
+	fmt.Sscanf(monthStr, "%d", &month)
+	fmt.Sscanf(pageStr, "%d", &page)
+
+	resp, err := api.queryMonthlyUserReportsUC.Execute(c.Request.Context(), readStats.ReqQueryMonthlyUserReports{
+		Year:   year,
+		Month:  month,
+		Page:   page,
+		Limit:  50, // 預設每頁 50 筆
+		Search: search,
+	})
+
+	if err != nil {
+		handler.ErrorHandler(c, err)
+		return
+	}
+
+	userStats := make([]*admin.UserAccountStat, 0, len(resp.UserStats))
+	for _, s := range resp.UserStats {
+		children := make([]*admin.ChildMonthlyStat, 0, len(s.Children))
+		for _, cs := range s.Children {
+			rate := 0.0
+			if cs.TotalBookings > 0 {
+				rate = float64(cs.AttendedCount) / float64(cs.TotalBookings)
+			}
+			children = append(children, &admin.ChildMonthlyStat{
+				ChildName:      cs.ChildName,
+				Bookings:       cs.TotalBookings,
+				Attended:       cs.AttendedCount,
+				Leave:          cs.LeaveCount,
+				Absent:         cs.AbsentCount,
+				AttendanceRate: rate,
+			})
+		}
+
+		parentRate := 0.0
+		if s.TotalBookings > 0 {
+			parentRate = float64(s.AttendedCount) / float64(s.TotalBookings)
+		}
+
+		userStats = append(userStats, &admin.UserAccountStat{
+			UserID:          s.UserID,
+			LineDisplayName: s.UserName,
+			TotalBookings:   s.TotalBookings,
+			TotalAttended:   s.AttendedCount,
+			TotalLeave:      s.LeaveCount,
+			TotalAbsent:     s.AbsentCount,
+			AttendanceRate:  parentRate,
+			Children:        children,
+		})
+	}
+
 	model := &admin.UserReportModel{
-		Year:  2026,
-		Month: 2,
-		UserStats: []*admin.UserAccountStat{
-			{
-				UserID:          "Ufa91de91be0274e3cc9851918a8e9660",
-				LineDisplayName: "Peter_Admin",
-				TotalBookings:   20,
-				TotalAttended:   18,
-				TotalLeave:      1,
-				TotalAbsent:     1,
-				AttendanceRate:  0.9,
-				Children: []*admin.ChildMonthlyStat{
-					{
-						ChildName:      "小明",
-						Bookings:       12,
-						Attended:       10,
-						Leave:          1,
-						Absent:         1,
-						AttendanceRate: 0.83,
-					},
-					{
-						ChildName:      "小紅",
-						Bookings:       8,
-						Attended:       8,
-						Leave:          0,
-						Absent:         0,
-						AttendanceRate: 1.0,
-					},
-				},
-			},
-			{
-				UserID:          "U1234567890abcdef",
-				LineDisplayName: "Strong_Parent",
-				TotalBookings:   15,
-				TotalAttended:   4,
-				TotalLeave:      8,
-				TotalAbsent:     3,
-				AttendanceRate:  0.26,
-				Children: []*admin.ChildMonthlyStat{
-					{
-						ChildName:      "小強",
-						Bookings:       15,
-						Attended:       4,
-						Leave:          8,
-						Absent:         3,
-						AttendanceRate: 0.26,
-					},
-				},
-			},
-		},
+		Year:      year,
+		Month:     month,
+		UserStats: userStats,
 	}
 
 	com := templates.Layout(

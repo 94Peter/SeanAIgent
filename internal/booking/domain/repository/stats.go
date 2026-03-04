@@ -40,4 +40,7 @@ type StatsRepository interface {
 	FindMonthlyStats(ctx context.Context, year, month int, skip, limit int64, search string) ([]*entity.UserMonthlyStat, int64, RepoError)
 	AggregateUserMonthlyStats(ctx context.Context, userID string, year, month int) (*entity.UserMonthlyStat, RepoError)
 	AggregateAllUsersMonthlyStats(ctx context.Context, year, month int) ([]*entity.UserMonthlyStat, RepoError)
+
+	// GetHistoricalAnalytics 獲取全域經營趨勢數據
+	GetHistoricalAnalytics(ctx context.Context, monthsLimit int) ([]*entity.MonthlyBusinessStat, RepoError)
 }
