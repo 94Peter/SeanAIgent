@@ -7,6 +7,11 @@ import (
 )
 
 type appointmentStatus string
+
+func (s appointmentStatus) String() string {
+	return string(s)
+}
+
 type leaveStatus string
 
 const (

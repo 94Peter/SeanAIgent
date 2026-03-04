@@ -7,7 +7,9 @@
 package cmd
 
 import (
+	"github.com/94peter/vulpes/db/mgo"
 	"github.com/mark3labs/mcp-go/server"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 	"seanAIgent/internal/booking/domain/service"
 	"seanAIgent/internal/booking/infra/db"
 	"seanAIgent/internal/booking/transport/mcp"
@@ -15,6 +17,7 @@ import (
 	"seanAIgent/internal/booking/transport/web"
 	"seanAIgent/internal/booking/transport/web/handler"
 	"seanAIgent/internal/booking/usecase"
+	"seanAIgent/internal/event"
 )
 
 import (
@@ -23,7 +26,7 @@ import (
 
 // Injectors from wire.go:
 
-func InitializeWeb() web.WebService {
+func InitializeWeb() (web.WebService, error) {
 	dbRepository := db.NewDbRepoAndIdGenerate()
 	trainDateService := service.NewTrainDateService(dbRepository)
 	serviceAggregator := usecase.ServiceAggregator{
@@ -39,24 +42,30 @@ func InitializeWeb() web.WebService {
 	readUseCase4 := usecase.ProvideUserQueryTrainByIDUC(dbRepository)
 	readUseCase5 := usecase.ProvideAdminQueryTrainRangeUC(dbRepository)
 	readUseCase6 := usecase.ProvideAdminQueryRecentTrainUC(dbRepository)
-	cacheWorker := usecase.NewCacheWorker(dbRepository)
-	createApptUseCase := usecase.ProvideCreateApptUC(dbRepository, cacheWorker)
-	adminCheckInUseCase := usecase.ProvideAdminCheckInUC(dbRepository, cacheWorker)
+	database := ProvideDatabase()
+	eventStore, err := event.ProvideEventStore(database)
+	if err != nil {
+		return nil, err
+	}
+	bus := event.ProvideEventBus(eventStore)
+	createApptUseCase := usecase.ProvideCreateApptUC(dbRepository, bus)
+	adminCheckInUseCase := usecase.ProvideAdminCheckInUC(dbRepository, bus)
 	checkInUseCase := usecase.ProvideCheckInUC(adminCheckInUseCase)
-	cancelApptUseCase := usecase.ProvideCancelApptUC(dbRepository, cacheWorker)
-	createLeaveUseCase := usecase.ProvideCreateLeaveUC(dbRepository, cacheWorker)
-	cancelLeaveUseCase := usecase.ProvideCancelLeaveUC(dbRepository, cacheWorker)
-	adminToggleCheckInUseCase := usecase.ProvideAdminToggleCheckInUC(dbRepository, cacheWorker)
-	adminCreateLeaveUseCase := usecase.ProvideAdminCreateLeaveUC(dbRepository, cacheWorker)
-	adminRestoreFromLeaveUseCase := usecase.ProvideAdminRestoreFromLeaveUC(dbRepository, cacheWorker)
-	adminCreateWalkInUseCase := usecase.ProvideAdminCreateWalkInUC(dbRepository, cacheWorker)
+	cancelApptUseCase := usecase.ProvideCancelApptUC(dbRepository, bus)
+	createLeaveUseCase := usecase.ProvideCreateLeaveUC(dbRepository, bus)
+	cancelLeaveUseCase := usecase.ProvideCancelLeaveUC(dbRepository, bus)
+	adminToggleCheckInUseCase := usecase.ProvideAdminToggleCheckInUC(dbRepository, bus)
+	adminCreateLeaveUseCase := usecase.ProvideAdminCreateLeaveUC(dbRepository, bus)
+	adminRestoreFromLeaveUseCase := usecase.ProvideAdminRestoreFromLeaveUC(dbRepository, bus)
+	adminCreateWalkInUseCase := usecase.ProvideAdminCreateWalkInUC(dbRepository, bus)
 	adminQueryStudentsUseCase := usecase.ProvideAdminQueryStudentsUC(dbRepository)
-	autoMarkAbsentUseCase := usecase.ProvideAutoMarkAbsentUC(dbRepository)
-	adminBatchUpdateAttendanceUseCase := usecase.ProvideAdminBatchUpdateAttendanceUC(dbRepository, cacheWorker)
+	autoMarkAbsentUseCase := usecase.ProvideAutoMarkAbsentUC(dbRepository, bus)
+	adminBatchUpdateAttendanceUseCase := usecase.ProvideAdminBatchUpdateAttendanceUC(dbRepository, bus)
 	readUseCase7 := usecase.ProvideQueryUserBookingsUC(dbRepository)
 	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
 	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
 	readUseCase8 := usecase.ProvideQueryAllUserApptStatsUC(dbRepository)
+	v := usecase.ProvideSubscribers(dbRepository)
 	idempotencyManager := usecase.ProvideIdempotencyManager()
 	registry := &usecase.Registry{
 		CreateTrainDate:            writeUseCase,
@@ -86,7 +95,8 @@ func InitializeWeb() web.WebService {
 		GetUserMonthlyStats:        getUserMonthlyStatsUseCase,
 		QueryTwoWeeksSchedule:      queryTwoWeeksScheduleUseCase,
 		QueryAllUserApptStats:      readUseCase8,
-		CacheWorker:                cacheWorker,
+		Bus:                        bus,
+		Subscribers:                v,
 		IdempotencyManager:         idempotencyManager,
 	}
 	bookingUseCaseSet := handler.NewBookingUseCaseSet(registry)
@@ -94,10 +104,10 @@ func InitializeWeb() web.WebService {
 	v2BookingUseCaseSet := handler.NewV2BookingUseCaseSet(registry)
 	config := ProvideWebConfig()
 	webService := web.InitWeb(bookingUseCaseSet, trainingUseCaseSet, v2BookingUseCaseSet, registry, config)
-	return webService
+	return webService, nil
 }
 
-func InitializeMCP() mcp.Server {
+func InitializeMCP() (mcp.Server, error) {
 	dbRepository := db.NewDbRepoAndIdGenerate()
 	trainDateService := service.NewTrainDateService(dbRepository)
 	serviceAggregator := usecase.ServiceAggregator{
@@ -113,24 +123,30 @@ func InitializeMCP() mcp.Server {
 	readUseCase4 := usecase.ProvideUserQueryTrainByIDUC(dbRepository)
 	readUseCase5 := usecase.ProvideAdminQueryTrainRangeUC(dbRepository)
 	readUseCase6 := usecase.ProvideAdminQueryRecentTrainUC(dbRepository)
-	cacheWorker := usecase.NewCacheWorker(dbRepository)
-	createApptUseCase := usecase.ProvideCreateApptUC(dbRepository, cacheWorker)
-	adminCheckInUseCase := usecase.ProvideAdminCheckInUC(dbRepository, cacheWorker)
+	database := ProvideDatabase()
+	eventStore, err := event.ProvideEventStore(database)
+	if err != nil {
+		return nil, err
+	}
+	bus := event.ProvideEventBus(eventStore)
+	createApptUseCase := usecase.ProvideCreateApptUC(dbRepository, bus)
+	adminCheckInUseCase := usecase.ProvideAdminCheckInUC(dbRepository, bus)
 	checkInUseCase := usecase.ProvideCheckInUC(adminCheckInUseCase)
-	cancelApptUseCase := usecase.ProvideCancelApptUC(dbRepository, cacheWorker)
-	createLeaveUseCase := usecase.ProvideCreateLeaveUC(dbRepository, cacheWorker)
-	cancelLeaveUseCase := usecase.ProvideCancelLeaveUC(dbRepository, cacheWorker)
-	adminToggleCheckInUseCase := usecase.ProvideAdminToggleCheckInUC(dbRepository, cacheWorker)
-	adminCreateLeaveUseCase := usecase.ProvideAdminCreateLeaveUC(dbRepository, cacheWorker)
-	adminRestoreFromLeaveUseCase := usecase.ProvideAdminRestoreFromLeaveUC(dbRepository, cacheWorker)
-	adminCreateWalkInUseCase := usecase.ProvideAdminCreateWalkInUC(dbRepository, cacheWorker)
+	cancelApptUseCase := usecase.ProvideCancelApptUC(dbRepository, bus)
+	createLeaveUseCase := usecase.ProvideCreateLeaveUC(dbRepository, bus)
+	cancelLeaveUseCase := usecase.ProvideCancelLeaveUC(dbRepository, bus)
+	adminToggleCheckInUseCase := usecase.ProvideAdminToggleCheckInUC(dbRepository, bus)
+	adminCreateLeaveUseCase := usecase.ProvideAdminCreateLeaveUC(dbRepository, bus)
+	adminRestoreFromLeaveUseCase := usecase.ProvideAdminRestoreFromLeaveUC(dbRepository, bus)
+	adminCreateWalkInUseCase := usecase.ProvideAdminCreateWalkInUC(dbRepository, bus)
 	adminQueryStudentsUseCase := usecase.ProvideAdminQueryStudentsUC(dbRepository)
-	autoMarkAbsentUseCase := usecase.ProvideAutoMarkAbsentUC(dbRepository)
-	adminBatchUpdateAttendanceUseCase := usecase.ProvideAdminBatchUpdateAttendanceUC(dbRepository, cacheWorker)
+	autoMarkAbsentUseCase := usecase.ProvideAutoMarkAbsentUC(dbRepository, bus)
+	adminBatchUpdateAttendanceUseCase := usecase.ProvideAdminBatchUpdateAttendanceUC(dbRepository, bus)
 	readUseCase7 := usecase.ProvideQueryUserBookingsUC(dbRepository)
 	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
 	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
 	readUseCase8 := usecase.ProvideQueryAllUserApptStatsUC(dbRepository)
+	v := usecase.ProvideSubscribers(dbRepository)
 	idempotencyManager := usecase.ProvideIdempotencyManager()
 	registry := &usecase.Registry{
 		CreateTrainDate:            writeUseCase,
@@ -160,15 +176,16 @@ func InitializeMCP() mcp.Server {
 		GetUserMonthlyStats:        getUserMonthlyStatsUseCase,
 		QueryTwoWeeksSchedule:      queryTwoWeeksScheduleUseCase,
 		QueryAllUserApptStats:      readUseCase8,
-		CacheWorker:                cacheWorker,
+		Bus:                        bus,
+		Subscribers:                v,
 		IdempotencyManager:         idempotencyManager,
 	}
-	v := toolSet()
-	server := mcp.InitMcpServer(registry, v)
-	return server
+	v2 := toolSet()
+	server := mcp.InitMcpServer(registry, v2)
+	return server, nil
 }
 
-func GetUseCaseRegistry() *usecase.Registry {
+func GetUseCaseRegistry() (*usecase.Registry, error) {
 	dbRepository := db.NewDbRepoAndIdGenerate()
 	trainDateService := service.NewTrainDateService(dbRepository)
 	serviceAggregator := usecase.ServiceAggregator{
@@ -184,24 +201,30 @@ func GetUseCaseRegistry() *usecase.Registry {
 	readUseCase4 := usecase.ProvideUserQueryTrainByIDUC(dbRepository)
 	readUseCase5 := usecase.ProvideAdminQueryTrainRangeUC(dbRepository)
 	readUseCase6 := usecase.ProvideAdminQueryRecentTrainUC(dbRepository)
-	cacheWorker := usecase.NewCacheWorker(dbRepository)
-	createApptUseCase := usecase.ProvideCreateApptUC(dbRepository, cacheWorker)
-	adminCheckInUseCase := usecase.ProvideAdminCheckInUC(dbRepository, cacheWorker)
+	database := ProvideDatabase()
+	eventStore, err := event.ProvideEventStore(database)
+	if err != nil {
+		return nil, err
+	}
+	bus := event.ProvideEventBus(eventStore)
+	createApptUseCase := usecase.ProvideCreateApptUC(dbRepository, bus)
+	adminCheckInUseCase := usecase.ProvideAdminCheckInUC(dbRepository, bus)
 	checkInUseCase := usecase.ProvideCheckInUC(adminCheckInUseCase)
-	cancelApptUseCase := usecase.ProvideCancelApptUC(dbRepository, cacheWorker)
-	createLeaveUseCase := usecase.ProvideCreateLeaveUC(dbRepository, cacheWorker)
-	cancelLeaveUseCase := usecase.ProvideCancelLeaveUC(dbRepository, cacheWorker)
-	adminToggleCheckInUseCase := usecase.ProvideAdminToggleCheckInUC(dbRepository, cacheWorker)
-	adminCreateLeaveUseCase := usecase.ProvideAdminCreateLeaveUC(dbRepository, cacheWorker)
-	adminRestoreFromLeaveUseCase := usecase.ProvideAdminRestoreFromLeaveUC(dbRepository, cacheWorker)
-	adminCreateWalkInUseCase := usecase.ProvideAdminCreateWalkInUC(dbRepository, cacheWorker)
+	cancelApptUseCase := usecase.ProvideCancelApptUC(dbRepository, bus)
+	createLeaveUseCase := usecase.ProvideCreateLeaveUC(dbRepository, bus)
+	cancelLeaveUseCase := usecase.ProvideCancelLeaveUC(dbRepository, bus)
+	adminToggleCheckInUseCase := usecase.ProvideAdminToggleCheckInUC(dbRepository, bus)
+	adminCreateLeaveUseCase := usecase.ProvideAdminCreateLeaveUC(dbRepository, bus)
+	adminRestoreFromLeaveUseCase := usecase.ProvideAdminRestoreFromLeaveUC(dbRepository, bus)
+	adminCreateWalkInUseCase := usecase.ProvideAdminCreateWalkInUC(dbRepository, bus)
 	adminQueryStudentsUseCase := usecase.ProvideAdminQueryStudentsUC(dbRepository)
-	autoMarkAbsentUseCase := usecase.ProvideAutoMarkAbsentUC(dbRepository)
-	adminBatchUpdateAttendanceUseCase := usecase.ProvideAdminBatchUpdateAttendanceUC(dbRepository, cacheWorker)
+	autoMarkAbsentUseCase := usecase.ProvideAutoMarkAbsentUC(dbRepository, bus)
+	adminBatchUpdateAttendanceUseCase := usecase.ProvideAdminBatchUpdateAttendanceUC(dbRepository, bus)
 	readUseCase7 := usecase.ProvideQueryUserBookingsUC(dbRepository)
 	getUserMonthlyStatsUseCase := usecase.ProvideGetUserMonthlyStatsUC(dbRepository)
 	queryTwoWeeksScheduleUseCase := usecase.ProvideQueryTwoWeeksScheduleUC(dbRepository)
 	readUseCase8 := usecase.ProvideQueryAllUserApptStatsUC(dbRepository)
+	v := usecase.ProvideSubscribers(dbRepository)
 	idempotencyManager := usecase.ProvideIdempotencyManager()
 	registry := &usecase.Registry{
 		CreateTrainDate:            writeUseCase,
@@ -231,13 +254,18 @@ func GetUseCaseRegistry() *usecase.Registry {
 		GetUserMonthlyStats:        getUserMonthlyStatsUseCase,
 		QueryTwoWeeksSchedule:      queryTwoWeeksScheduleUseCase,
 		QueryAllUserApptStats:      readUseCase8,
-		CacheWorker:                cacheWorker,
+		Bus:                        bus,
+		Subscribers:                v,
 		IdempotencyManager:         idempotencyManager,
 	}
-	return registry
+	return registry, nil
 }
 
 // wire.go:
+
+func ProvideDatabase() *mongo.Database {
+	return mgo.GetDatabase()
+}
 
 func toolSet() []server.ServerTool {
 	return []server.ServerTool{tool.ProvideCreateTrainingCoursesTool(), tool.ProvideDeleteLeaveByIdTool(), tool.ProvideQueryLeaveByDateTool(), tool.ProvideQueryTrainingByRangeTool()}

@@ -3,10 +3,13 @@ package write
 import (
 	"context"
 	"errors"
+	"time"
 
+	"seanAIgent/internal/booking/domain"
 	"seanAIgent/internal/booking/domain/entity"
 	"seanAIgent/internal/booking/domain/repository"
 	"seanAIgent/internal/booking/usecase/core"
+	"seanAIgent/internal/event"
 )
 
 type ReqCreateLeave struct {
@@ -21,17 +24,18 @@ type createLeaveUseCaseRepo interface {
 	repository.AppointmentRepository
 	repository.TrainRepository
 	repository.StatsRepository
+	repository.IdentityGenerator
 }
 
 type createLeaveUseCase struct {
 	repo createLeaveUseCaseRepo
-	cw   cacheWorker
+	bus  event.Bus
 }
 
-func NewCreateLeaveUseCase(repo createLeaveUseCaseRepo, cw cacheWorker) CreateLeaveUseCase {
+func NewCreateLeaveUseCase(repo createLeaveUseCaseRepo, bus event.Bus) CreateLeaveUseCase {
 	return &createLeaveUseCase{
 		repo: repo,
-		cw:   cw,
+		bus:  bus,
 	}
 }
 
@@ -62,6 +66,7 @@ func (uc *createLeaveUseCase) Execute(
 		return nil, ErrCreateLeaveTrainDateNotFound.Wrap(err)
 	}
 
+	oldStatus := appt.Status().String()
 	err = appt.AppendLeaveRecord(req.Reason, trainDate.Period().Start())
 	if err != nil {
 		return nil, core.NewUseCaseError("CREATE_LEAVE", "DOMAIN_FAIL", "目前時間不允許執行請假操作", core.ErrInvalidInput).Wrap(err)
@@ -80,8 +85,20 @@ func (uc *createLeaveUseCase) Execute(
 		return nil, ErrCreateLeaveSaveLeaveFail.Wrap(err)
 	}
 
-	// 使用同步清理，確保跳轉頁面後資料一致
-	uc.cw.CleanSync(ctx, req.User.UserID(), appt.TrainingID(), trainDate.Period().Start())
+	// 手動清理快取
+	_ = uc.repo.CleanTrainCache(ctx, req.User.UserID())
+	_ = uc.repo.CleanStatsCache(ctx, req.User.UserID(), trainDate.Period().Start().Year(), int(trainDate.Period().Start().Month()))
+
+	// 發送領域事件
+	evt := event.NewTypedEvent(uc.repo.GenerateID(), domain.TopicAppointmentStatusChanged, domain.AppointmentStatusChanged{
+		BookingID:  appt.ID(),
+		UserID:     appt.User().UserID(),
+		TrainingID: appt.TrainingID(),
+		OldStatus:  oldStatus,
+		NewStatus:  appt.Status().String(),
+		OccurredAt: time.Now(),
+	})
+	uc.bus.Publish(ctx, evt)
 
 	return appt, nil
 }

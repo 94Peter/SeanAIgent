@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"seanAIgent/internal/booking/domain"
 	"seanAIgent/internal/booking/domain/entity"
 	readAppt "seanAIgent/internal/booking/usecase/appointment/read"
 	writeAppt "seanAIgent/internal/booking/usecase/appointment/write"
@@ -9,6 +10,7 @@ import (
 	readStats "seanAIgent/internal/booking/usecase/stats/read"
 	readTrain "seanAIgent/internal/booking/usecase/traindate/read"
 	writeTrain "seanAIgent/internal/booking/usecase/traindate/write"
+	"seanAIgent/internal/event"
 )
 
 type Registry struct {
@@ -45,12 +47,15 @@ type Registry struct {
 	QueryTwoWeeksSchedule readTrain.QueryTwoWeeksScheduleUseCase
 	QueryAllUserApptStats core.ReadUseCase[readStats.ReqQueryAllUserApptStats, []*entity.UserApptStats]
 
-	CacheWorker        CacheWorker
+	Bus                event.Bus
+	Subscribers        []event.Subscriber
 	IdempotencyManager IdempotencyManager
 }
 
 func (r *Registry) Start(ctx context.Context) {
-	if r.CacheWorker != nil {
-		r.CacheWorker.Start(ctx)
+	if r.Bus != nil {
+		for _, s := range r.Subscribers {
+			r.Bus.Subscribe(domain.TopicAppointmentStatusChanged, s)
+		}
 	}
 }

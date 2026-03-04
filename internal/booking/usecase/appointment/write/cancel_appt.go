@@ -3,10 +3,13 @@ package write
 import (
 	"context"
 	"errors"
+	"time"
 
+	"seanAIgent/internal/booking/domain"
 	"seanAIgent/internal/booking/domain/entity"
 	"seanAIgent/internal/booking/domain/repository"
 	"seanAIgent/internal/booking/usecase/core"
+	"seanAIgent/internal/event"
 )
 
 type ReqCancelAppt struct {
@@ -20,18 +23,19 @@ type cancelApptUseCaseRepo interface {
 	repository.AppointmentRepository
 	repository.TrainRepository
 	repository.StatsRepository
+	repository.IdentityGenerator
 }
 
-func NewCancelApptUseCase(repo cancelApptUseCaseRepo, cw cacheWorker) CancelApptUseCase {
+func NewCancelApptUseCase(repo cancelApptUseCaseRepo, bus event.Bus) CancelApptUseCase {
 	return &cancelApptUseCase{
 		repo: repo,
-		cw:   cw,
+		bus:  bus,
 	}
 }
 
 type cancelApptUseCase struct {
 	repo cancelApptUseCaseRepo
-	cw   cacheWorker
+	bus  event.Bus
 }
 
 func (uc *cancelApptUseCase) Name() string {
@@ -48,6 +52,8 @@ func (uc *cancelApptUseCase) Execute(
 		}
 		return nil, ErrCancelApptFindApptFail.Wrap(repoErr)
 	}
+	
+	oldStatus := appt.Status().String()
 	err := appt.CancelAsMistake(req.UserID)
 	if err != nil {
 		return nil, ErrCancelApptCancelApptFail.Wrap(err)
@@ -72,8 +78,20 @@ func (uc *cancelApptUseCase) Execute(
 		return nil, ErrCancelApptDeleteApptFail.Wrap(repoErr)
 	}
 
-	// 使用同步清理，確保跳轉頁面後資料一致
-	uc.cw.CleanSync(ctx, req.UserID, appt.TrainingID(), trainDate.Period().Start())
+	// 手動清理快取
+	_ = uc.repo.CleanTrainCache(ctx, req.UserID)
+	_ = uc.repo.CleanStatsCache(ctx, req.UserID, trainDate.Period().Start().Year(), int(trainDate.Period().Start().Month()))
+
+	// 發送領域事件
+	evt := event.NewTypedEvent(uc.repo.GenerateID(), domain.TopicAppointmentStatusChanged, domain.AppointmentStatusChanged{
+		BookingID:  appt.ID(),
+		UserID:     appt.User().UserID(),
+		TrainingID: appt.TrainingID(),
+		OldStatus:  oldStatus,
+		NewStatus:  "Canceled",
+		OccurredAt: time.Now(),
+	})
+	uc.bus.Publish(ctx, evt)
 
 	return appt, nil
 }

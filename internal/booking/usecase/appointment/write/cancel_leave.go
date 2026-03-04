@@ -3,9 +3,13 @@ package write
 import (
 	"context"
 	"errors"
+	"time"
+
+	"seanAIgent/internal/booking/domain"
 	"seanAIgent/internal/booking/domain/entity"
 	"seanAIgent/internal/booking/domain/repository"
 	"seanAIgent/internal/booking/usecase/core"
+	"seanAIgent/internal/event"
 )
 
 type ReqCancelLeave struct {
@@ -19,12 +23,13 @@ type cancelLeaveUseCaseRepo interface {
 	repository.TrainRepository
 	repository.AppointmentRepository
 	repository.StatsRepository
+	repository.IdentityGenerator
 }
 
-func NewCancelLeaveUseCase(repo cancelLeaveUseCaseRepo, cw cacheWorker) CancelLeaveUseCase {
+func NewCancelLeaveUseCase(repo cancelLeaveUseCaseRepo, bus event.Bus) CancelLeaveUseCase {
 	return &cancelLeaveUseCase{
 		repo: repo,
-		cw:   cw,
+		bus:  bus,
 	}
 }
 
@@ -45,7 +50,7 @@ var (
 
 type cancelLeaveUseCase struct {
 	repo cancelLeaveUseCaseRepo
-	cw   cacheWorker
+	bus  event.Bus
 }
 
 func (uc *cancelLeaveUseCase) Name() string {
@@ -68,6 +73,7 @@ func (uc *cancelLeaveUseCase) Execute(
 		return nil, ErrCancelLeaveTrainDateNotFound.Wrap(repoErr)
 	}
 
+	oldStatus := appt.Status().String()
 	// 這裡會檢查 req.UserID 是否為預約本人
 	err := appt.CancelLeave(req.UserID)
 	if err != nil {
@@ -87,8 +93,20 @@ func (uc *cancelLeaveUseCase) Execute(
 		return nil, ErrCancelLeaveUpdateApptFail.Wrap(repoErr)
 	}
 
-	// 使用同步清理，確保跳轉頁面後資料一致
-	uc.cw.CleanSync(ctx, appt.User().UserID(), appt.TrainingID(), trainDate.Period().Start())
+	// 手動清理快取
+	_ = uc.repo.CleanTrainCache(ctx, appt.User().UserID())
+	_ = uc.repo.CleanStatsCache(ctx, appt.User().UserID(), trainDate.Period().Start().Year(), int(trainDate.Period().Start().Month()))
+
+	// 發送領域事件
+	evt := event.NewTypedEvent(uc.repo.GenerateID(), domain.TopicAppointmentStatusChanged, domain.AppointmentStatusChanged{
+		BookingID:  appt.ID(),
+		UserID:     appt.User().UserID(),
+		TrainingID: appt.TrainingID(),
+		OldStatus:  oldStatus,
+		NewStatus:  appt.Status().String(),
+		OccurredAt: time.Now(),
+	})
+	uc.bus.Publish(ctx, evt)
 
 	return appt, nil
 }

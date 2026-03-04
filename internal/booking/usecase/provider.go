@@ -5,12 +5,14 @@ import (
 	"seanAIgent/internal/booking/domain/entity"
 	"seanAIgent/internal/booking/domain/repository"
 	"seanAIgent/internal/booking/domain/service"
+	"seanAIgent/internal/booking/infra"
 	readAppt "seanAIgent/internal/booking/usecase/appointment/read"
 	writeAppt "seanAIgent/internal/booking/usecase/appointment/write"
 	"seanAIgent/internal/booking/usecase/core"
 	readStats "seanAIgent/internal/booking/usecase/stats/read"
 	readTrain "seanAIgent/internal/booking/usecase/traindate/read"
 	writeTrain "seanAIgent/internal/booking/usecase/traindate/write"
+	"seanAIgent/internal/event"
 
 	"github.com/google/wire"
 )
@@ -66,15 +68,15 @@ func ProvideUserQueryTrainByIDUC(
 // Appointment UseCase
 
 func ProvideCreateApptUC(
-	repo Repository, cw CacheWorker,
+	repo Repository, bus event.Bus,
 ) writeAppt.CreateApptUseCase {
-	return core.WithWriteOTel(writeAppt.NewCreateApptUseCase(repo, cw))
+	return core.WithWriteOTel(writeAppt.NewCreateApptUseCase(repo, bus))
 }
 
 func ProvideCancelApptUC(
-	repo Repository, cw CacheWorker,
+	repo Repository, bus event.Bus,
 ) writeAppt.CancelApptUseCase {
-	return core.WithWriteOTel(writeAppt.NewCancelApptUseCase(repo, cw))
+	return core.WithWriteOTel(writeAppt.NewCancelApptUseCase(repo, bus))
 }
 
 func ProvideCheckInUC(
@@ -84,33 +86,33 @@ func ProvideCheckInUC(
 }
 
 func ProvideAdminCheckInUC(
-	repo Repository, cw CacheWorker,
+	repo Repository, bus event.Bus,
 ) writeAppt.AdminCheckInUseCase {
-	return core.WithWriteOTel(writeAppt.NewAdminCheckInUseCase(repo, cw))
+	return core.WithWriteOTel(writeAppt.NewAdminCheckInUseCase(repo, bus))
 }
 
 func ProvideAdminToggleCheckInUC(
-	repo Repository, cw CacheWorker,
+	repo Repository, bus event.Bus,
 ) writeAppt.AdminToggleCheckInUseCase {
-	return core.WithWriteOTel(writeAppt.NewAdminToggleCheckInUseCase(repo, cw))
+	return core.WithWriteOTel(writeAppt.NewAdminToggleCheckInUseCase(repo, bus))
 }
 
 func ProvideAdminCreateLeaveUC(
-	repo Repository, cw CacheWorker,
+	repo Repository, bus event.Bus,
 ) writeAppt.AdminCreateLeaveUseCase {
-	return core.WithWriteOTel(writeAppt.NewAdminCreateLeaveUseCase(repo, cw))
+	return core.WithWriteOTel(writeAppt.NewAdminCreateLeaveUseCase(repo, bus))
 }
 
 func ProvideAdminRestoreFromLeaveUC(
-	repo Repository, cw CacheWorker,
+	repo Repository, bus event.Bus,
 ) writeAppt.AdminRestoreFromLeaveUseCase {
-	return core.WithWriteOTel(writeAppt.NewAdminRestoreFromLeaveUseCase(repo, cw))
+	return core.WithWriteOTel(writeAppt.NewAdminRestoreFromLeaveUseCase(repo, bus))
 }
 
 func ProvideAdminCreateWalkInUC(
-	repo Repository, cw CacheWorker,
+	repo Repository, bus event.Bus,
 ) writeAppt.AdminCreateWalkInUseCase {
-	return core.WithWriteOTel(writeAppt.NewAdminCreateWalkInUseCase(repo, cw))
+	return core.WithWriteOTel(writeAppt.NewAdminCreateWalkInUseCase(repo, bus))
 }
 
 func ProvideAdminQueryStudentsUC(
@@ -120,15 +122,15 @@ func ProvideAdminQueryStudentsUC(
 }
 
 func ProvideAutoMarkAbsentUC(
-	repo Repository,
+	repo Repository, bus event.Bus,
 ) writeAppt.AutoMarkAbsentUseCase {
-	return core.WithWriteOTel(writeAppt.NewAutoMarkAbsentUseCase(repo))
+	return core.WithWriteOTel(writeAppt.NewAutoMarkAbsentUseCase(repo, bus))
 }
 
 func ProvideAdminBatchUpdateAttendanceUC(
-	repo Repository, cw CacheWorker,
+	repo Repository, bus event.Bus,
 ) writeAppt.AdminBatchUpdateAttendanceUseCase {
-	return core.WithWriteOTel(writeAppt.NewAdminBatchUpdateAttendanceUseCase(repo, cw))
+	return core.WithWriteOTel(writeAppt.NewAdminBatchUpdateAttendanceUseCase(repo, bus))
 }
 
 func ProvideQueryUserBookingsUC(
@@ -138,15 +140,15 @@ func ProvideQueryUserBookingsUC(
 }
 
 func ProvideCreateLeaveUC(
-	repo Repository, cw CacheWorker,
+	repo Repository, bus event.Bus,
 ) writeAppt.CreateLeaveUseCase {
-	return core.WithWriteOTel(writeAppt.NewCreateLeaveUseCase(repo, cw))
+	return core.WithWriteOTel(writeAppt.NewCreateLeaveUseCase(repo, bus))
 }
 
 func ProvideCancelLeaveUC(
-	repo Repository, cw CacheWorker,
+	repo Repository, bus event.Bus,
 ) writeAppt.CancelLeaveUseCase {
-	return core.WithWriteOTel(writeAppt.NewCancelLeaveUseCase(repo, cw))
+	return core.WithWriteOTel(writeAppt.NewCancelLeaveUseCase(repo, bus))
 }
 
 func ProvideFindNearestTrainByTimeUC(
@@ -191,6 +193,14 @@ func ProvideQueryAllUserApptStatsUC(
 	return core.WithReadOTel(readStats.NewQueryAllUserApptStatsUseCase(repo))
 }
 
+func ProvideSubscribers(
+	repo Repository,
+) []event.Subscriber {
+	return []event.Subscriber{
+		infra.NewCacheSubscriber(repo, repo),
+	}
+}
+
 var UseCaseSet = wire.NewSet(
 	ProvideCreateTrainDateUC,
 	ProvideBatchCreateTrainDateUC,
@@ -222,7 +232,8 @@ var UseCaseSet = wire.NewSet(
 	ProvideQueryTwoWeeksScheduleUC,
 	ProvideQueryAllUserApptStatsUC,
 
-	NewCacheWorker,
+	ProvideSubscribers,
+	event.EventSet,
 	ProvideIdempotencyManager,
 
 	wire.Struct(new(ServiceAggregator), "*"),

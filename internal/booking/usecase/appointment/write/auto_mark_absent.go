@@ -4,6 +4,7 @@ import (
 	"context"
 	"seanAIgent/internal/booking/domain/repository"
 	"seanAIgent/internal/booking/usecase/core"
+	"seanAIgent/internal/event"
 	"time"
 )
 
@@ -14,12 +15,16 @@ type autoMarkAbsentUseCaseRepo interface {
 	repository.AppointmentRepository
 }
 
-func NewAutoMarkAbsentUseCase(repo autoMarkAbsentUseCaseRepo) AutoMarkAbsentUseCase {
-	return &autoMarkAbsentUseCase{repo: repo}
+func NewAutoMarkAbsentUseCase(repo autoMarkAbsentUseCaseRepo, bus event.Bus) AutoMarkAbsentUseCase {
+	return &autoMarkAbsentUseCase{
+		repo: repo,
+		bus:  bus,
+	}
 }
 
 type autoMarkAbsentUseCase struct {
 	repo autoMarkAbsentUseCaseRepo
+	bus  event.Bus
 }
 
 func (uc *autoMarkAbsentUseCase) Name() string {
