@@ -6,6 +6,7 @@ import (
 	"seanAIgent/internal/booking/domain/repository"
 
 	"github.com/94peter/vulpes/db/mgo"
+	"github.com/94peter/vulpes/log"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -50,6 +51,51 @@ func (s *statsRepoImpl) UpsertUserMonthlyStats(ctx context.Context, stat *entity
 		ctx, filter, update, options.UpdateOne().SetUpsert(true),
 	)
 	if err != nil {
+		return newInternalError(op, err)
+	}
+	return nil
+}
+
+func (s *statsRepoImpl) UpsertManyUserMonthlyStats(ctx context.Context, stats []*entity.UserMonthlyStat) repository.RepoError {
+	if len(stats) == 0 {
+		return nil
+	}
+	const op = "upsert_many_user_monthly_stats"
+	bulk, err := mgo.NewBulkOperation(userMonthlyStatsCol)
+	if err != nil {
+		return newInternalError(op, err)
+	}
+
+	validCount := 0
+	for _, stat := range stats {
+		// 1. 執行實體級別的驗證
+		if err := stat.Validate(); err != nil {
+			// 紀錄錯誤並跳過該筆，不影響其他資料
+			log.Errorf("%s: skipping invalid stat for user %s (%d/%d): %v", op, stat.UserID, stat.Year, stat.Month, err)
+			continue
+		}
+
+		filter := bson.M{
+			"year":    stat.Year,
+			"month":   stat.Month,
+			"user_id": stat.UserID,
+		}
+		update := bson.M{
+			"$set": stat,
+		}
+		bulk.UpdateOne(filter, update)
+		validCount++
+	}
+
+	if validCount == 0 {
+		return nil
+	}
+
+	// 2. 執行批次寫入
+	_, err = bulk.Execute(ctx)
+	if err != nil {
+		// 這裡如果是 MongoDB 網路錯誤，會整批失敗，這是合理的 (需要重試)
+		// 如果是資料約束錯誤 (如重複 Key)，因為我們用的是 Upsert，風險較低
 		return newInternalError(op, err)
 	}
 	return nil

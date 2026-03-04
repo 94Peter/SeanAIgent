@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"errors"
 	"time"
 )
 
@@ -24,4 +25,21 @@ func NewUserMonthlyStat(userID, userName string, year, month int) *UserMonthlySt
 		Month:         month,
 		LastUpdatedAt: time.Now(),
 	}
+}
+
+func (s *UserMonthlyStat) Validate() error {
+	if s.UserID == "" {
+		return errors.New("user_id is required")
+	}
+	if s.Year < 2024 || s.Month < 1 || s.Month > 12 {
+		return errors.New("invalid year or month")
+	}
+	if s.TotalBookings < 0 || s.AttendedCount < 0 || s.AbsentCount < 0 || s.LeaveCount < 0 {
+		return errors.New("counters cannot be negative")
+	}
+	// 邏輯檢查：總數不應小於各項分類總和
+	if s.TotalBookings < (s.AttendedCount + s.AbsentCount + s.LeaveCount) {
+		return errors.New("total bookings mismatch with status counters")
+	}
+	return nil
 }

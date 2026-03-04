@@ -10,6 +10,7 @@ import (
 	writeAppt "seanAIgent/internal/booking/usecase/appointment/write"
 	"seanAIgent/internal/booking/usecase/core"
 	readStats "seanAIgent/internal/booking/usecase/stats/read"
+	writeStats "seanAIgent/internal/booking/usecase/stats/write"
 	readTrain "seanAIgent/internal/booking/usecase/traindate/read"
 	writeTrain "seanAIgent/internal/booking/usecase/traindate/write"
 	"seanAIgent/internal/event"
@@ -28,7 +29,7 @@ type ServiceAggregator struct {
 	service.TrainDateService
 }
 
-// 為每個 UseCase 定義一個包裝過的 Provider
+// 為每個 UseCase 定定義一個包裝過的 Provider
 func ProvideCreateTrainDateUC(
 	repo Repository, svc ServiceAggregator,
 ) core.WriteUseCase[writeTrain.ReqCreateTrainDate, *entity.TrainDate] {
@@ -193,11 +194,18 @@ func ProvideQueryAllUserApptStatsUC(
 	return core.WithReadOTel(readStats.NewQueryAllUserApptStatsUseCase(repo))
 }
 
+func ProvideBatchSyncMonthlyStatsUC(
+	repo Repository,
+) writeStats.BatchSyncMonthlyStatsUseCase {
+	return core.WithWriteOTel(writeStats.NewBatchSyncMonthlyStatsUseCase(repo))
+}
+
 func ProvideSubscribers(
 	repo Repository,
 ) []event.Subscriber {
 	return []event.Subscriber{
 		infra.NewCacheSubscriber(repo, repo),
+		infra.NewUserMonthlyStatsSubscriber(repo, repo),
 	}
 }
 
@@ -231,6 +239,7 @@ var UseCaseSet = wire.NewSet(
 	ProvideGetUserMonthlyStatsUC,
 	ProvideQueryTwoWeeksScheduleUC,
 	ProvideQueryAllUserApptStatsUC,
+	ProvideBatchSyncMonthlyStatsUC,
 
 	ProvideSubscribers,
 	event.EventSet,

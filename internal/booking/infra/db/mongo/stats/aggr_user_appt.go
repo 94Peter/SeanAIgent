@@ -5,6 +5,7 @@ import (
 	"seanAIgent/internal/booking/domain/entity"
 	"seanAIgent/internal/booking/domain/repository"
 	"seanAIgent/internal/booking/infra/db/mongo/core"
+	"time"
 
 	"github.com/94peter/vulpes/db/mgo"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -140,4 +141,100 @@ func (*statsRepoImpl) GetUserApptStats(
 
 func (*statsRepoImpl) CleanStatsCache(ctx context.Context, userID string, year, month int) repository.RepoError {
 	return nil
+}
+
+func (s *statsRepoImpl) AggregateUserMonthlyStats(ctx context.Context, userID string, year, month int) (*entity.UserMonthlyStat, repository.RepoError) {
+	results, err := s.aggregateMonthlyStats(ctx, userID, year, month)
+	if err != nil {
+		return nil, err
+	}
+	if len(results) == 0 {
+		return entity.NewUserMonthlyStat(userID, "", year, month), nil
+	}
+	return results[0], nil
+}
+
+func (s *statsRepoImpl) AggregateAllUsersMonthlyStats(ctx context.Context, year, month int) ([]*entity.UserMonthlyStat, repository.RepoError) {
+	return s.aggregateMonthlyStats(ctx, "", year, month)
+}
+
+func (s *statsRepoImpl) aggregateMonthlyStats(ctx context.Context, userID string, year, month int) ([]*entity.UserMonthlyStat, repository.RepoError) {
+	const op = "aggregate_monthly_stats"
+	
+	start := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.Local)
+	end := start.AddDate(0, 1, 0).Add(-time.Nanosecond)
+
+	match := bson.M{
+		"start_date": bson.M{"$gte": start, "$lte": end},
+	}
+
+	pipe := mongo.Pipeline{
+		{{"$match", match}},
+		{{"$lookup", bson.D{
+			{"from", "appointment"},
+			{"localField", "_id"},
+			{"foreignField", "training_date_id"},
+			{"as", "appointments"},
+		}}},
+		{{"$unwind", "$appointments"}},
+	}
+
+	if userID != "" {
+		pipe = append(pipe, bson.D{{"$match", bson.M{"appointments.user_id": userID}}})
+	}
+
+	pipe = append(pipe, mongo.Pipeline{
+		{{"$group", bson.D{
+			{"_id", "$appointments.user_id"},
+			{"user_name", bson.D{{"$first", "$appointments.user_name"}}},
+			{"total_bookings", bson.D{{"$sum", 1}}},
+			{"attended_count", bson.D{
+				{"$sum", bson.D{
+					{"$cond", bson.D{
+						{"if", bson.M{"$eq": []interface{}{"$appointments.status", "ATTENDED"}}},
+						{"then", 1},
+						{"else", 0},
+					}},
+				}},
+			}},
+			{"absent_count", bson.D{
+				{"$sum", bson.D{
+					{"$cond", bson.D{
+						{"if", bson.M{"$eq": []interface{}{"$appointments.status", "ABSENT"}}},
+						{"then", 1},
+						{"else", 0},
+					}},
+				}},
+			}},
+			{"leave_count", bson.D{
+				{"$sum", bson.D{
+					{"$cond", bson.D{
+						{"if", bson.M{"$eq": []interface{}{"$appointments.status", "CANCELLED_LEAVE"}}},
+						{"then", 1},
+						{"else", 0},
+					}},
+				}},
+			}},
+		}}},
+		{{"$project", bson.D{
+			{"_id", 0},
+			{"user_id", "$_id"},
+			{"user_name", "$user_name"},
+			{"year", bson.D{{"$literal", year}}},
+			{"month", bson.D{{"$literal", month}}},
+			{"total_bookings", "$total_bookings"},
+			{"attended_count", "$attended_count"},
+			{"absent_count", "$absent_count"},
+			{"leave_count", "$leave_count"},
+			{"last_updated_at", bson.D{{"$literal", time.Now()}}},
+		}}},
+	}...)
+
+	results, err := mgo.PipeFindByPipeline[*entity.UserMonthlyStat](
+		ctx, "training_date", pipe, 10000,
+	)
+	if err != nil {
+		return nil, newInternalError(op, err)
+	}
+	return results, nil
 }

@@ -18,11 +18,11 @@
 - [x] Wire 依賴注入設定
 
 ### Phase 2: 事件訂閱者與計算邏輯
-- [ ] 實作 `UserMonthlyStatsSubscriber`
-    - [ ] 監聽 `AppointmentStatusChanged` 事件
-    - [ ] 核心運算: 執行單一用戶的 Aggregation Pipe
-    - [ ] 資料持久化: 呼叫 Repo 寫入 `user_monthly_stats` 集合
-- [ ] 實作 `BatchSyncMonthlyStatsUseCase` (供手動或 Cron 全量校準使用)
+- [x] 實作 `UserMonthlyStatsSubscriber`
+    - [x] 監聽 `AppointmentStatusChanged` 事件
+    - [x] 核心運算: 執行單一用戶的 Aggregation Pipe
+    - [x] 資料持久化: 呼叫 Repo 寫入 `user_monthly_stats` 集合
+- [x] 實作 `BatchSyncMonthlyStatsUseCase` (供手動或 Cron 全量校準使用)
 
 ### Phase 3: 狀態連動 (透過事件)
 - [ ] 在 `AdminBatchUpdateAttendance` 成功後發送事件

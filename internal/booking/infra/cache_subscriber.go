@@ -23,9 +23,14 @@ func NewCacheSubscriber(repo repository.TrainRepository, statsRepo repository.St
 		bgCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
+		if p.TrainingID == "" {
+			log.Warnf("CacheSubscriber: TrainingID is empty for booking %s, might be legacy event. Skipping.", p.BookingID)
+			return nil
+		}
+
 		trainDate, err := repo.FindTrainDateByID(bgCtx, p.TrainingID)
 		if err != nil {
-			return fmt.Errorf("CacheSubscriber: find traindate fail: %w", err)
+			return fmt.Errorf("CacheSubscriber: find traindate fail (ID: %s): %w", p.TrainingID, err)
 		}
 
 		startTime := trainDate.Period().Start()
