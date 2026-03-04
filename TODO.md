@@ -10,12 +10,12 @@
 ## 📊 經營分析與數據報表優化 (預聚合快照表方案)
 
 ### Phase 1: 基礎建設 & 資料庫設計
-- [ ] 定義 `UserMonthlyStat` Domain Entity 與 JSON 結構
-- [ ] 實作 `StatsRepository` (MongoDB)
-    - [ ] `UpsertUserMonthlyStats`: 更新或新增單一用戶月統計
-    - [ ] `FindMonthlyStats`: 支援年份、月份、分頁、搜尋
-    - [ ] 建立資料庫索引: `{ year: 1, month: 1, user_id: 1 }`
-- [ ] Wire 依賴注入設定
+- [x] 定義 `UserMonthlyStat` Domain Entity 與 JSON 結構
+- [x] 實作 `StatsRepository` (MongoDB)
+    - [x] `UpsertUserMonthlyStats`: 更新或新增單一用戶月統計
+    - [x] `FindMonthlyStats`: 支援年份、月份、分頁、搜尋
+    - [x] 建立資料庫索引: `{ year: 1, month: 1, user_id: 1 }`
+- [x] Wire 依賴注入設定
 
 ### Phase 2: 事件訂閱者與計算邏輯
 - [ ] 實作 `UserMonthlyStatsSubscriber`

@@ -33,4 +33,8 @@ type StatsRepository interface {
 		ctx context.Context, userID string, filter FilterUserApptStats,
 	) (*entity.UserApptStats, RepoError)
 	CleanStatsCache(ctx context.Context, userID string, year, month int) RepoError
+
+	// Phase 1: 預聚合統計表相關操作
+	UpsertUserMonthlyStats(ctx context.Context, stat *entity.UserMonthlyStat) RepoError
+	FindMonthlyStats(ctx context.Context, year, month int, skip, limit int64, search string) ([]*entity.UserMonthlyStat, int64, RepoError)
 }
