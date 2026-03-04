@@ -37,6 +37,7 @@ func NewAdminApi(registry *usecase.Registry) handler.WebAPI {
 		getUserMonthlyStatsUC:        registry.GetUserMonthlyStats,
 		queryMonthlyUserReportsUC:    registry.QueryMonthlyUserReports,
 		getBusinessAnalyticsUC:       registry.GetBusinessAnalytics,
+		getUserDetailUC:              registry.GetUserDetail,
 	}
 }
 
@@ -54,6 +55,7 @@ type adminAPI struct {
 	getUserMonthlyStatsUC        readStats.GetUserMonthlyStatsUseCase
 	queryMonthlyUserReportsUC    readStats.QueryMonthlyUserReportsUseCase
 	getBusinessAnalyticsUC       readStats.GetBusinessAnalyticsUseCase
+	getUserDetailUC              readStats.GetUserDetailUseCase
 	once                         sync.Once
 }
 
@@ -80,8 +82,67 @@ func (api *adminAPI) adminGroup(r ezapi.Router) {
 
 	r.GET("/v2/admin/users/report", api.getUserReport)
 	r.GET("/:lang/v2/admin/users/report", api.getUserReport)
+	r.GET("/v2/admin/users/report/export", api.exportUserReport)
 	r.GET("/v2/admin/users/:userId", api.getUserDetail)
 	r.GET("/:lang/v2/admin/users/:userId", api.getUserDetail)
+}
+
+func (api *adminAPI) exportUserReport(c *gin.Context) {
+	now := time.Now()
+	yearStr := c.DefaultQuery("year", fmt.Sprintf("%d", now.Year()))
+	monthStr := c.DefaultQuery("month", fmt.Sprintf("%d", int(now.Month())))
+
+	var year, month int
+	fmt.Sscanf(yearStr, "%d", &year)
+	fmt.Sscanf(monthStr, "%d", &month)
+
+	// 1. 獲取該月所有資料 (不分頁)
+	resp, err := api.queryMonthlyUserReportsUC.Execute(c.Request.Context(), readStats.ReqQueryMonthlyUserReports{
+		Year:  year,
+		Month: month,
+		Page:  1,
+		Limit: 1000, // 假設單月家長不超過 1000 位
+	})
+
+	if err != nil {
+		handler.ErrorHandler(c, err)
+		return
+	}
+
+	// 2. 生成 CSV 內容
+	fileName := fmt.Sprintf("SeanAIgent_Report_%d_%02d.csv", year, month)
+	c.Writer.Header().Set("Content-Type", "text/csv; charset=utf-8")
+	c.Writer.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileName))
+	
+	// 寫入 UTF-8 BOM 以免 Excel 亂碼
+	c.Writer.Write([]byte{0xEF, 0xBB, 0xBF})
+
+	fmt.Fprintln(c.Writer, "家長姓名,UserID,孩子姓名,總預約,出席次數,請假次數,缺席次數,出席率")
+
+	for _, u := range resp.UserStats {
+		// 寫入家長匯總列
+		parentRate := 0.0
+		if u.TotalBookings > 0 {
+			parentRate = float64(u.AttendedCount) / float64(u.TotalBookings)
+		}
+		fmt.Fprintf(c.Writer, "%s,%s,---(家長匯總)---,%d,%d,%d,%d,%.2f%%\n",
+			u.UserName, u.UserID, u.TotalBookings, u.AttendedCount, u.LeaveCount, u.AbsentCount, parentRate*100)
+
+		// 寫入孩子明細列
+		for _, child := range u.Children {
+			childRate := 0.0
+			if child.TotalBookings > 0 {
+				childRate = float64(child.AttendedCount) / float64(child.TotalBookings)
+			}
+			fmt.Fprintf(c.Writer, ",,%s,%d,%d,%d,%d,%.2f%%\n",
+				child.ChildName, child.TotalBookings, child.AttendedCount, child.LeaveCount, child.AbsentCount, childLimitRate(childRate)*100)
+		}
+	}
+}
+
+func childLimitRate(rate float64) float64 {
+	if rate > 1.0 { return 1.0 }
+	return rate
 }
 
 func apptToRecord(appt *entity.Appointment) *admin.CheckinRecord {
@@ -458,52 +519,60 @@ func (api *adminAPI) getUserDetail(c *gin.Context) {
 	userID := c.Param("userId")
 	monthQuery := c.DefaultQuery("month", "all")
 
-	allMonthlyRecords := []*admin.UserMonthlyRecord{
-		{
-			MonthDisplay: "2026年 2月",
-			MonthValue:   "2026-02",
-			Bookings: []*admin.ChildBookingRecord{
-				{ChildName: "小明", Date: "02/24 (週二)", Time: "14:00", Location: "TKU 操場", Status: "CheckedIn"},
-				{ChildName: "小紅", Date: "02/24 (週二)", Time: "14:00", Location: "TKU 操場", Status: "CheckedIn"},
-				{ChildName: "小明", Date: "02/16 (週一)", Time: "18:30", Location: "中和運動中心", Status: "Absent"},
-				{ChildName: "小紅", Date: "02/24 (週二)", Time: "14:00", Location: "TKU 操場", Status: "Leave"},
-			},
-		},
-		{
-			MonthDisplay: "2026年 1月",
-			MonthValue:   "2026-01",
-			Bookings: []*admin.ChildBookingRecord{
-				{ChildName: "小明", Date: "01/20 (週二)", Time: "14:00", Location: "TKU 操場", Status: "CheckedIn"},
-				{ChildName: "小紅", Date: "01/13 (週二)", Time: "14:00", Location: "TKU 操場", Status: "CheckedIn"},
-			},
-		},
-	}
-
-	overallStats := &admin.UserOverallStats{
-		TotalBookings:  45,
-		TotalAttended:  38,
-		TotalLeave:     4,
-		TotalAbsent:    3,
-		AttendanceRate: 0.92,
+	resp, err := api.getUserDetailUC.Execute(c.Request.Context(), readStats.ReqGetUserDetail{
+		UserID: userID,
+	})
+	if err != nil {
+		handler.ErrorHandler(c, err)
+		return
 	}
 
 	var filteredRecords []*admin.UserMonthlyRecord
 	var filterStats *admin.UserOverallStats
+	availableMonths := make([]string, 0, len(resp.MonthlyRecords))
+
+	for _, r := range resp.MonthlyRecords {
+		availableMonths = append(availableMonths, r.MonthValue)
+	}
 
 	if monthQuery == "all" {
-		filteredRecords = allMonthlyRecords
-		filterStats = overallStats
+		// 轉換所有記錄
+		for _, r := range resp.MonthlyRecords {
+			bookings := make([]*admin.ChildBookingRecord, 0, len(r.Bookings))
+			for _, b := range r.Bookings {
+				bookings = append(bookings, &admin.ChildBookingRecord{
+					ChildName: b.ChildName,
+					Date:      b.Date,
+					Time:      b.Time,
+					Location:  b.Location,
+					Status:    b.Status,
+				})
+			}
+			filteredRecords = append(filteredRecords, &admin.UserMonthlyRecord{
+				MonthDisplay: r.MonthDisplay,
+				MonthValue:   r.MonthValue,
+				Bookings:     bookings,
+			})
+		}
+		filterStats = &admin.UserOverallStats{
+			TotalBookings:  resp.OverallStats.TotalBookings,
+			TotalAttended:  resp.OverallStats.TotalAttended,
+			TotalLeave:     resp.OverallStats.TotalLeave,
+			TotalAbsent:    resp.OverallStats.TotalAbsent,
+			AttendanceRate: resp.OverallStats.AttendanceRate,
+		}
 	} else {
-		var selectedMonth *admin.UserMonthlyRecord
-		for _, r := range allMonthlyRecords {
+		// 找出特定月份
+		var selectedMonth *readStats.UserMonthlyRecordVO
+		for _, r := range resp.MonthlyRecords {
 			if r.MonthValue == monthQuery {
 				selectedMonth = r
-				filteredRecords = append(filteredRecords, r)
 				break
 			}
 		}
 
 		if selectedMonth != nil {
+			bookings := make([]*admin.ChildBookingRecord, 0, len(selectedMonth.Bookings))
 			var b, a, l, abs int
 			for _, rec := range selectedMonth.Bookings {
 				b++
@@ -515,10 +584,22 @@ func (api *adminAPI) getUserDetail(c *gin.Context) {
 				case "Absent":
 					abs++
 				}
+				bookings = append(bookings, &admin.ChildBookingRecord{
+					ChildName: rec.ChildName,
+					Date:      rec.Date,
+					Time:      rec.Time,
+					Location:  rec.Location,
+					Status:    rec.Status,
+				})
 			}
+			filteredRecords = append(filteredRecords, &admin.UserMonthlyRecord{
+				MonthDisplay: selectedMonth.MonthDisplay,
+				MonthValue:   selectedMonth.MonthValue,
+				Bookings:     bookings,
+			})
 			rate := 0.0
-			if b-l > 0 {
-				rate = float64(a) / float64(b-l)
+			if b > 0 {
+				rate = float64(a) / float64(b)
 			}
 			filterStats = &admin.UserOverallStats{
 				TotalBookings:  b,
@@ -533,10 +614,10 @@ func (api *adminAPI) getUserDetail(c *gin.Context) {
 	}
 
 	model := &admin.UserDetailModel{
-		UserID:          userID,
-		LineDisplayName: "Peter_Admin",
+		UserID:          resp.UserID,
+		LineDisplayName: resp.LineDisplayName,
 		CurrentMonth:    monthQuery,
-		AvailableMonths: []string{"2026-02", "2026-01"},
+		AvailableMonths: availableMonths,
 		FilterStats:     filterStats,
 		MonthlyRecords:  filteredRecords,
 	}

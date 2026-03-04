@@ -43,7 +43,7 @@ func getPipeline(q bson.M, userID string) mongo.Pipeline {
 			{"checked_in_count", bson.D{
 				{"$sum", bson.D{
 					{"$cond", bson.D{
-						{"if", "$appointments.is_checked_in"},
+						{"if", bson.M{"$eq": []interface{}{"$appointments.status", "ATTENDED"}}},
 						{"then", 1},
 						{"else", 0},
 					}},
@@ -52,7 +52,7 @@ func getPipeline(q bson.M, userID string) mongo.Pipeline {
 			{"on_leave_count", bson.D{
 				{"$sum", bson.D{
 					{"$cond", bson.D{
-						{"if", "$appointments.is_on_leave"},
+						{"if", bson.M{"$eq": []interface{}{"$appointments.status", "CANCELLED_LEAVE"}}},
 						{"then", 1},
 						{"else", 0},
 					}},
@@ -65,8 +65,27 @@ func getPipeline(q bson.M, userID string) mongo.Pipeline {
 				{"startDate", "$start_date"},
 				{"endDate", "$end_date"},
 				{"timezone", "$timezone"},
-				{"isCheckedIn", "$appointments.is_checked_in"},
-				{"isOnLeave", "$appointments.is_on_leave"},
+				{"isCheckedIn", bson.D{
+					{"$cond", bson.D{
+						{"if", bson.M{"$eq": []interface{}{"$appointments.status", "ATTENDED"}}},
+						{"then", true},
+						{"else", false},
+					}},
+				}},
+				{"isOnLeave", bson.D{
+					{"$cond", bson.D{
+						{"if", bson.M{"$eq": []interface{}{"$appointments.status", "CANCELLED_LEAVE"}}},
+						{"then", true},
+						{"else", false},
+					}},
+				}},
+				{"isAbsent", bson.D{
+					{"$cond", bson.D{
+						{"if", bson.M{"$eq": []interface{}{"$appointments.status", "ABSENT"}}},
+						{"then", true},
+						{"else", false},
+					}},
+				}},
 			}}}},
 		}}},
 		{{"$sort", bson.D{{"_id.user_name", 1}, {"_id.child_name", 1}}}},
@@ -161,7 +180,9 @@ func (s *statsRepoImpl) AggregateAllUsersMonthlyStats(ctx context.Context, year,
 func (s *statsRepoImpl) aggregateMonthlyStats(ctx context.Context, userID string, year, month int) ([]*entity.UserMonthlyStat, repository.RepoError) {
 	const op = "aggregate_monthly_stats"
 	
-	start := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.Local)
+	// 強制使用台北時間計算月初與月底
+	taipeiLoc := time.FixedZone("Asia/Taipei", 8*60*60)
+	start := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, taipeiLoc)
 	end := start.AddDate(0, 1, 0).Add(-time.Nanosecond)
 
 	match := bson.M{

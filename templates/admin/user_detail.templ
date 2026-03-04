@@ -50,42 +50,48 @@ templ UserDetail(model *UserDetailModel) {
 		<div class="p-4 space-y-6">
 			<!-- User Profile Card -->
 			@card.Card(card.Props{ Class: "bg-[#1C1C1E] border-[#27272A]" }) {
-				@card.Content(card.ContentProps{ Class: "p-6" }) {
+				@card.Content(card.ContentProps{ Class: "p-4 sm:p-6" }) {
 					<div class="flex items-center gap-4 mb-6">
-						<div class="w-16 h-16 rounded-full bg-gradient-to-br from-[#FFD700] to-[#B8860B] flex items-center justify-center text-black text-2xl font-bold">
-							{ model.LineDisplayName[0:1] }
+						<div class="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[#FFD700] to-[#B8860B] flex items-center justify-center text-black text-xl sm:text-2xl font-bold">
+							if len(model.LineDisplayName) > 0 {
+								{ model.LineDisplayName[0:1] }
+							}
 						</div>
 						<div>
-							<h2 class="text-2xl font-bold text-white">{ model.LineDisplayName }</h2>
-							<div class="flex items-center gap-2 mt-1">
-								<span class="text-xs px-2 py-0.5 rounded bg-[#FFD700] text-black font-bold uppercase tracking-wider">
+							<h2 class="text-xl sm:text-2xl font-bold text-white leading-tight">{ model.LineDisplayName }</h2>
+							<div class="flex flex-wrap items-center gap-2 mt-1">
+								<span class="text-[9px] px-1.5 py-0.5 rounded bg-[#FFD700] text-black font-bold uppercase tracking-wider">
 									if model.CurrentMonth == "all" || model.CurrentMonth == "" {
 										累積統計
 									} else {
 										{ model.CurrentMonth } 統計
 									}
 								</span>
-								<span class="text-[10px] text-[#525252] font-mono">ID: { model.UserID }</span>
+								<span class="text-[9px] text-[#525252] font-mono">ID: { model.UserID }</span>
 							</div>
 						</div>
 					</div>
 
-					<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-[#27272A]">
-						<div>
-							<div class="text-[10px] text-[#8E8E93] uppercase mb-1">預約次數</div>
-							<div class="text-xl font-mono font-bold">{ fmt.Sprintf("%d", model.FilterStats.TotalBookings) }</div>
+					<div class="flex items-start justify-between w-full pt-6 border-t border-[#27272A] gap-2 overflow-x-auto no-scrollbar">
+						<div class="flex-1 min-w-0 text-center sm:text-left">
+							<div class="text-xs text-[#8E8E93] uppercase mb-1 truncate">預約次數</div>
+							<div class="text-xl font-mono font-bold text-white leading-none">{ fmt.Sprintf("%d", model.FilterStats.TotalBookings) }</div>
 						</div>
-						<div>
-							<div class="text-[10px] text-[#8E8E93] uppercase mb-1">出席次數</div>
-							<div class="text-xl font-mono font-bold text-[#34D399]">{ fmt.Sprintf("%d", model.FilterStats.TotalAttended) }</div>
+						<div class="flex-1 min-w-0 text-center sm:text-left">
+							<div class="text-xs text-[#8E8E93] uppercase mb-1 truncate">出席次數</div>
+							<div class="text-xl font-mono font-bold text-[#34D399] leading-none">{ fmt.Sprintf("%d", model.FilterStats.TotalAttended) }</div>
 						</div>
-						<div>
-							<div class="text-[10px] text-[#8E8E93] uppercase mb-1">請假紀錄</div>
-							<div class="text-xl font-mono font-bold text-[#F59E0B]">{ fmt.Sprintf("%d", model.FilterStats.TotalLeave) }</div>
+						<div class="flex-1 min-w-0 text-center sm:text-left">
+							<div class="text-xs text-[#8E8E93] uppercase mb-1 truncate">請假紀錄</div>
+							<div class="text-xl font-mono font-bold text-[#F59E0B] leading-none">{ fmt.Sprintf("%d", model.FilterStats.TotalLeave) }</div>
 						</div>
-						<div>
-							<div class="text-[10px] text-[#8E8E93] uppercase mb-1">出席率</div>
-							<div class="text-xl font-mono font-bold text-[#60A5FA]">{ fmt.Sprintf("%d%%", int(model.FilterStats.AttendanceRate*100)) }</div>
+						<div class="flex-1 min-w-0 text-center sm:text-left">
+							<div class="text-xs text-[#8E8E93] uppercase mb-1 truncate">缺席次數</div>
+							<div class="text-xl font-mono font-bold text-[#EF4444] leading-none">{ fmt.Sprintf("%d", model.FilterStats.TotalAbsent) }</div>
+						</div>
+						<div class="flex-1 min-w-0 text-center sm:text-left">
+							<div class="text-xs text-[#8E8E93] uppercase mb-1 truncate">出席率</div>
+							<div class="text-xl font-mono font-bold text-[#60A5FA] leading-none">{ fmt.Sprintf("%d%%", int(model.FilterStats.AttendanceRate*100)) }</div>
 						</div>
 					</div>
 				}

@@ -43,4 +43,7 @@ type StatsRepository interface {
 
 	// GetHistoricalAnalytics 獲取全域經營趨勢數據
 	GetHistoricalAnalytics(ctx context.Context, monthsLimit int) ([]*entity.MonthlyBusinessStat, RepoError)
+
+	// FindUserMonthlyStats 獲取特定用戶的所有月份統計
+	FindUserMonthlyStats(ctx context.Context, userID string) ([]*entity.UserMonthlyStat, RepoError)
 }

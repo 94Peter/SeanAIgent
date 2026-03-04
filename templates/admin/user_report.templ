@@ -55,14 +55,30 @@ templ UserReport(model *UserReportModel) {
 					<p class="text-sm text-[#8E8E93]">依家長帳號彙整統計</p>
 				</div>
 				<div class="flex gap-2 w-full sm:w-auto">
-					<button class="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[#1C1C1E] border border-[#3A3A3C] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#2C2C2E] transition-colors">
-						@icon.Calendar(icon.Props{Size: 16})
-						切換月份
-					</button>
-					<button class="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[#06C755] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#05B04B] transition-colors">
+					<div class="relative flex-1 sm:flex-none">
+						<!-- 使用 JS showPicker() 確保 100% 觸發 -->
+						<button 
+							type="button"
+							onclick="this.nextElementSibling.showPicker()"
+							class="w-full flex items-center justify-center gap-2 bg-[#1C1C1E] border border-[#3A3A3C] px-4 py-2 rounded-lg text-sm font-semibold text-[#FFD700] hover:bg-[#2C2C2E] hover:border-[#FFD700]/50 transition-all cursor-pointer shadow-lg min-w-[140px]"
+						>
+							@icon.Calendar(icon.Props{Size: 18})
+							<span>{ fmt.Sprintf("%d年 %02d月", model.Year, model.Month) }</span>
+						</button>
+						<input 
+							type="month" 
+							value={ fmt.Sprintf("%d-%02d", model.Year, model.Month) }
+							onchange="const [y, m] = this.value.split('-'); window.location.href='?year=' + y + '&month=' + parseInt(m);"
+							class="absolute inset-0 w-full h-full opacity-0 pointer-events-none"
+						/>
+					</div>
+					<a 
+						href={ templ.URL(fmt.Sprintf("/v2/admin/users/report/export?year=%d&month=%d", model.Year, model.Month)) }
+						class="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[#06C755] px-4 py-2 rounded-lg text-sm font-semibold text-white hover:bg-[#05B04B] transition-colors shadow-lg"
+					>
 						@icon.Download(icon.Props{Size: 16})
 						匯出 CSV
-					</button>
+					</a>
 				</div>
 			</header>
 

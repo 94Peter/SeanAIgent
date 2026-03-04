@@ -29,4 +29,5 @@ type appointmentInfo struct {
 	Capacity        int       `json:"capacity"`
 	IsCheckedIn     bool      `json:"is_checked_in"`
 	IsOnLeave       bool      `json:"is_on_leave"`
+	IsAbsent        bool      `json:"is_absent"`
 }

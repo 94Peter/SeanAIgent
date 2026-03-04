@@ -50,6 +50,7 @@ type Registry struct {
 	BatchSyncMonthlyStats writeStats.BatchSyncMonthlyStatsUseCase
 	QueryMonthlyUserReports readStats.QueryMonthlyUserReportsUseCase
 	GetBusinessAnalytics    readStats.GetBusinessAnalyticsUseCase
+	GetUserDetail           readStats.GetUserDetailUseCase
 
 	Bus                event.Bus
 	Subscribers        []event.Subscriber

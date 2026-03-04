@@ -83,7 +83,7 @@ func (s *statsRepoImpl) UpsertManyUserMonthlyStats(ctx context.Context, stats []
 		update := bson.M{
 			"$set": stat,
 		}
-		bulk.UpdateOne(filter, update)
+		bulk.UpsertOne(filter, update)
 		validCount++
 	}
 
@@ -177,5 +177,23 @@ func (s *statsRepoImpl) GetHistoricalAnalytics(ctx context.Context, monthsLimit 
 		return nil, newInternalError(op, err)
 	}
 
+	return results, nil
+}
+
+func (s *statsRepoImpl) FindUserMonthlyStats(ctx context.Context, userID string) ([]*entity.UserMonthlyStat, repository.RepoError) {
+	const op = "find_user_monthly_stats"
+	filter := bson.M{"user_id": userID}
+	
+	opts := options.Find().SetSort(bson.D{{Key: "year", Value: -1}, {Key: "month", Value: -1}})
+	cursor, err := mgo.GetDatabase().Collection(userMonthlyStatsCol).Find(ctx, filter, opts)
+	if err != nil {
+		return nil, newInternalError(op, err)
+	}
+	defer cursor.Close(ctx)
+
+	var results []*entity.UserMonthlyStat
+	if err := cursor.All(ctx, &results); err != nil {
+		return nil, newInternalError(op, err)
+	}
 	return results, nil
 }

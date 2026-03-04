@@ -44,7 +44,6 @@ func (b *internalBus) Publish(ctx context.Context, e Event) {
 	// 1. 持久化事件 (稽核與防丟)
 	if err := b.store.Save(ctx, e); err != nil {
 		log.Printf("EventBus: fail to save event %s: %v", e.ID(), err)
-		// 即使存檔失敗也繼續嘗試發送即時訊息，但會紀錄錯誤
 	}
 
 	b.mu.RLock()
@@ -56,7 +55,8 @@ func (b *internalBus) Publish(ctx context.Context, e Event) {
 	}
 
 	for _, s := range subs {
-		go b.handleEvent(ctx, s, e)
+		// 重要：使用 context.Background() 確保異步處理不會因為 Web 請求結束而被取消
+		go b.handleEvent(context.Background(), s, e)
 	}
 }
 
