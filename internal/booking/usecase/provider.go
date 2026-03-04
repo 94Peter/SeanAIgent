@@ -125,6 +125,12 @@ func ProvideAutoMarkAbsentUC(
 	return core.WithWriteOTel(writeAppt.NewAutoMarkAbsentUseCase(repo))
 }
 
+func ProvideAdminBatchUpdateAttendanceUC(
+	repo Repository, cw CacheWorker,
+) writeAppt.AdminBatchUpdateAttendanceUseCase {
+	return core.WithWriteOTel(writeAppt.NewAdminBatchUpdateAttendanceUseCase(repo, cw))
+}
+
 func ProvideQueryUserBookingsUC(
 	repo Repository,
 ) core.ReadUseCase[readAppt.ReqQueryUserBookings, *readAppt.RespQueryUserBookings] {
@@ -205,6 +211,7 @@ var UseCaseSet = wire.NewSet(
 	ProvideAdminCreateWalkInUC,
 	ProvideAdminQueryStudentsUC,
 	ProvideAutoMarkAbsentUC,
+	ProvideAdminBatchUpdateAttendanceUC,
 	ProvideQueryUserBookingsUC,
 	ProvideCancelLeaveUC,
 	ProvideCreateLeaveUC,

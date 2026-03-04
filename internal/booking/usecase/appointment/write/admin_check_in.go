@@ -116,7 +116,9 @@ func (uc *adminToggleCheckInUseCase) Execute(ctx context.Context, req ReqAdminTo
 	}
 
 	if appt.Status() == entity.StatusAttended {
-		appt.AdminRestoreFromLeave() // Reverts to StatusConfirmed
+		if err := appt.AdminRestoreFromLeave(train.Period().Start()); err != nil {
+			return nil, ErrCheckInDomainError.Wrap(err)
+		}
 	} else {
 		if err := appt.AdminCheckIn(train.Period().Start()); err != nil {
 			if errors.Is(err, entity.ErrAppointmentCheckInNotOpen) {

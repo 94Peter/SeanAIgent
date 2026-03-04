@@ -9,6 +9,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"encoding/json"
 	"fmt"
 	"seanAIgent/components/csrf"
 	"seanAIgent/components/icon"
@@ -21,16 +22,26 @@ type CheckinPageModel struct {
 	Location    string
 	Capacity    int
 	Bookings    []*CheckinRecord
+	IsStarted   bool
 }
 
 type CheckinRecord struct {
 	BookingID   string
 	ChildName   string
 	ParentName  string
-	Status      string // "Pending", "CheckedIn", "Leave"
+	Status      string // "Pending", "CheckedIn", "Leave", "Absent"
 	IsWalkIn    bool
 	IsGuest     bool
 	ContactInfo string
+}
+
+func (m *CheckinPageModel) GetInitialJSON() string {
+	data := make(map[string]string)
+	for _, b := range m.Bookings {
+		data[b.BookingID] = b.Status
+	}
+	b, _ := json.Marshal(data)
+	return string(b)
 }
 
 func AdminCheckin(model *CheckinPageModel) templ.Component {
@@ -54,7 +65,20 @@ func AdminCheckin(model *CheckinPageModel) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<style>\n\t\t[x-cloak] { display: none !important; }\n\t\t.htmx-indicator { display: none; }\n\t\t.htmx-request .htmx-indicator { display: inline; }\n\t\t.htmx-request.disabled { pointer-events: none; opacity: 0.6; }\n\t</style><div class=\"w-full min-h-screen bg-[#000000] text-white font-sans pb-32\" x-data=\"checkinManager()\"><!-- Sticky Header --><div class=\"sticky top-0 z-50 bg-[#121212]/95 backdrop-blur-md border-b border-[#27272A] p-4\"><div class=\"flex items-center justify-between mb-4\"><div class=\"flex items-center gap-3\"><a href=\"/v2/admin/dashboard\" class=\"text-[#8E8E93] active:scale-90 transition-transform\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<style>\n\t\t[x-cloak] { display: none !important; }\n\t\t.btn-status-active { @apply scale-95 opacity-100 ring-2 ring-white/20; }\n\t</style><div class=\"w-full min-h-screen bg-[#000000] text-white font-sans pb-32\" x-data=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var2 string
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("checkinManager(%s, '%s', %t)", model.GetInitialJSON(), model.SessionID, model.IsStarted))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 46, Col: 112}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\"><!-- Sticky Header --><div class=\"sticky top-0 z-50 bg-[#121212]/95 backdrop-blur-md border-b border-[#27272A] p-4\"><div class=\"flex items-center justify-between mb-4\"><div class=\"flex items-center gap-3\"><a href=\"/v2/admin/dashboard\" class=\"text-[#8E8E93] active:scale-90 transition-transform\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -62,86 +86,74 @@ func AdminCheckin(model *CheckinPageModel) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</a><div><h1 class=\"text-lg font-bold text-[#FFD700]\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(model.DateDisplay)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 44, Col: 70}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</h1><p class=\"text-[10px] text-[#8E8E93] uppercase tracking-tighter\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</a><div><div class=\"flex items-center gap-2\"><h1 class=\"text-lg font-bold text-[#FFD700]\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(model.Location)
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(model.DateDisplay)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 45, Col: 87}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 57, Col: 71}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, " | ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</h1>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if !model.IsStarted {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<span class=\"bg-[#525252] text-white text-[8px] px-1.5 py-0.5 rounded font-black uppercase\">未開課</span>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div><p class=\"text-[10px] text-[#8E8E93] uppercase tracking-tighter\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(model.TimeDisplay)
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(model.Location)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 45, Col: 111}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 62, Col: 87}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</p></div></div><button @click=\"showAddModal = true\" class=\"bg-[#60A5FA] text-black px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-lg shadow-[#60A5FA]/20 active:scale-95 transition-all\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, " | ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icon.Plus(icon.Props{Size: 14}).Render(ctx, templ_7745c5c3_Buffer)
+		var templ_7745c5c3_Var5 string
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(model.TimeDisplay)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 62, Col: 111}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<span class=\"text-xs font-black\">臨時加人</span></button></div><!-- Overall Stats Counter --><div class=\"flex gap-4\" id=\"checkin-stats\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</p></div></div><div class=\"flex gap-2\"><button @click=\"submitBatch()\" :disabled=\"!hasChanges || !isStarted\" :class=\"(hasChanges && isStarted) ? 'bg-[#34D399] text-black shadow-lg shadow-[#34D399]/20' : 'bg-[#27272A] text-[#525252] opacity-50 cursor-not-allowed'\" class=\"px-4 py-2 rounded-xl flex items-center gap-2 transition-all active:scale-95\"><template x-if=\"submitting\"><span class=\"w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin\"></span></template><span class=\"text-sm font-black uppercase\">儲存變更</span></button> <button @click=\"showAddModal = true\" class=\"bg-[#27272A] text-white p-2 rounded-xl active:scale-95 border border-[#3F3F46]\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = CheckinStats(len(model.Bookings), 0, 0).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = icon.Plus(icon.Props{Size: 20}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div></div><div class=\"p-4 space-y-8\"><!-- Section: Regular & Walk-in List --><section class=\"space-y-3\"><div class=\"flex items-center gap-2 px-1\"><div class=\"w-1 h-4 bg-[#FFD700] rounded-full\"></div><h2 class=\"text-sm font-bold text-[#8E8E93] uppercase tracking-widest\">預約與點名清單</h2></div><div class=\"space-y-2\" id=\"active-list\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		for _, b := range model.Bookings {
-			if b.Status != "Leave" {
-				templ_7745c5c3_Err = CheckinRow(b).Render(ctx, templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-			}
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div></section><!-- Section: Leave List --><section class=\"space-y-3 pt-4 border-t border-[#27272A]\"><div class=\"flex items-center gap-2 px-1\"><div class=\"w-1 h-4 bg-[#F59E0B] rounded-full\"></div><h2 class=\"text-sm font-bold text-[#8E8E93] uppercase tracking-widest\">請假名單 (可還原)</h2></div><div class=\"space-y-2\" id=\"leave-list\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</button></div></div><!-- Overall Stats Counter (Calculated Locally) --><div class=\"grid grid-cols-4 gap-2\"><div class=\"bg-[#1C1C1E] border border-[#27272A] p-2 rounded-xl text-center\"><div class=\"text-[8px] text-[#8E8E93] uppercase font-bold mb-0.5\">總預約</div><div class=\"text-lg font-black text-white\" x-text=\"stats.total\">0</div></div><div class=\"bg-[#1C1C1E] border border-[#34D399]/30 p-2 rounded-xl text-center\"><div class=\"text-[8px] text-[#34D399] uppercase font-bold mb-0.5\">簽到</div><div class=\"text-lg font-black text-[#34D399]\" x-text=\"stats.attended\">0</div></div><div class=\"bg-[#1C1C1E] border border-[#F59E0B]/30 p-2 rounded-xl text-center\"><div class=\"text-[8px] text-[#F59E0B] uppercase font-bold mb-0.5\">請假</div><div class=\"text-lg font-black text-[#F59E0B]\" x-text=\"stats.leave\">0</div></div><div class=\"bg-[#1C1C1E] border border-[#EF4444]/30 p-2 rounded-xl text-center\"><div class=\"text-[8px] text-[#EF4444] uppercase font-bold mb-0.5\">缺席</div><div class=\"text-lg font-black text-[#EF4444]\" x-text=\"stats.absent\">0</div></div></div></div><div class=\"p-4 space-y-6\"><div class=\"space-y-3\"><div class=\"flex items-center justify-between px-1\"><div class=\"flex items-center gap-2\"><div class=\"w-1 h-4 bg-[#FFD700] rounded-full\"></div><h2 class=\"text-sm font-bold text-[#8E8E93] uppercase tracking-widest\">點名名冊</h2></div><template x-if=\"!isStarted\"><span class=\"text-[10px] text-[#FF6B6B] font-bold\">課程開始後方可點名</span></template><span class=\"text-[10px] text-[#525252]\" x-show=\"hasChanges && isStarted\">有尚未儲存的更動...</span></div><div class=\"space-y-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		for _, b := range model.Bookings {
-			if b.Status == "Leave" {
-				templ_7745c5c3_Err = LeaveRow(b).Render(ctx, templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
+			templ_7745c5c3_Err = BatchCheckinRow(b).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div></section></div><!-- Walk-in Modal -->")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div></div></div><!-- Walk-in Modal -->")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -149,7 +161,7 @@ func AdminCheckin(model *CheckinPageModel) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div style=\"display:none;\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<div style=\"display:none;\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -157,7 +169,7 @@ func AdminCheckin(model *CheckinPageModel) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</div><script src=\"https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js\" defer></script><script>\n\t\t\tdocument.body.addEventListener('htmx:configRequest', (evt) => {\n\t\t\t\tconst csrfInput = document.querySelector('input[name=\"_csrf\"]');\n\t\t\t\tif (csrfInput) {\n\t\t\t\t\tevt.detail.headers['X-CSRF-Token'] = csrfInput.value;\n\t\t\t\t}\n\t\t\t});\n\n\t\t\tfunction checkinManager() {\n\t\t\t\treturn {\n\t\t\t\t\tshowAddModal: false,\n\t\t\t\t\tinit() {\n\t\t\t\t\t\tthis.updateStats();\n\t\t\t\t\t\tdocument.body.addEventListener('htmx:afterOnLoad', () => {\n\t\t\t\t\t\t\tthis.updateStats();\n\t\t\t\t\t\t});\n\t\t\t\t\t},\n\t\t\t\t\tupdateStats() {\n\t\t\t\t\t\tconst checkedIn = document.querySelectorAll('[data-status=\"CheckedIn\"]').length;\n\t\t\t\t\t\tconst leave = document.querySelectorAll('[data-status=\"Leave\"]').length;\n\t\t\t\t\t\t// Optional: Update UI stats if needed, but HTMX OOB might handle this better\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t</script></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</div><script src=\"https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js\" defer></script><script>\n\t\t\tdocument.body.addEventListener('htmx:configRequest', (evt) => {\n\t\t\t\tconst csrfInput = document.querySelector('input[name=\"_csrf\"]');\n\t\t\t\tif (csrfInput) {\n\t\t\t\t\tevt.detail.headers['X-CSRF-Token'] = csrfInput.value;\n\t\t\t\t}\n\t\t\t});\n\n\t\t\tfunction checkinManager(initialData, sessionId, isStarted) {\n\t\t\t\treturn {\n\t\t\t\t\tattendance: initialData,\n\t\t\t\t\toriginal: JSON.parse(JSON.stringify(initialData)),\n\t\t\t\t\tsessionId: sessionId,\n\t\t\t\t\tisStarted: isStarted,\n\t\t\t\t\tshowAddModal: false,\n\t\t\t\t\tsubmitting: false,\n\t\t\t\t\t\n\t\t\t\t\tget hasChanges() {\n\t\t\t\t\t\treturn JSON.stringify(this.attendance) !== JSON.stringify(this.original);\n\t\t\t\t\t},\n\n\t\t\t\t\tget stats() {\n\t\t\t\t\t\tconst vals = Object.values(this.attendance);\n\t\t\t\t\t\treturn {\n\t\t\t\t\t\t\ttotal: vals.length,\n\t\t\t\t\t\t\tattended: vals.filter(v => v === 'CheckedIn').length,\n\t\t\t\t\t\t\tleave: vals.filter(v => v === 'Leave').length,\n\t\t\t\t\t\t\tabsent: vals.filter(v => v === 'Absent').length\n\t\t\t\t\t\t};\n\t\t\t\t\t},\n\n\t\t\t\t\tsetStatus(id, status) {\n\t\t\t\t\t\tif (!this.isStarted) return;\n\t\t\t\t\t\t// Toggle logic: if clicking the same status, revert to Pending\n\t\t\t\t\t\tif (this.attendance[id] === status) {\n\t\t\t\t\t\t\tthis.attendance[id] = 'Pending';\n\t\t\t\t\t\t} else {\n\t\t\t\t\t\t\tthis.attendance[id] = status;\n\t\t\t\t\t\t}\n\t\t\t\t\t},\n\n\t\t\t\t\tasync submitBatch() {\n\t\t\t\t\t\tif (this.submitting || !this.isStarted) return;\n\t\t\t\t\t\tthis.submitting = true;\n\t\t\t\t\t\t\n\t\t\t\t\t\tconst updates = Object.entries(this.attendance)\n\t\t\t\t\t\t\t.filter(([id, status]) => status !== this.original[id])\n\t\t\t\t\t\t\t.map(([id, status]) => ({ bookingId: id, status: status }));\n\n\t\t\t\t\t\ttry {\n\t\t\t\t\t\t\tconst response = await fetch('/v2/admin/checkin/batch-update', {\n\t\t\t\t\t\t\t\tmethod: 'POST',\n\t\t\t\t\t\t\t\theaders: {\n\t\t\t\t\t\t\t\t\t'Content-Type': 'application/json',\n\t\t\t\t\t\t\t\t\t'X-CSRF-Token': document.querySelector('input[name=\"_csrf\"]').value\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\tbody: JSON.stringify({\n\t\t\t\t\t\t\t\t\tsessionId: this.sessionId,\n\t\t\t\t\t\t\t\t\tupdates: updates\n\t\t\t\t\t\t\t\t})\n\t\t\t\t\t\t\t});\n\n\t\t\t\t\t\t\tif (response.ok) {\n\t\t\t\t\t\t\t\tthis.original = JSON.parse(JSON.stringify(this.attendance));\n\t\t\t\t\t\t\t\twindow.location.reload(); // Refresh to get fresh data\n\t\t\t\t\t\t\t} else {\n\t\t\t\t\t\t\t\tconst data = await response.json();\n\t\t\t\t\t\t\t\talert(data.message || '儲存失敗，請檢查時間限制');\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t} catch (e) {\n\t\t\t\t\t\t\talert('儲存出錯');\n\t\t\t\t\t\t} finally {\n\t\t\t\t\t\t\tthis.submitting = false;\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t</script></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -165,7 +177,7 @@ func AdminCheckin(model *CheckinPageModel) templ.Component {
 	})
 }
 
-func CheckinStats(total, attended, leave int) templ.Component {
+func BatchCheckinRow(b *CheckinRecord) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -181,362 +193,182 @@ func CheckinStats(total, attended, leave int) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var5 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var5 == nil {
-			templ_7745c5c3_Var5 = templ.NopComponent
+		templ_7745c5c3_Var6 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var6 == nil {
+			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div class=\"flex-1 bg-[#1C1C1E] border border-[#27272A] p-2 rounded-xl text-center\"><div class=\"text-[9px] text-[#8E8E93] uppercase font-bold mb-0.5\">預約總數</div><div class=\"text-xl font-black text-white\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var6 string
-		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", total))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 131, Col: 71}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</div></div><div class=\"flex-1 bg-[#1C1C1E] border border-[#34D399]/30 p-2 rounded-xl text-center\"><div class=\"text-[9px] text-[#34D399] uppercase font-bold mb-0.5\">現場簽到</div><div class=\"text-xl font-black text-[#34D399]\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div class=\"bg-[#1C1C1E] border border-[#27272A] rounded-2xl p-4 flex items-center justify-between transition-all\" :class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
-		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", attended))
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("attendance['%s'] === 'CheckedIn' ? 'border-[#34D399]/50 bg-[#34D399]/5' : (attendance['%s'] === 'Leave' || attendance['%s'] === 'Absent' ? 'opacity-60 border-dashed' : '')", b.BookingID, b.BookingID, b.BookingID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 135, Col: 78}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 218, Col: 236}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</div></div><div class=\"flex-1 bg-[#1C1C1E] border border-[#F59E0B]/30 p-2 rounded-xl text-center\"><div class=\"text-[9px] text-[#F59E0B] uppercase font-bold mb-0.5\">累計請假</div><div class=\"text-xl font-black text-[#F59E0B]\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\"><div class=\"flex items-center gap-3\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var8 string
-		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", leave))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 139, Col: 75}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
+		var templ_7745c5c3_Var8 = []any{"w-12 h-12 rounded-full flex items-center justify-center font-black text-lg " + cond(b.IsGuest, "bg-[#FF6B6B] text-black", cond(b.IsWalkIn, "bg-[#60A5FA] text-black", "bg-[#27272A] text-[#8E8E93]"))}
+		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var8...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<div class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		return nil
-	})
-}
-
-func CheckinRow(b *CheckinRecord) templ.Component {
-	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
-			return templ_7745c5c3_CtxErr
+		var templ_7745c5c3_Var9 string
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var8).String())
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 1, Col: 0}
 		}
-		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-		if !templ_7745c5c3_IsBuffer {
-			defer func() {
-				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err == nil {
-					templ_7745c5c3_Err = templ_7745c5c3_BufErr
-				}
-			}()
-		}
-		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var9 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var9 == nil {
-			templ_7745c5c3_Var9 = templ.NopComponent
-		}
-		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var10 = []any{"bg-[#1C1C1E] border rounded-2xl p-4 flex items-center justify-between transition-all " + cond(b.Status == "CheckedIn", "border-[#34D399]/50 bg-[#34D399]/5", "border-[#27272A]")}
-		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var10...)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div id=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var10 string
+		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(b.ChildName[0:1])
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 222, Col: 22}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</div><div><div class=\"flex items-center gap-2\"><span class=\"font-bold text-white text-lg\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var11 string
-		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs("row-" + b.BookingID)
+		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(b.ChildName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 145, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 226, Col: 61}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</span> ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if b.IsGuest {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<span class=\"text-[10px] text-[#FF6B6B] border border-[#FF6B6B] px-1.5 py-0.5 rounded font-bold\">體驗</span>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</div><p class=\"text-[10px] text-[#525252]\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var12 string
-		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var10).String())
+		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(b.ParentName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 1, Col: 0}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 231, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\" data-status=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, " 的孩子</p></div></div><div class=\"flex gap-1.5 bg-black/40 p-1.5 rounded-2xl border border-white/5\" :class=\"!isStarted ? 'opacity-20 grayscale pointer-events-none' : ''\"><!-- Attended --><button @click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var13 string
-		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(b.Status)
+		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("setStatus('%s', 'CheckedIn')", b.BookingID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 147, Col: 24}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 238, Col: 69}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "\"><div class=\"flex items-center gap-3\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\" class=\"w-11 h-11 rounded-xl flex items-center justify-center transition-all\" :class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var14 = []any{"w-12 h-12 rounded-full flex items-center justify-center font-black text-lg " + cond(b.IsGuest, "bg-[#FF6B6B] text-black", cond(b.IsWalkIn, "bg-[#60A5FA] text-black", "bg-[#27272A] text-[#8E8E93]"))}
-		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var14...)
+		var templ_7745c5c3_Var14 string
+		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("attendance['%s'] === 'CheckedIn' ? 'bg-[#34D399] text-black shadow-lg shadow-[#34D399]/20 scale-95' : 'text-[#525252] hover:bg-white/5'", b.BookingID))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 240, Col: 176}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<div class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = icon.Check(icon.Props{Size: 22}).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</button><!-- Leave --><button @click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var15 string
-		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var14).String())
+		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("setStatus('%s', 'Leave')", b.BookingID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 1, Col: 0}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 246, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "\" class=\"w-11 h-11 rounded-xl flex items-center justify-center transition-all\" :class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var16 string
-		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(b.ChildName[0:1])
+		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("attendance['%s'] === 'Leave' ? 'bg-[#F59E0B] text-black scale-95' : 'text-[#525252] hover:bg-white/5'", b.BookingID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 151, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 248, Col: 142}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</div><div><div class=\"flex items-center gap-2\"><span class=\"font-bold text-white text-lg\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "\"><span class=\"font-black text-sm\">假</span></button><!-- Absent --><button @click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var17 string
-		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(b.ChildName)
+		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("setStatus('%s', 'Absent')", b.BookingID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 155, Col: 61}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 254, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</span> ")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		if b.IsGuest {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<span class=\"text-[10px] text-[#FF6B6B] border border-[#FF6B6B] px-1.5 py-0.5 rounded font-bold\">體驗</span>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "</div><p class=\"text-[10px] text-[#525252]\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "\" class=\"w-11 h-11 rounded-xl flex items-center justify-center transition-all\" :class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var18 string
-		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(b.ParentName)
+		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("attendance['%s'] === 'Absent' ? 'bg-[#EF4444] text-white scale-95' : 'text-[#525252] hover:bg-white/5'", b.BookingID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 160, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 256, Col: 143}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, " 的孩子</p></div></div><div class=\"flex gap-2\"><!-- Toggle Check-in --><button hx-post=\"/v2/admin/checkin/toggle\" hx-vals=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var19 string
-		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"bookingId": "%s"}`, b.BookingID))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 168, Col: 61}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "\" hx-target=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var20 string
-		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs("#row-" + b.BookingID)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 169, Col: 37}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "\" hx-swap=\"outerHTML\" class=\"w-14 h-14 rounded-2xl flex items-center justify-center transition-all active:scale-90\" :class=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var21 string
-		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(cond(b.Status == "CheckedIn", "bg-[#34D399] text-black shadow-lg shadow-[#34D399]/20", "bg-[#27272A] text-[#525252]"))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 172, Col: 130}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = icon.Check(icon.Props{Size: 28}).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "</button><!-- Move to Leave --><button hx-post=\"/v2/admin/checkin/leave\" hx-vals=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var22 string
-		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"bookingId": "%s"}`, b.BookingID))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 179, Col: 61}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "\" hx-target=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var23 string
-		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs("#row-" + b.BookingID)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 180, Col: 37}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "\" hx-swap=\"delete\" class=\"w-14 h-14 rounded-2xl bg-[#27272A] text-[#525252] flex items-center justify-center active:scale-90 transition-all\"><span class=\"font-black text-xl\">假</span></button></div></div>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		return nil
-	})
-}
-
-func LeaveRow(b *CheckinRecord) templ.Component {
-	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
-			return templ_7745c5c3_CtxErr
-		}
-		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-		if !templ_7745c5c3_IsBuffer {
-			defer func() {
-				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err == nil {
-					templ_7745c5c3_Err = templ_7745c5c3_BufErr
-				}
-			}()
-		}
-		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var24 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var24 == nil {
-			templ_7745c5c3_Var24 = templ.NopComponent
-		}
-		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "<div id=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var25 string
-		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs("row-" + b.BookingID)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 192, Col: 27}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "\" class=\"bg-[#1C1C1E]/40 border border-[#F59E0B]/30 rounded-2xl p-4 flex items-center justify-between\" data-status=\"Leave\"><div class=\"flex items-center gap-3 grayscale\"><div class=\"w-12 h-12 rounded-full bg-[#27272A] text-[#525252] flex items-center justify-center font-black text-lg\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var26 string
-		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(b.ChildName[0:1])
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 198, Col: 22}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "</div><div><span class=\"font-bold text-[#8E8E93] text-lg line-through\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var27 string
-		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(b.ChildName)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 201, Col: 77}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "</span><p class=\"text-[10px] text-[#525252]\">已於 LINE 請假</p></div></div><button hx-post=\"/v2/admin/checkin/restore\" hx-vals=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var28 string
-		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"bookingId": "%s"}`, b.BookingID))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 208, Col: 60}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "\" hx-target=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var29 string
-		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs("#row-" + b.BookingID)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 209, Col: 36}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "\" hx-swap=\"delete\" class=\"bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20 px-4 py-3 rounded-xl font-bold text-sm active:scale-95 transition-all\">取消請假</button></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "\"><span class=\"font-black text-sm\">缺</span></button></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -560,12 +392,12 @@ func AddStudentModal(sessionID string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var30 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var30 == nil {
-			templ_7745c5c3_Var30 = templ.NopComponent
+		templ_7745c5c3_Var19 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var19 == nil {
+			templ_7745c5c3_Var19 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "<div x-show=\"showAddModal\" x-cloak class=\"fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md\" x-transition><div class=\"bg-[#1C1C1E] w-full max-w-md rounded-t-3xl sm:rounded-2xl border-t sm:border border-[#27272A] overflow-hidden shadow-2xl\" @click.away=\"showAddModal = false\"><div class=\"p-6 border-b border-[#27272A] flex justify-between items-center\"><h3 class=\"font-black text-xl text-[#FFD700] uppercase\">臨時加人管理</h3><button @click=\"showAddModal = false\" class=\"bg-[#27272A] p-2 rounded-full text-[#8E8E93]\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<div x-show=\"showAddModal\" x-cloak class=\"fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md\" x-transition><div class=\"bg-[#1C1C1E] w-full max-w-md rounded-t-3xl sm:rounded-2xl border-t sm:border border-[#27272A] overflow-hidden shadow-2xl\" @click.away=\"showAddModal = false\"><div class=\"p-6 border-b border-[#27272A] flex justify-between items-center\"><h3 class=\"font-black text-xl text-[#FFD700] uppercase\">臨時加人管理</h3><button @click=\"showAddModal = false\" class=\"bg-[#27272A] p-2 rounded-full text-[#8E8E93]\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -573,20 +405,20 @@ func AddStudentModal(sessionID string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "</button></div><div x-data=\"{ tab: 'existing' }\" class=\"p-6\"><!-- Tab Switcher --><div class=\"flex bg-[#000000] p-1 rounded-xl border border-[#27272A] mb-6\"><button @click=\"tab = 'existing'\" :class=\"tab === 'existing' ? 'bg-[#27272A] text-white shadow-sm' : 'text-[#525252]'\" class=\"flex-1 py-2.5 rounded-lg font-bold text-xs transition-all\">現有學員</button> <button @click=\"tab = 'new'\" :class=\"tab === 'new' ? 'bg-[#27272A] text-white shadow-sm' : 'text-[#525252]'\" class=\"flex-1 py-2.5 rounded-lg font-bold text-xs transition-all\">新客體驗</button></div><!-- Content --><div x-show=\"tab === 'existing'\" class=\"space-y-4\"><div class=\"relative\"><input type=\"text\" name=\"q\" placeholder=\"搜尋學員姓名...\" hx-get=\"/v2/admin/students/search\" hx-vals=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "</button></div><div x-data=\"{ tab: 'existing' }\" class=\"p-6\"><!-- Tab Switcher --><div class=\"flex bg-[#000000] p-1 rounded-xl border border-[#27272A] mb-6\"><button @click=\"tab = 'existing'\" :class=\"tab === 'existing' ? 'bg-[#27272A] text-white shadow-sm' : 'text-[#525252]'\" class=\"flex-1 py-2.5 rounded-lg font-bold text-xs transition-all\">現有學員</button> <button @click=\"tab = 'new'\" :class=\"tab === 'new' ? 'bg-[#27272A] text-white shadow-sm' : 'text-[#525252]'\" class=\"flex-1 py-2.5 rounded-lg font-bold text-xs transition-all\">新客體驗</button></div><!-- Content --><div x-show=\"tab === 'existing'\" class=\"space-y-4\"><div class=\"relative\"><input type=\"text\" name=\"q\" placeholder=\"搜尋學員姓名...\" hx-get=\"/v2/admin/students/search\" hx-vals=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var31 string
-		templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"sessionId": "%s"}`, sessionID))
+		var templ_7745c5c3_Var20 string
+		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"sessionId": "%s"}`, sessionID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 241, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 287, Col: 62}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "\" hx-trigger=\"keyup changed delay:300ms\" hx-target=\"#search-results\" class=\"w-full bg-[#000000] border border-[#27272A] rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-[#60A5FA] transition-colors\"><div class=\"absolute right-5 top-1/2 -translate-y-1/2 text-[#525252]\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "\" hx-trigger=\"keyup changed delay:300ms\" hx-target=\"#search-results\" class=\"w-full bg-[#000000] border border-[#27272A] rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-[#60A5FA] transition-colors\"><div class=\"absolute right-5 top-1/2 -translate-y-1/2 text-[#525252]\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -594,20 +426,20 @@ func AddStudentModal(sessionID string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "</div></div><div class=\"max-h-64 overflow-y-auto space-y-2 pr-1\" id=\"search-results\"><!-- HTMX results here --><div class=\"text-center py-10 text-[#525252] text-xs font-bold uppercase tracking-widest\">請輸入姓名開始搜尋</div></div></div><div x-show=\"tab === 'new'\" class=\"space-y-4\"><form hx-post=\"/v2/admin/checkin/walkin\" hx-on::after-request=\"showAddModal = false\" class=\"space-y-4\"><input type=\"hidden\" name=\"trainDateId\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "</div></div><div class=\"max-h-64 overflow-y-auto space-y-2 pr-1\" id=\"search-results\"><!-- HTMX results here --><div class=\"text-center py-10 text-[#525252] text-xs font-bold uppercase tracking-widest\">請輸入姓名開始搜尋</div></div></div><div x-show=\"tab === 'new'\" class=\"space-y-4\"><form hx-post=\"/v2/admin/checkin/walkin\" hx-on::after-request=\"showAddModal = false\" class=\"space-y-4\"><input type=\"hidden\" name=\"trainDateId\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var32 string
-		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(sessionID)
+		var templ_7745c5c3_Var21 string
+		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(sessionID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 260, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 306, Col: 63}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "\"> <input type=\"text\" name=\"childName\" placeholder=\"孩子姓名\" required class=\"w-full bg-[#000000] border border-[#27272A] rounded-2xl px-5 py-4 text-white focus:outline-none\"> <input type=\"text\" name=\"contactInfo\" placeholder=\"家長電話 (必填)\" required class=\"w-full bg-[#000000] border border-[#27272A] rounded-2xl px-5 py-4 text-white focus:outline-none\"> <button type=\"submit\" class=\"w-full bg-[#FFD700] text-black font-black py-5 rounded-2xl shadow-lg shadow-[#FFD700]/10 active:scale-95 transition-all text-sm uppercase mt-4\">確認加入並簽到</button></form></div></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "\"> <input type=\"text\" name=\"childName\" placeholder=\"孩子姓名\" required class=\"w-full bg-[#000000] border border-[#27272A] rounded-2xl px-5 py-4 text-white focus:outline-none\"> <input type=\"text\" name=\"contactInfo\" placeholder=\"家長電話 (必填)\" required class=\"w-full bg-[#000000] border border-[#27272A] rounded-2xl px-5 py-4 text-white focus:outline-none\"> <button type=\"submit\" class=\"w-full bg-[#FFD700] text-black font-black py-5 rounded-2xl shadow-lg shadow-[#FFD700]/10 active:scale-95 transition-all text-sm uppercase mt-4\">確認加入並簽到</button></form></div></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -631,51 +463,51 @@ func SearchResultRow(id, child, parent, userId, sessionId string) templ.Componen
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var33 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var33 == nil {
-			templ_7745c5c3_Var33 = templ.NopComponent
+		templ_7745c5c3_Var22 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var22 == nil {
+			templ_7745c5c3_Var22 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "<button hx-post=\"/v2/admin/checkin/walkin\" hx-vals=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "<button hx-post=\"/v2/admin/checkin/walkin\" hx-vals=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var34 string
-		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"trainDateId": "%s", "childName": "%s", "userId": "%s", "parentName": "%s"}`, sessionId, child, userId, parent))
+		var templ_7745c5c3_Var23 string
+		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"trainDateId": "%s", "childName": "%s", "userId": "%s", "parentName": "%s"}`, sessionId, child, userId, parent))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 276, Col: 137}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 322, Col: 137}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "\" hx-on::after-request=\"showAddModal = false\" class=\"w-full flex items-center justify-between p-4 bg-[#000000] border border-[#27272A] rounded-2xl hover:border-[#60A5FA] transition-all group\"><div class=\"text-left\"><div class=\"font-black text-white group-hover:text-[#60A5FA]\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var35 string
-		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(child)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 281, Col: 72}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "\" hx-on::after-request=\"showAddModal = false\" class=\"w-full flex items-center justify-between p-4 bg-[#000000] border border-[#27272A] rounded-2xl hover:border-[#60A5FA] transition-all group\"><div class=\"text-left\"><div class=\"font-black text-white group-hover:text-[#60A5FA]\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "</div><div class=\"text-[10px] text-[#525252] font-bold\">家長：")
+		var templ_7745c5c3_Var24 string
+		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(child)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 327, Col: 72}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var36 string
-		templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(parent)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 282, Col: 70}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "</div><div class=\"text-[10px] text-[#525252] font-bold\">家長：")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "</div></div><div class=\"bg-[#60A5FA]/10 text-[#60A5FA] text-[10px] px-3 py-1.5 rounded-lg font-black uppercase tracking-tighter\">加入並簽到</div></button>")
+		var templ_7745c5c3_Var25 string
+		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(parent)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 328, Col: 70}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "</div></div><div class=\"bg-[#60A5FA]/10 text-[#60A5FA] text-[10px] px-3 py-1.5 rounded-lg font-black uppercase tracking-tighter\">加入並簽到</div></button>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

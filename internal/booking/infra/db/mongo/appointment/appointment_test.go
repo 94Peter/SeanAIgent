@@ -281,8 +281,9 @@ func TestAppointmentIntegrate(t *testing.T) {
 
 		// 4. Batch Update
 		updatedAppts := make([]*entity.Appointment, 0, count)
+		startTime := time.Now().Add(-10 * time.Minute)
 		for _, appt := range appts {
-			appt.MarkAsAttended(time.Now())
+			_ = appt.AdminCheckIn(startTime)
 			updatedAppts = append(updatedAppts, appt)
 		}
 
