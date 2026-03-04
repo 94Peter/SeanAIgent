@@ -184,8 +184,12 @@ func (s *statsRepoImpl) aggregateMonthlyStats(ctx context.Context, userID string
 	}
 
 	pipe = append(pipe, mongo.Pipeline{
+		// 第一步：按用戶 + 孩子進行分組
 		{{"$group", bson.D{
-			{"_id", "$appointments.user_id"},
+			{"_id", bson.M{
+				"user_id":    "$appointments.user_id",
+				"child_name": "$appointments.child_name",
+			}},
 			{"user_name", bson.D{{"$first", "$appointments.user_name"}}},
 			{"total_bookings", bson.D{{"$sum", 1}}},
 			{"attended_count", bson.D{
@@ -216,6 +220,22 @@ func (s *statsRepoImpl) aggregateMonthlyStats(ctx context.Context, userID string
 				}},
 			}},
 		}}},
+		// 第二步：按用戶分組，將孩子數據聚合為陣列
+		{{"$group", bson.D{
+			{"_id", "$_id.user_id"},
+			{"user_name", bson.D{{"$first", "$user_name"}}},
+			{"total_bookings", bson.D{{"$sum", "$total_bookings"}}},
+			{"attended_count", bson.D{{"$sum", "$attended_count"}}},
+			{"absent_count", bson.D{{"$sum", "$absent_count"}}},
+			{"leave_count", bson.D{{"$sum", "$leave_count"}}},
+			{"children", bson.D{{"$push", bson.D{
+				{"child_name", "$_id.child_name"},
+				{"total_bookings", "$total_bookings"},
+				{"attended_count", "$attended_count"},
+				{"absent_count", "$absent_count"},
+				{"leave_count", "$leave_count"},
+			}}}},
+		}}},
 		{{"$project", bson.D{
 			{"_id", 0},
 			{"user_id", "$_id"},
@@ -226,6 +246,7 @@ func (s *statsRepoImpl) aggregateMonthlyStats(ctx context.Context, userID string
 			{"attended_count", "$attended_count"},
 			{"absent_count", "$absent_count"},
 			{"leave_count", "$leave_count"},
+			{"children", "$children"},
 			{"last_updated_at", bson.D{{"$literal", time.Now()}}},
 		}}},
 	}...)

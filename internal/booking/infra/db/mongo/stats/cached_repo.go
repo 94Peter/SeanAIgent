@@ -92,3 +92,25 @@ func (r *cachedStatsRepo) AggregateUserMonthlyStats(ctx context.Context, userID 
 func (r *cachedStatsRepo) AggregateAllUsersMonthlyStats(ctx context.Context, year, month int) ([]*entity.UserMonthlyStat, repository.RepoError) {
 	return r.delegate.AggregateAllUsersMonthlyStats(ctx, year, month)
 }
+
+func (r *cachedStatsRepo) GetHistoricalAnalytics(ctx context.Context, monthsLimit int) ([]*entity.MonthlyBusinessStat, repository.RepoError) {
+	// 趨勢數據變動頻率低，可以快取
+	cacheKey := "historical_analytics:" + strconv.Itoa(monthsLimit)
+	if val, found := r.cache.Get(cacheKey); found {
+		return val.([]*entity.MonthlyBusinessStat), nil
+	}
+
+	res, err, _ := r.sfGroup.Do(cacheKey, func() (interface{}, error) {
+		data, repoErr := r.delegate.GetHistoricalAnalytics(ctx, monthsLimit)
+		if repoErr != nil {
+			return nil, repoErr
+		}
+		r.cache.Set(cacheKey, data, 10*time.Minute) // 快取 10 分鐘
+		return data, nil
+	})
+
+	if err != nil {
+		return nil, err.(repository.RepoError)
+	}
+	return res.([]*entity.MonthlyBusinessStat), nil
+}

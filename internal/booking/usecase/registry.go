@@ -48,6 +48,8 @@ type Registry struct {
 	QueryAllUserApptStats core.ReadUseCase[readStats.ReqQueryAllUserApptStats, []*entity.UserApptStats]
 
 	BatchSyncMonthlyStats writeStats.BatchSyncMonthlyStatsUseCase
+	QueryMonthlyUserReports readStats.QueryMonthlyUserReportsUseCase
+	GetBusinessAnalytics    readStats.GetBusinessAnalyticsUseCase
 
 	Bus                event.Bus
 	Subscribers        []event.Subscriber

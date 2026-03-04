@@ -138,3 +138,44 @@ func (s *statsRepoImpl) FindMonthlyStats(
 
 	return results, total, nil
 }
+
+func (s *statsRepoImpl) GetHistoricalAnalytics(ctx context.Context, monthsLimit int) ([]*entity.MonthlyBusinessStat, repository.RepoError) {
+	const op = "get_historical_analytics"
+
+	pipe := mongo.Pipeline{
+		{{"$group", bson.D{
+			{"_id", bson.M{"year": "$year", "month": "$month"}},
+			{"total_bookings", bson.D{{"$sum", "$total_bookings"}}},
+			{"attended_count", bson.D{{"$sum", "$attended_count"}}},
+			{"leave_count", bson.D{{"$sum", "$leave_count"}}},
+			{"active_users", bson.D{{"$sum", 1}}},
+		}}},
+		{{"$sort", bson.D{
+			{"_id.year", -1},
+			{"_id.month", -1},
+		}}},
+		{{"$limit", monthsLimit}},
+		{{"$project", bson.D{
+			{"_id", 0},
+			{"year", "$_id.year"},
+			{"month", "$_id.month"},
+			{"total_bookings", "$total_bookings"},
+			{"attended_count", "$attended_count"},
+			{"leave_count", "$leave_count"},
+			{"active_users", "$active_users"},
+		}}},
+	}
+
+	cursor, err := mgo.GetDatabase().Collection(userMonthlyStatsCol).Aggregate(ctx, pipe)
+	if err != nil {
+		return nil, newInternalError(op, err)
+	}
+	defer cursor.Close(ctx)
+
+	var results []*entity.MonthlyBusinessStat
+	if err := cursor.All(ctx, &results); err != nil {
+		return nil, newInternalError(op, err)
+	}
+
+	return results, nil
+}

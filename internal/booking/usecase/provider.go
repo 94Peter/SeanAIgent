@@ -200,6 +200,18 @@ func ProvideBatchSyncMonthlyStatsUC(
 	return core.WithWriteOTel(writeStats.NewBatchSyncMonthlyStatsUseCase(repo))
 }
 
+func ProvideQueryMonthlyUserReportsUC(
+	repo Repository,
+) readStats.QueryMonthlyUserReportsUseCase {
+	return core.WithReadOTel(readStats.NewQueryMonthlyUserReportsUseCase(repo))
+}
+
+func ProvideGetBusinessAnalyticsUC(
+	repo Repository,
+) readStats.GetBusinessAnalyticsUseCase {
+	return core.WithReadOTel(readStats.NewGetBusinessAnalyticsUseCase(repo))
+}
+
 func ProvideSubscribers(
 	repo Repository,
 ) []event.Subscriber {
@@ -241,6 +253,8 @@ var UseCaseSet = wire.NewSet(
 	ProvideQueryTwoWeeksScheduleUC,
 	ProvideQueryAllUserApptStatsUC,
 	ProvideBatchSyncMonthlyStatsUC,
+	ProvideQueryMonthlyUserReportsUC,
+	ProvideGetBusinessAnalyticsUC,
 
 	ProvideSubscribers,
 	event.EventSet,
