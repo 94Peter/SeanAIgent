@@ -13,6 +13,16 @@ type Event interface {
 	Data() []byte      // 優化: 使用原始位元組，避免 Store 與 Bus 進行反射處理
 }
 
+// Marshaler 定義了物件如何序列化為位元組
+type Marshaler interface {
+	Marshal() ([]byte, error)
+}
+
+// Unmarshaler 定義了物件如何從位元組反序列化
+type Unmarshaler interface {
+	Unmarshal([]byte) error
+}
+
 // Subscriber 定義了訂閱者介面
 type Subscriber interface {
 	ID() string

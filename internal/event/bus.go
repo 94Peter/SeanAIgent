@@ -61,6 +61,12 @@ func (b *internalBus) Publish(ctx context.Context, e Event) {
 }
 
 func (b *internalBus) handleEvent(ctx context.Context, s Subscriber, e Event) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("EventBus: subscriber %s panicked: %v", s.ID(), r)
+		}
+	}()
+
 	if err := s.Handle(ctx, e); err != nil {
 		log.Printf("EventBus: subscriber %s handle error: %v", s.ID(), err)
 		return
