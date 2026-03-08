@@ -61,7 +61,7 @@ func (m *Aigent) BuildWithGoSdk(
 		// 2. 使用 Container API 模擬 Dockerfile 的過程
 		// 這樣我們才能在執行 go build 時掛載快取
 		builder := dag.Container(dagger.ContainerOpts{Platform: p}).
-			From("golang:1.24-alpine").
+			From("golang:1.25-alpine").
 			WithExec([]string{"apk", "add", "--no-cache", "tzdata"}).
 			WithMountedDirectory("/src", src).
 			WithWorkdir("/src").
