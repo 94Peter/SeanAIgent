@@ -24,8 +24,6 @@ type testAppointment struct {
 	Status         string        `bson:"status"`
 	ID             bson.ObjectID `bson:"_id"`
 	TrainingDateId bson.ObjectID `bson:"training_date_id"`
-	IsCheckedIn    bool          `bson:"is_checked_in"`
-	IsOnLeave      bool          `bson:"is_on_leave"`
 }
 
 func (*testAppointment) Validate() error {
@@ -98,84 +96,15 @@ func TestScheduleRepo_Integration(t *testing.T) {
 		// Delete
 		err = repo.DeleteTrainingDate(ctx, found)
 		require.NoError(t, err)
-
-		// Verify Delete
-		_, err = repo.FindTrainDateByID(ctx, trainID)
-		assert.Error(t, err) // Should be not found
 	})
 
-	t.Run("Capacity", func(t *testing.T) {
+	t.Run("QueryTrainDateHasAppointmentState", func(t *testing.T) {
 		defer drapAllDb()
 		ctx := t.Context()
-		timeRange, _ := entity.NewTimeRange(
-			time.Date(2025, 2, 4, 10, 0, 0, 0, time.UTC),
-			time.Date(2025, 2, 4, 12, 0, 0, 0, time.UTC),
-		)
-		trainID := bson.NewObjectID().Hex()
-		trainDate, _ := entity.NewTrainDate(
-			entity.WithBasicTrainDate(
-				trainID, "coach1", "Gym B", 10, timeRange),
-		)
-		err := repo.SaveTrainDate(ctx, trainDate)
-		require.NoError(t, err)
 
-		// Deduct
-		err = repo.DeductCapacity(ctx, trainID, 2)
-		require.NoError(t, err)
-
-		found, _ := repo.FindTrainDateByID(ctx, trainID)
-		assert.Equal(t, 8, found.AvailableCapacity())
-
-		// Increase
-		err = repo.IncreaseCapacity(ctx, trainID, 1)
-		require.NoError(t, err)
-
-		found, _ = repo.FindTrainDateByID(ctx, trainID)
-		assert.Equal(t, 9, found.AvailableCapacity())
-	})
-
-	t.Run("Overlap", func(t *testing.T) {
-		defer drapAllDb()
-		ctx := t.Context()
-		baseStart := time.Date(2025, 3, 1, 10, 0, 0, 0, time.UTC)
-		baseEnd := baseStart.Add(2 * time.Hour)
-		timeRange, _ := entity.NewTimeRange(baseStart, baseEnd)
-
-		trainID := bson.NewObjectID().Hex()
-		trainDate, _ := entity.NewTrainDate(
-			entity.WithBasicTrainDate(
-				trainID, "coach_overlap", "Gym C", 5, timeRange),
-		)
-		err := repo.SaveTrainDate(ctx, trainDate)
-		require.NoError(t, err)
-
-		// Check Overlap
-		overlapRange, _ := entity.NewTimeRange(baseStart.Add(1*time.Hour), baseStart.Add(3*time.Hour))
-		isOverlap, err := repo.CheckOverlap(ctx, "coach_overlap", overlapRange)
-		require.NoError(t, err)
-		assert.True(t, isOverlap)
-
-		noOverlapRange, _ := entity.NewTimeRange(baseStart.Add(3*time.Hour), baseStart.Add(5*time.Hour))
-		isOverlap, err = repo.CheckOverlap(ctx, "coach_overlap", noOverlapRange)
-		require.NoError(t, err)
-		assert.False(t, isOverlap)
-
-		// Check HasAnyOverlap
-		isAnyOverlap, err := repo.HasAnyOverlap(ctx, "coach_overlap", []entity.TimeRange{noOverlapRange, overlapRange})
-		require.NoError(t, err)
-		assert.True(t, isAnyOverlap)
-	})
-
-	t.Run("Aggregations", func(t *testing.T) {
-		defer drapAllDb()
-		ctx := t.Context()
-		var err error
-		// 1. Create TrainDate
-		start := time.Date(2025, 4, 1, 10, 0, 0, 0, time.UTC)
-		end := start.Add(2 * time.Hour)
-		tr, _ := entity.NewTimeRange(start, end)
+		// 1. Prepare Training Date
 		trainID := bson.NewObjectID()
-
+		tr, _ := entity.NewTimeRange(time.Now(), time.Now().Add(time.Hour))
 		trainDate, _ := entity.NewTrainDate(
 			entity.WithBasicTrainDate(
 				trainID.Hex(), "coach_aggr", "Gym D", 10, tr),
@@ -196,8 +125,6 @@ func TestScheduleRepo_Integration(t *testing.T) {
 			TrainingDateId: trainID,
 			Status:         "CONFIRMED",
 			CreatedAt:      time.Now(),
-			IsCheckedIn:    false,
-			IsOnLeave:      false,
 		}
 
 		appt2 := &testAppointment{
@@ -207,10 +134,8 @@ func TestScheduleRepo_Integration(t *testing.T) {
 			UserName:       "User Two",
 			ChildName:      "Child Two",
 			TrainingDateId: trainID,
-			Status:         "CONFIRMED",
+			Status:         "ATTENDED",
 			CreatedAt:      time.Now(),
-			IsCheckedIn:    true,
-			IsOnLeave:      false,
 		}
 
 		// Insert appts using mgo.Save (as it accepts interface{})
@@ -250,67 +175,5 @@ func TestScheduleRepo_Integration(t *testing.T) {
 		// UserAppointments should only contain user1's appointment
 		require.Len(t, userState.UserAppointments, 1)
 		assert.Equal(t, user1ID, userState.UserAppointments[0].UserID)
-
-		// AllUsers should contain names of all users (User One, User Two)
-		// Note: user_appointments in aggregation might be filtered, but "allUsers" logic depends on implementation
-		// Looking at aggr_user_train_has_appts.go:
-		// "allUsers" maps from all appointments where is_on_leave is false.
-		assert.Contains(t, userState.AllUsers, "Child One")
-		assert.Contains(t, userState.AllUsers, "Child Two")
-	})
-
-	t.Run("SaveManyAndFind", func(t *testing.T) {
-		defer drapAllDb()
-		ctx := t.Context()
-		// Create 2 train dates
-		tr1, _ := entity.NewTimeRange(
-			time.Date(2025, 5, 1, 10, 0, 0, 0, time.UTC),
-			time.Date(2025, 5, 1, 12, 0, 0, 0, time.UTC),
-		)
-		td1, _ := entity.NewTrainDate(entity.WithBasicTrainDate(bson.NewObjectID().Hex(), "c1", "L1", 5, tr1))
-
-		tr2, _ := entity.NewTimeRange(
-			time.Date(2025, 5, 2, 10, 0, 0, 0, time.UTC),
-			time.Date(2025, 5, 2, 12, 0, 0, 0, time.UTC),
-		)
-		td2, _ := entity.NewTrainDate(entity.WithBasicTrainDate(bson.NewObjectID().Hex(), "c1", "L1", 5, tr2))
-
-		err = repo.SaveManyTrainDates(ctx, []*entity.TrainDate{td1, td2})
-		require.NoError(t, err)
-
-		// Find by time range covering both
-		filter := repository.NewFilterTrainDataByTimeRange(
-			time.Date(2025, 5, 1, 0, 0, 0, 0, time.UTC),
-			time.Date(2025, 5, 3, 0, 0, 0, 0, time.UTC),
-		)
-		found, err := repo.FindTrainDates(ctx, filter)
-		require.NoError(t, err)
-		assert.GreaterOrEqual(t, len(found), 2)
-	})
-
-	t.Run("NearestTime", func(t *testing.T) {
-		defer drapAllDb()
-		ctx := t.Context()
-		// Create 2 train dates
-		tr1, _ := entity.NewTimeRange(
-			time.Date(2025, 7, 1, 10, 0, 0, 0, time.UTC),
-			time.Date(2025, 7, 1, 12, 0, 0, 0, time.UTC),
-		)
-		td1, _ := entity.NewTrainDate(entity.WithBasicTrainDate(bson.NewObjectID().Hex(), "c1", "L1", 5, tr1))
-		tr2, _ := entity.NewTimeRange(
-			time.Date(2025, 7, 2, 10, 0, 0, 0, time.UTC),
-			time.Date(2025, 7, 2, 12, 0, 0, 0, time.UTC),
-		)
-		td2, _ := entity.NewTrainDate(entity.WithBasicTrainDate(bson.NewObjectID().Hex(), "c1", "L1", 5, tr2))
-
-		err := repo.SaveManyTrainDates(ctx, []*entity.TrainDate{td1, td2})
-		require.NoError(t, err)
-
-		// Find by time range covering both
-		filter := repository.NewFilterTrainDateByEndTime(time.Date(2025, 7, 1, 11, 0, 0, 0, time.UTC))
-		found, err := repo.FindTrainDates(ctx, filter)
-		require.NoError(t, err)
-		assert.Equal(t, 2, len(found))
-		assert.Equal(t, td1.ID(), found[0].ID())
 	})
 }

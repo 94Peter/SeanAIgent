@@ -1,48 +1,55 @@
 # Sean AIgent Project Roadmap
 
-## v2.0.0 - The Next Generation Booking Experience (Current)
-*Released: 2026-02-19*
+## 🚀 v2.0.0 - Performance & Event-Driven Foundation (Released)
+*Released: 2026-02-19 | Refined: 2026-03-07*
 
-### ✅ Key Features Delivered
-- **Infinite Scrolling Calendar**: Smooth week-by-week loading with stable scroll anchoring.
-- **Student Stats Dashboard**: 90-day overview of bookings, leaves, and attendance.
-- **Smart Participant Entry**: Manual name entry with auto-completion and quick-select tags.
-- **CSRF Protection**: Comprehensive security for all booking actions.
-- **V1-V2 Data Migration**: Seamless transition from legacy data structures.
+### ✅ Infrastructure & Architecture (Completed)
+- **Event-Driven Core**: Implemented internal `EventBus` and MongoDB `EventStore` for asynchronous decoupled workflows.
+- **High-Performance Booking**: 
+    - Achieved **4,498 RPS** with **2.16ms** avg latency.
+    - Implemented `SingleFlight` to prevent cache stampedes.
+    - Optimized `groupToWeeks` algorithm to $O(N)$.
+- **Asynchronous Cache Invalidation**: Background `CacheWorker` pool for non-blocking cleanup.
+- **Observability**: Optimized OpenTelemetry sampling (5%) for reduced GC overhead.
 
 ---
 
-## v2.0.1 - Stability & Housekeeping (In Progress)
-*Focus: Performance, Cleanup, and UX Refinement*
+## 🛠️ v2.1.0 - Dual-Track Optimization (In Progress)
 
-### 1. ✅ Housekeeping (Legacy Code Removal) - COMPLETED
-- [x] **Remove V1 Templates**: Deleted `templates/forms/bookTraining/` and associated assets.
-- [x] **Cleanup Routes**: Removed legacy 3-layer architecture routers (`internal/handler`).
-- [x] **Domain Simplification**: Stripped `internal/db/` and `internal/service/` legacy directories.
-- [x] **Archive Migration**: Removed `v1tov2` utilities and decoupled Repository from migration logic.
-- [x] **Architecture Alignment**: Migrated MCP and LINE messaging to the Transport layer.
-- [x] **Utility Consolidation**: Unified `timeutil` and `lineutil` for shared cross-layer functions.
+### Track A: Client-Facing Booking UX (預約端優化)
+*Goal: Provide a seamless, "app-like" booking experience for students.*
 
-### 2. ✅ Performance Optimization - COMPLETED
-- [x] **Parallel Fetching**: Integrated `errgroup` in `getBookingV2Form` to fetch stats, schedules, and bookings concurrently.
-- [x] **Request Merging (SingleFlight)**: Implemented `SingleFlight` in both Handler and Repository layers to prevent cache stampedes and database spikes.
-- [x] **Asynchronous Cache Invalidation**: Built a centralized `CacheWorker` pool (5 workers) for non-blocking background cleanup of user stats and schedules.
-- [x] **Algorithmic Optimization**: Refactored `groupToWeeks` logic from $O(N \times M)$ to $O(N)$ using map lookups, reducing CPU time during scheduling.
-- [x] **Concurrency Stability**: Secured global caches with `sync.RWMutex` and added `recover` blocks to background goroutines for auto-recovery.
-- [x] **Observability Tuning**: Optimized OpenTelemetry sampling rate to 5% to reduce GC pressure and memory overhead at high throughput (4500+ RPS).
-
-### 3. ✨ UX & Robustness (Next Focus)
-- [ ] **Frontend Resource Separation**: Extract inline JavaScript from `booking_v2.templ` to `/assets/js/booking_v2.js`.
-- [ ] **Toast System Integration**: Replace all `alert()` and `console.error()` calls with the project's native Toast notifications.
+- [x] **Infinite Scrolling Calendar**: Week-by-week loading with stable anchoring.
+- [x] **Student Stats Dashboard**: 90-day overview of attendance and bookings.
+- [ ] **Frontend Resource Separation**: Extract inline JS from `.templ` to `/assets/js/`.
+- [ ] **Native Toast Integration**: Replace `alert()` with project-native Toast system.
 - [ ] **Skeleton Screens**: Add loading placeholders for smoother infinite scroll transitions.
-- [ ] **Input Validation**: Implement stricter server-side validation for student names.
+- [ ] **Input Robustness**: Enhanced server-side validation for participant names.
+
+### Track B: Coach & Admin Analytics (教練管理後台)
+*Goal: Data-driven management with automated attendance tracking.*
+
+- [x] **Pre-aggregated Analytics (Snapshot)**: Implementation of `UserMonthlyStat` for instant report loading.
+- [x] **Event-Driven Stats Linkage**: Automatic updates via `AppointmentStatusChanged` events.
+- [x] **Batch Attendance Updates**: Bulk marking of attendance/absence in admin UI.
+- [x] **Automated Cron Jobs**: Nightly sync for "Auto Mark Absent" and stats calibration.
+- [x] **Server-side Report Engine**: Pagination and search for student attendance reports.
+- [ ] **Member Billing & Payment Tracking**: Tracking student payment status (paid/unpaid/expired) and history.
+- [ ] **Advanced Data Visualization**: Charts for revenue trends and class occupancy.
+- [ ] **CSV Export Enhancements**: Flexible date ranges and filters for financial reconciliation.
+
+### Track C: Tech Debt & Infrastructure (技術債與底層維護)
+*Goal: Maintain a clean, maintainable codebase and efficient database.*
+
+- [ ] **Database V1 Cleanup**: Remove legacy V1 fields from MongoDB collections and Domain Entities to save storage and reduce complexity.
 
 ---
 
-## v2.1.0+ - Future Considerations
-- [ ] **Notification Center**: In-app notifications for booking approvals and changes.
-- [ ] **Multi-language Support**: Full translation coverage for the V2 UI.
-- [ ] **Admin Dashboard**: Enhanced management view for class capacities and attendance tracking.
+## 🔮 v2.2.0+ - Future Considerations
+- [ ] **Real-time Notification Center**: In-app/LINE notifications for booking approvals and class changes.
+- [ ] **Multi-language Expansion**: Full i18n coverage for both Client and Admin UIs.
+- [ ] **Waitlist System**: Automated queue management for fully booked classes.
+- [ ] **Payment Integration**: Support for package purchases and credit management.
 
 ---
-*Roadmap last updated: 2026-02-22 by Gemini CLI*
+*Roadmap last updated: 2026-03-07 by Gemini CLI*
