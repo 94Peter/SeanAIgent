@@ -46,8 +46,12 @@ func getUserPipelineTrainDateHasApptState(userID string, q bson.M) mongo.Pipelin
 						{"userId", "$$u.user_id"},
 						{"userName", "$$u.user_name"},
 						{"childName", "$$u.child_name"},
-						{"isOnLeave", "$$u.is_on_leave"},
-						{"isCheckIn", "$$u.is_check_in"},
+						{"isOnLeave", bson.D{{"$eq", bson.A{"$$u.status", "CANCELLED_LEAVE"}}}},
+						{"isCheckedIn", bson.D{{"$eq", bson.A{"$$u.status", "ATTENDED"}}}},
+						{"isAbsent", bson.D{{"$eq", bson.A{"$$u.status", "ABSENT"}}}},
+						{"isWalkIn", "$$u.is_walk_in"},
+						{"isGuest", "$$u.is_guest"},
+						{"contactInfo", "$$u.contact_info"},
 						{"createdAt", "$$u.created_at"},
 						// 在此處添加其他 UserAppointment 需要的欄位
 					}},
@@ -61,7 +65,7 @@ func getUserPipelineTrainDateHasApptState(userID string, q bson.M) mongo.Pipelin
 						{"$filter", bson.D{
 							{"input", "$appointments"},
 							{"as", "a"},
-							{"cond", bson.D{{"$eq", bson.A{"$$a.is_on_leave", false}}}},
+							{"cond", bson.D{{"$eq", bson.A{"$$a.status", "CONFIRMED"}}}},
 						}},
 					}},
 					{"as", "u"},

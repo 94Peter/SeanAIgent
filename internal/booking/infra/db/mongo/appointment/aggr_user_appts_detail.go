@@ -32,8 +32,8 @@ func getProject() bson.D {
 			{"childName", "$child_name"},
 			{"createdAt", "$created_at"},
 			{"trainingDateId", bson.D{{"$toString", "$training_date_id"}}},
-			{"isOnLeave", "$is_on_leave"},
-			{"isCheckedIn", "$is_checked_in"},
+			{"isOnLeave", bson.D{{"$eq", bson.A{"$status", "CANCELLED_LEAVE"}}}},
+			{"isCheckedIn", bson.D{{"$eq", bson.A{"$status", "ATTENDED"}}}},
 			{"status", "$status"},
 
 			// 映射 TrainDateUI 結構

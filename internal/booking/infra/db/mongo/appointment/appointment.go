@@ -71,7 +71,6 @@ func withDomainAppt(appt *entity.Appointment) apptOpt {
 		model.TrainingDateId = trainID
 		model.CreatedAt = appt.CreatedAt()
 		model.UpdateAt = appt.UpdateAt()
-		model.IsCheckedIn = (appt.VerifiedAt() != nil)
 		model.VerifyTime = appt.VerifiedAt()
 		model.IsWalkIn = appt.IsWalkIn()
 		model.IsGuest = appt.IsGuest()
@@ -82,9 +81,7 @@ func withDomainAppt(appt *entity.Appointment) apptOpt {
 				Status:    string(info.Status()),
 				CreatedAt: info.CreatedAt(),
 			}
-			model.IsOnLeave = true
 		} else {
-			model.IsOnLeave = false
 			model.Leave = nil
 		}
 		model.Migration.Status = mgo.MigrateStatusSuccess
@@ -115,14 +112,12 @@ type appointment struct {
 	mgo.Index `bson:"-"`
 	Migration mgo.MigrationInfo `bson:"_migration"`
 	// v2 field
-	V2Fields `bson:",inline"`
-	// deprecated v1 field
-	V1_deprecatedFields `bson:",inline"`
-	ChildName           string        `bson:"child_name,omitempty"`
-	UserName            string        `bson:"user_name"`
-	UserID              string        `bson:"user_id"`
-	TrainingDateId      bson.ObjectID `bson:"training_date_id"`
-	ID                  bson.ObjectID `bson:"_id"`
+	V2Fields       `bson:",inline"`
+	ChildName      string        `bson:"child_name,omitempty"`
+	UserName       string        `bson:"user_name"`
+	UserID         string        `bson:"user_id"`
+	TrainingDateId bson.ObjectID `bson:"training_date_id"`
+	ID             bson.ObjectID `bson:"_id"`
 }
 
 type V2Fields struct {
@@ -133,11 +128,6 @@ type V2Fields struct {
 	IsWalkIn    bool       `bson:"is_walk_in"`
 	IsGuest     bool       `bson:"is_guest"`
 	ContactInfo string     `bson:"contact_info,omitempty"`
-}
-
-type V1_deprecatedFields struct {
-	IsCheckedIn bool `bson:"is_checked_in"`
-	IsOnLeave   bool `bson:"is_on_leave"`
 }
 
 type leaveInfo struct {
@@ -322,8 +312,6 @@ func getUpdateFieldFromModel(appt *appointment) (bson.M, error) {
 		"_migration":       appt.Migration,
 		"created_at":       appt.CreatedAt,
 		"verify_time":      appt.VerifyTime,
-		"is_checked_in":    appt.IsCheckedIn,
-		"is_on_leave":      appt.IsOnLeave,
 		"leave":            appt.Leave,
 		"is_walk_in":       appt.IsWalkIn,
 		"is_guest":         appt.IsGuest,
@@ -400,7 +388,7 @@ func (*apptRepoImpl) MarkAbsentByTrainIDs(ctx context.Context, trainDateIDs []st
 		"training_date_id": bson.M{"$in": oids},
 		"status":           "CONFIRMED",
 	}
-	
+
 	cursor, err := mgo.GetDatabase().Collection(appointmentCollectionName).Find(ctx, filter, options.Find().SetProjection(bson.M{"user_id": 1}))
 	if err != nil {
 		return nil, newInternalError(op, err)

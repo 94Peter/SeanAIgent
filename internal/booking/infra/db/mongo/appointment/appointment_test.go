@@ -60,12 +60,10 @@ func TestModelConversion(t *testing.T) {
 		assert.True(t, model.UpdateAt.Equal(now))
 
 		// Check VerifyTime
-		assert.True(t, model.IsCheckedIn)
 		assert.NotNil(t, model.VerifyTime)
 		assert.True(t, model.VerifyTime.Equal(verifiedAt))
 
 		// Check Leave
-		assert.True(t, model.IsOnLeave)
 		assert.NotNil(t, model.Leave)
 		assert.Equal(t, leaveReason, model.Leave.Reason)
 		assert.Equal(t, string(leaveStatus), model.Leave.Status)
@@ -96,10 +94,6 @@ func TestModelConversion(t *testing.T) {
 					Status:    string(entity.LeaveStatusPending),
 					CreatedAt: now.Add(time.Hour),
 				},
-			},
-			V1_deprecatedFields: V1_deprecatedFields{
-				IsCheckedIn: true,
-				IsOnLeave:   true,
 			},
 			CreatedAt: now,
 		}
