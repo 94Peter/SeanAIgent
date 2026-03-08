@@ -1,6 +1,6 @@
 module seanAIgent
 
-go 1.24.6
+go 1.25.0
 
 replace github.com/94peter/botreplyer => ./pkg/botreplyer
 
@@ -8,7 +8,7 @@ replace github.com/94peter/vulpes => ./pkg/vulpes
 
 require (
 	github.com/94peter/botreplyer v0.0.0
-	github.com/94peter/vulpes v0.2.0
+	github.com/94peter/vulpes v0.2.1
 	github.com/Oudwins/tailwind-merge-go v0.2.1
 	github.com/a-h/templ v0.3.943
 	github.com/gin-contrib/sessions v1.0.4
