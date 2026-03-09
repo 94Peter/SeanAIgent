@@ -8,6 +8,7 @@ import (
     "seanAIgent/components/timepicker"
     "seanAIgent/components/tabs"
     "seanAIgent/components/toast"
+    "github.com/94peter/vulpes/ezapi"
 )
 
 type OgMeta struct {
@@ -22,6 +23,10 @@ templ Layout(content templ.Component, liffId string, ogMeta *OgMeta) {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <!-- CSRF Token for JS -->
+        if token, ok := ctx.Value(ezapi.CtxKeyCSRFToken).(string); ok {
+            <meta name="csrf-token" content={ token } />
+        }
         <!-- 基本 Open Graph 資訊 -->
         <meta property="og:title" content={ ogMeta.Title } />
         <meta property="og:description" content={ ogMeta.Description } />

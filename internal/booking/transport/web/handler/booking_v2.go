@@ -280,7 +280,9 @@ func (api *v2BookingAPI) getBookingV2Form(c *gin.Context) {
 			Image:       "https://storage.94peter.dev/cdn-cgi/image/width=1200,height=630,quality=80,format=auto/https://storage.94peter.dev/images/UAC.png",
 		},
 	)
-	r := newTemplRenderer(ctx, http.StatusOK, com)
+	
+	// Ensure the Request context is used so that Middlewares (like CSRF) attached values are available to Templ
+	r := newTemplRenderer(c.Request.Context(), http.StatusOK, com)
 	c.Render(http.StatusOK, r)
 }
 

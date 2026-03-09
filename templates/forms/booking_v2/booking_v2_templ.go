@@ -300,7 +300,7 @@ func ModalLayout(id string, title string, onClose string, fullHeight bool) templ
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var10 = []any{"relative w-full max-w-md bg-[#1C1C1E] rounded-t-xl sm:rounded-xl shadow-2xl flex flex-col overflow-hidden", cond(fullHeight, "h-[85vh]", "")}
+		var templ_7745c5c3_Var10 = []any{"relative w-full max-w-md bg-[#1C1C1E] rounded-t-2xl sm:rounded-xl shadow-2xl flex flex-col overflow-hidden", cond(fullHeight, "h-[85vh]", "")}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var10...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -754,7 +754,7 @@ func WeekRow(week *WeekData, user *UserContext) templ.Component {
 			}
 			for _, slot := range day.Slots {
 				if slot.IsEmpty {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "<div class=\"w-full rounded-[8px] p-2 border border-dashed border-[#3A3A3C] flex items-center justify-center text-left min-h-[40px] opacity-50 cursor-default\"><span class=\"text-xs text-[#8E8E93]\">[未排課]</span></div>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "<div class=\"w-full rounded-[8px] p-2 border border-dashed border-[#3A3A3C] flex items-center justify-center text-left min-h-[40px] opacity-50 cursor-not-allowed\"><span class=\"text-xs text-[#8E8E93]\">[未排課]</span></div>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -981,64 +981,46 @@ func BookingPopup(user *UserContext) templ.Component {
 			templ_7745c5c3_Var44 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Var45 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-			if !templ_7745c5c3_IsBuffer {
-				defer func() {
-					templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-					if templ_7745c5c3_Err == nil {
-						templ_7745c5c3_Err = templ_7745c5c3_BufErr
-					}
-				}()
-			}
-			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "<div class=\"p-5\"><div class=\"mb-4\"><div class=\"flex justify-between items-start\"><h3 id=\"popup-course-title\" class=\"text-xl font-bold text-white line-clamp-1\">Course Title</h3><div class=\"text-xs font-bold px-2 py-1 rounded bg-[#27272A] text-[#FFD700] border border-[#FFD700]/30\"><span id=\"popup-booked-count\">0</span> / <span id=\"popup-capacity\">0</span></div></div><p id=\"popup-time-info\" class=\"text-sm text-[#8E8E93] mt-1\">Date Time Location</p><input type=\"hidden\" id=\"popup-slot-id\"></div><div id=\"booking-main-view\"><div class=\"mb-4\" id=\"booked-list-wrapper\"><label class=\"block text-xs font-medium text-[#8E8E93] mb-2 uppercase\">已加入名單 (點擊可管理)</label><div id=\"booked-participants-list\" class=\"flex flex-wrap gap-2 min-h-[32px]\"></div></div><div class=\"mb-4\"><label class=\"block text-xs font-medium text-[#8E8E93] mb-2 uppercase\">新增參與者</label><div class=\"flex flex-wrap gap-2 p-3 bg-[#000000] border border-[#3A3A3C] rounded-lg min-h-[50px] items-center\" id=\"smart-input-container\" onclick=\"document.getElementById('smart-input').focus()\"><input type=\"text\" id=\"smart-input\" class=\"bg-transparent border-none outline-none text-white text-base min-w-[100px] flex-grow placeholder-[#525252]\" placeholder=\"輸入名字...\" autocomplete=\"off\" onkeydown=\"handleSmartInputKeydown(event)\"></div></div><div class=\"mb-6\"><label class=\"block text-xs font-medium text-[#8E8E93] mb-2\">快速選擇</label><div class=\"flex flex-wrap gap-2\" id=\"frequent-names-list\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "<div id=\"booking-popup\" class=\"fixed inset-0 z-[60] hidden flex items-end justify-center sm:items-center\"><div class=\"absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity\" onclick=\"closeBookingPopup()\"></div><div class=\"relative w-full max-w-md bg-[#1C1C1E] rounded-t-xl sm:rounded-xl shadow-2xl flex flex-col overflow-hidden border-t sm:border border-white/5\"><div class=\"flex justify-between items-center p-4 border-b border-[#27272A]\"><h3 id=\"popup-course-title\" class=\"text-lg font-bold text-white uppercase tracking-tight\">課程預約</h3><button onclick=\"closeBookingPopup()\" class=\"text-[#8E8E93] p-1\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"18\" y1=\"6\" x2=\"6\" y2=\"18\"></line><line x1=\"6\" y1=\"6\" x2=\"18\" y2=\"18\"></line></svg></button></div><div class=\"p-5\"><div class=\"mb-4\"><div class=\"flex justify-between items-start\"><div class=\"flex flex-col\"><p id=\"popup-time-info\" class=\"text-sm font-bold text-[#FFD700] uppercase tracking-wider\">Date Time</p></div><div class=\"text-xs font-bold px-2 py-1 rounded bg-[#27272A] text-zinc-400 border border-white/10\"><span id=\"popup-booked-count\">0</span> / <span id=\"popup-capacity\">0</span></div></div><input type=\"hidden\" id=\"popup-slot-id\"></div><div id=\"booking-main-view\"><div class=\"mb-4\" id=\"booked-list-wrapper\"><label class=\"block text-xs font-black text-zinc-500 mb-2 uppercase tracking-widest\">目前名單</label><div id=\"booked-participants-list\" class=\"flex flex-wrap gap-2\"></div></div><div class=\"mb-4\"><label class=\"block text-xs font-black text-zinc-500 mb-2 uppercase tracking-widest\">新增參與者</label><div class=\"flex flex-wrap gap-2 p-3 bg-black border border-[#3A3A3C] rounded-lg min-h-[50px] items-center\" id=\"smart-input-container\" onclick=\"document.getElementById('smart-input').focus()\"><input type=\"text\" id=\"smart-input\" class=\"bg-transparent border-none outline-none text-white text-base min-w-[100px] flex-grow placeholder-zinc-700\" placeholder=\"輸入名字...\" autocomplete=\"off\" onkeydown=\"handleSmartInputKeydown(event)\"></div></div><div class=\"mb-6\"><label class=\"block text-xs font-black text-zinc-500 mb-2 uppercase tracking-widest\">常用選擇</label><div class=\"flex flex-wrap gap-2\" id=\"frequent-names-list\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		for _, name := range user.FrequentChildren {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "<button")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, name := range user.FrequentChildren {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "<button")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, templ.Attributes{"onclick": fmt.Sprintf("addDraftTag('%s')", name)})
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, " class=\"px-3 py-1.5 rounded-full bg-[#27272A] text-white text-sm border border-[#3A3A3C] hover:bg-[#3A3A3C]\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var46 string
-				templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(name)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 340, Col: 204}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "</button>")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "</div></div><button onclick=\"submitBooking()\" class=\"w-full bg-[#FFD700] text-black font-bold py-3 rounded-lg text-base hover:bg-[#E6C200] transition-colors\">完成</button></div><div id=\"booking-leave-view\" class=\"hidden\"><form id=\"leave-request-form\" onsubmit=\"submitLeaveRequest(event)\"><input type=\"hidden\" id=\"leave-booking-id\" name=\"bookingId\"><p class=\"text-white text-lg font-bold mb-4\"><span id=\"leave-student-name\" class=\"text-[#FFD700]\"></span> 要請假</p><textarea id=\"leaveReason\" name=\"reason\" rows=\"4\" class=\"w-full bg-[#000000] border border-[#3A3A3C] rounded-lg p-3 text-white text-sm mb-4 focus:border-[#FFD700] outline-none transition-colors resize-none\" placeholder=\"請輸入請假原因...\" required></textarea><div class=\"flex gap-3\"><button type=\"button\" onclick=\"cancelLeaveRequest()\" class=\"flex-1 px-4 py-2.5 rounded-lg border border-[#3A3A3C] text-white text-sm font-medium\">取消</button><button type=\"submit\" class=\"flex-1 px-4 py-2.5 rounded-lg bg-[#FFD700] text-black text-sm font-bold\">提交申請</button></div></form></div>")
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, templ.Attributes{"onclick": fmt.Sprintf("addDraftTag('%s')", name)})
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = InlineConfirmation("booking").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, " class=\"px-3 py-1.5 rounded-full bg-[#27272A] text-zinc-300 text-sm border border-[#3A3A3C] hover:bg-[#3A3A3C] transition-colors\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "</div>")
+			var templ_7745c5c3_Var45 string
+			templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(name)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 354, Col: 226}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			return nil
-		})
-		templ_7745c5c3_Err = ModalLayout("booking-popup", "預約課程", "closeBookingPopup", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var45), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "</button>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "</div></div><button onclick=\"submitBooking()\" class=\"w-full bg-[#FFD700] text-black font-black py-3 rounded-lg text-base hover:brightness-110 active:scale-[0.98] transition-all uppercase\">確認預約</button></div><div id=\"booking-leave-view\" class=\"hidden\"><form id=\"leave-request-form\" onsubmit=\"submitLeaveRequest(event)\"><input type=\"hidden\" id=\"leave-booking-id\" name=\"bookingId\"><p class=\"text-white text-lg font-bold mb-4\">學員 <span id=\"leave-student-name\" class=\"text-[#F59E0B]\"></span> 請假申請</p><textarea id=\"leaveReason\" name=\"reason\" rows=\"4\" class=\"w-full bg-black border border-[#3A3A3C] rounded-lg p-3 text-white text-sm mb-4 focus:border-[#F59E0B] outline-none transition-colors resize-none\" placeholder=\"請輸入請假原因...\" required></textarea><div class=\"flex gap-3\"><button type=\"button\" onclick=\"cancelLeaveRequest()\" class=\"flex-1 px-4 py-3 rounded-lg border border-[#3A3A3C] text-zinc-400 text-sm font-bold uppercase\">返回</button> <button type=\"submit\" class=\"flex-1 px-4 py-3 rounded-lg bg-[#F59E0B] text-black text-sm font-black uppercase shadow-lg shadow-[#F59E0B]/20\">提交請假</button></div></form></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = InlineConfirmation("booking").Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "</div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1062,12 +1044,12 @@ func MyBookingsModal(bookings []*MyBookingItem) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var47 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var47 == nil {
-			templ_7745c5c3_Var47 = templ.NopComponent
+		templ_7745c5c3_Var46 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var46 == nil {
+			templ_7745c5c3_Var46 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Var48 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Var47 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 			if !templ_7745c5c3_IsBuffer {
@@ -1079,34 +1061,34 @@ func MyBookingsModal(bookings []*MyBookingItem) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "<div class=\"flex-grow overflow-y-auto p-4 space-y-4\"><div class=\"flex gap-4 border-b border-[#27272A] mb-4\"><button id=\"tab-upcoming\" onclick=\"switchMyBookingsTab('upcoming')\" class=\"pb-2 text-[#FFD700] border-b-2 border-[#FFD700] font-medium\">即將到來</button> <button id=\"tab-history\" onclick=\"switchMyBookingsTab('history')\" class=\"pb-2 text-[#8E8E93] font-medium hover:text-white transition-colors border-b-2 border-transparent\">歷史紀錄</button></div><div id=\"my-bookings-list\" class=\"space-y-3\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "<div class=\"flex-grow overflow-y-auto p-4 space-y-4\" x-data=\"{ tab: 'upcoming' }\"><div class=\"flex bg-black p-1 rounded-lg border border-white/5 mb-4\"><button id=\"tab-upcoming\" @click=\"tab = 'upcoming'; switchMyBookingsTab('upcoming')\" :class=\"tab === 'upcoming' ? 'bg-[#27272A] text-[#FFD700] shadow-sm' : 'text-zinc-500'\" class=\"flex-1 py-2 rounded-md font-bold text-xs transition-all uppercase\">即將到來</button> <button id=\"tab-history\" @click=\"tab = 'history'; switchMyBookingsTab('history')\" :class=\"tab === 'history' ? 'bg-[#27272A] text-[#FFD700] shadow-sm' : 'text-zinc-500'\" class=\"flex-1 py-2 rounded-md font-bold text-xs transition-all uppercase\">歷史紀錄</button></div><div id=\"my-bookings-list\" class=\"space-y-3\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			for _, item := range bookings {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "<div class=\"bg-[#000000] p-3 rounded-lg border border-[#27272A]\"><div class=\"mb-2\"><div class=\"text-white font-bold\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "<div class=\"bg-black/40 p-3 rounded-xl border border-white/5\"><div class=\"mb-2\"><div class=\"text-white font-bold tracking-tight\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var48 string
+				templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(item.DateDisplay)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 389, Col: 74}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "</div><div class=\"text-[10px] text-zinc-500 font-bold uppercase\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var49 string
-				templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(item.DateDisplay)
+				templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(item.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 369, Col: 76}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 390, Col: 78}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "</div><div class=\"text-xs text-[#8E8E93]\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var50 string
-				templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(item.Title)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 369, Col: 132}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1135,7 +1117,7 @@ func MyBookingsModal(bookings []*MyBookingItem) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ModalLayout("my-bookings-modal", "我的預約", "closeMyBookings", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var48), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ModalLayout("my-bookings-modal", "我的預約", "closeMyBookings", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var47), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1159,77 +1141,77 @@ func InlineConfirmation(idPrefix string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var51 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var51 == nil {
-			templ_7745c5c3_Var51 = templ.NopComponent
+		templ_7745c5c3_Var50 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var50 == nil {
+			templ_7745c5c3_Var50 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "<div id=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var52 string
-		templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-panel")
+		var templ_7745c5c3_Var51 string
+		templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-panel")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 384, Col: 38}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 406, Col: 38}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "\" class=\"absolute bottom-0 left-0 right-0 bg-[#2C2C2E] p-6 pt-8 rounded-t-2xl sm:rounded-xl z-[70] flex flex-col gap-5 transform transition-transform duration-300 translate-y-full border-t border-white/10 shadow-2xl\"><div class=\"text-center\"><h4 id=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var52 string
+		templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-title")
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 408, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "\" class=\"absolute bottom-0 left-0 right-0 bg-[#2C2C2E] p-5 pt-6 rounded-t-2xl sm:rounded-xl z-[70] flex flex-col gap-4 transform transition-transform duration-300 translate-y-full border-t border-[#3A3A3C] shadow-2xl\"><div class=\"text-center\"><h4 id=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "\" class=\"text-white font-black text-lg mb-1 uppercase tracking-tight\">Confirm Action</h4><p id=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var53 string
-		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-title")
+		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-msg")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 385, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 409, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "\" class=\"text-white font-bold text-lg mb-1\">Confirm Action</h4><p id=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 78, "\" class=\"text-zinc-500 text-sm font-medium\">確定要執行此操作嗎？</p></div><div class=\"flex gap-3\"><button id=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var54 string
-		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-msg")
+		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-cancel")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 385, Col: 160}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 412, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 78, "\" class=\"text-[#8E8E93] text-sm\">Are you sure?</p></div><div class=\"flex gap-3\"><button id=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "\" class=\"flex-1 py-3.5 rounded-xl border border-white/10 text-zinc-400 font-bold text-sm uppercase\">取消</button> <button id=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var55 string
-		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-cancel")
+		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-ok")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 386, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 413, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "\" class=\"flex-1 py-3 rounded-xl border border-[#3A3A3C] text-white font-bold text-sm\">取消</button><button id=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var56 string
-		templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(idPrefix + "-confirm-ok")
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/forms/booking_v2/booking_v2.templ`, Line: 386, Col: 206}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 80, "\" class=\"flex-1 py-3 rounded-xl bg-[#FFD700] text-black font-bold text-sm\">確定</button></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 80, "\" class=\"flex-1 py-3.5 rounded-xl bg-[#FFD700] text-black font-black text-sm uppercase\">確定</button></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1253,12 +1235,12 @@ func Script(liffId string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var57 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var57 == nil {
-			templ_7745c5c3_Var57 = templ.NopComponent
+		templ_7745c5c3_Var56 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var56 == nil {
+			templ_7745c5c3_Var56 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, "<script src=\"/assets/js/booking_v2.js?v=2026030902\"></script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, "<script src=\"/assets/js/booking_v2.js?v=2026030908\"></script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

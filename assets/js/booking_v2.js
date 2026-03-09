@@ -1,15 +1,20 @@
-// Booking V2 Calendar and Action Logic
+// Booking V2 Calendar and Action Logic (Stable Version)
 
 const fetchApi = async (u, o = {}) => {
-    const csrfInput = document.querySelector('input[name="_csrf"]');
-    const csrfToken = csrfInput ? csrfInput.value : '';
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     const headers = { 'Content-Type': 'application/json', ...o.headers };
     
     if (csrfToken && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(o.method?.toUpperCase())) {
-        headers['X-CSRF-Token'] = csrfToken;
+        headers['X-CSRF-TOKEN'] = csrfToken;
     }
 
-    const res = await fetch(u, { ...o, headers });
+    const opts = {
+        ...o,
+        headers,
+        credentials: 'same-origin'
+    };
+
+    const res = await fetch(u, opts);
     const d = await res.json(); 
     if (!res.ok) throw new Error(d.message || 'API failed'); 
     return d;
@@ -33,7 +38,7 @@ const jsRenderTag = (p, mini) => {
     const bookingTime = p.booking_time || p.BookingTime;
     const bookingId = p.booking_id || p.BookingID;
     const escapedName = n.replace(/'/g, "\\'");
-    return `<button class="text-xs px-2 py-1 ${classes}" onclick="handleMyBookingTagClick(this, '${escapedName}', '${s}', '${bookingTime}', '${bookingId}', '${slotId}')">${n}${suffix}</button>`;
+    return `<button class="text-xs px-2 py-1 ${classes}" data-status="${s}" data-name="${escapedName}" onclick="handleMyBookingTagClick(this, '${escapedName}', this.dataset.status, '${bookingTime}', '${bookingId}', '${slotId}')">${n}${suffix}</button>`;
 };
 
 const jsRenderSlotContent = (s) => {
@@ -220,6 +225,7 @@ function openBookingPopup(id, time, endTime, title, bookedCount, capacity, atten
     bookedList.innerHTML = ''; input.value = ''; Array.from(draftC.children).forEach(c => c !== input && c.remove());
     if (attendees && attendees.length) { document.getElementById('booked-list-wrapper').classList.remove('hidden'); attendees.forEach(p => addBookedTag(p.name || p.Name, p.status || p.Status, p.booking_time || p.BookingTime, p.booking_id || p.BookingID)); }
     else document.getElementById('booked-list-wrapper').classList.add('hidden');
+    
     document.getElementById('booking-popup').classList.remove('hidden');
 }
 
@@ -227,18 +233,17 @@ function closeBookingPopup() {
     window.currentIdempotencyKey = null;
     document.getElementById('booking-popup').classList.add('hidden'); 
     
-    // 1. Reset main/leave views
+    // Reset views
     document.getElementById('booking-leave-view').classList.add('hidden'); 
     document.getElementById('booking-main-view').classList.remove('hidden'); 
     
-    // 2. Hide all inline confirmation panels immediately
+    // Hide all inline confirmation panels
     const panels = document.querySelectorAll('[id$="-confirm-panel"]');
     panels.forEach(p => {
         p.classList.add('translate-y-full');
         setTimeout(() => p.classList.add('hidden'), 300);
     });
 
-    // 3. Clear inputs
     const leaveInput = document.getElementById('leaveReason');
     if (leaveInput) leaveInput.value = '';
 }
@@ -247,7 +252,15 @@ function closeMyBookings() { document.getElementById('my-bookings-modal').classL
 
 const addBookedTag = (n, s, t, id) => {
     const tag = document.createElement('div'); tag.className = "flex items-center gap-1 px-3 py-1 rounded-full cursor-pointer transition-all " + getStatusClasses(s);
-    tag.innerHTML = ("<span>" + n + "</span>"); tag.onclick = () => handleTagAction(tag, "booking", n, s, t, id, (ns) => { if (ns === "Remove") tag.remove(); else tag.className = "flex items-center gap-1 px-3 py-1 rounded-full cursor-pointer transition-all " + getStatusClasses(ns); });
+    tag.innerHTML = ("<span>" + n + "</span>"); 
+    tag.dataset.status = s;
+    tag.onclick = () => handleTagAction(tag, "booking", n, tag.dataset.status, t, id, (ns) => { 
+        if (ns === "Remove") tag.remove(); 
+        else {
+            tag.dataset.status = ns;
+            tag.className = "flex items-center gap-1 px-3 py-1 rounded-full cursor-pointer transition-all " + getStatusClasses(ns); 
+        }
+    });
     document.getElementById('booked-participants-list').appendChild(tag); document.getElementById('booked-list-wrapper').classList.remove('hidden');
 };
 
@@ -263,7 +276,15 @@ async function switchMyBookingsTab(type) {
     } catch(e) { l.innerHTML = '<div class="text-center text-[#F87171] py-8">載入失敗</div>'; }
 }
 
-async function handleMyBookingTagClick(btn, n, s, t, id, slotId) { handleTagAction(btn, "my-booking", n, s, t, id, (ns) => { if (ns === "Remove") btn.remove(); else switchMyBookingsTab(currentTab); }, slotId); }
+async function handleMyBookingTagClick(btn, n, s, t, id, slotId) { 
+    handleTagAction(btn, "my-booking", n, btn.dataset.status || s, t, id, (ns) => { 
+        if (ns === "Remove") btn.remove(); 
+        else {
+            btn.dataset.status = ns;
+            switchMyBookingsTab(currentTab); 
+        }
+    }, slotId); 
+}
 async function handleTagAction(btn, prefix, n, s, t, id, callback, slotId) {
     const currentSlotId = slotId || document.getElementById('popup-slot-id').value;
     

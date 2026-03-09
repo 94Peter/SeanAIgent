@@ -2,9 +2,9 @@
 
 // HTMX CSRF Configuration
 document.body.addEventListener('htmx:configRequest', (evt) => {
-    const csrfInput = document.querySelector('input[name="_csrf"]');
-    if (csrfInput) {
-        evt.detail.headers['X-CSRF-Token'] = csrfInput.value;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (csrfToken) {
+        evt.detail.headers['X-CSRF-Token'] = csrfToken;
     }
 });
 
