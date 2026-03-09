@@ -41,7 +41,7 @@ templ UserDetail(model *UserDetailModel) {
 	<div class="w-full min-h-screen bg-[#000000] text-white font-sans pb-20">
 		<!-- Admin Header with Back Button -->
 		<div class="sticky top-0 z-50 bg-[#121212]/80 backdrop-blur-md border-b border-[#27272A] p-4 flex items-center gap-4">
-			<a href="/v2/admin/users/report" class="p-2 -ml-2 text-[#8E8E93] hover:text-white transition-colors">
+			<a href={ templ.URL(getLocalizedURL(ctx, "/v2/admin/users/report")) } class="p-2 -ml-2 text-[#8E8E93] hover:text-white transition-colors">
 				@icon.ChevronLeft(icon.Props{Size: 24})
 			</a>
 			<h1 class="text-lg font-bold">學員預約明細</h1>
@@ -102,14 +102,14 @@ templ UserDetail(model *UserDetailModel) {
 				<label class="text-[10px] font-bold text-[#525252] uppercase tracking-widest ml-1">切換篩選月份</label>
 				<div class="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
 					<a 
-						href={ templ.URL(fmt.Sprintf("/v2/admin/users/%s?month=all", model.UserID)) }
+						href={ templ.URL(getLocalizedURL(ctx, fmt.Sprintf("/v2/admin/users/%s?month=all", model.UserID))) }
 						class={ "px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors " + cond(model.CurrentMonth == "all" || model.CurrentMonth == "", "bg-[#FFD700] text-black", "bg-[#1C1C1E] text-[#8E8E93] border border-[#27272A]") }
 					>
 						全部紀錄
 					</a>
 					for _, m := range model.AvailableMonths {
 						<a 
-							href={ templ.URL(fmt.Sprintf("/v2/admin/users/%s?month=%s", model.UserID, m)) }
+							href={ templ.URL(getLocalizedURL(ctx, fmt.Sprintf("/v2/admin/users/%s?month=%s", model.UserID, m))) }
 							class={ "px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors " + cond(model.CurrentMonth == m, "bg-[#FFD700] text-black", "bg-[#1C1C1E] text-[#8E8E93] border border-[#27272A]") }
 						>
 							{ m }

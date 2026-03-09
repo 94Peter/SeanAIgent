@@ -69,11 +69,11 @@ func UserReport(model *UserReportModel) templ.Component {
 		}
 		templ_7745c5c3_Err = navigation.NavTabs(navigation.Props{
 			Tabs: []navigation.Tab{
-				{Text: "訓練場次", URL: "/v2/admin/dashboard"},
-				{Text: "經營分析", URL: "/v2/admin/analytics"},
-				{Text: "數據月報表", URL: "/v2/admin/users/report"},
+				{Text: "訓練場次", URL: getLocalizedURL(ctx, "/v2/admin/dashboard")},
+				{Text: "經營分析", URL: getLocalizedURL(ctx, "/v2/admin/analytics")},
+				{Text: "數據月報表", URL: getLocalizedURL(ctx, "/v2/admin/users/report")},
 			},
-			ActiveURL: "/v2/admin/users/report",
+			ActiveURL: getLocalizedURL(ctx, "/v2/admin/users/report"),
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -125,14 +125,14 @@ func UserReport(model *UserReportModel) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" onchange=\"const [y, m] = this.value.split('-'); window.location.href='?year=' + y + '&month=' + parseInt(m);\" class=\"absolute inset-0 w-full h-full opacity-0 pointer-events-none\"></div><a href=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" onchange=\"const [y, m] = this.value.split('-'); window.location.search='?year=' + y + '&month=' + parseInt(m);\" class=\"absolute inset-0 w-full h-full opacity-0 pointer-events-none\"></div><a href=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 templ.SafeURL
-		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(fmt.Sprintf("/v2/admin/users/report/export?year=%d&month=%d", model.Year, model.Month)))
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(getLocalizedURL(ctx, fmt.Sprintf("/v2/admin/users/report/export?year=%d&month=%d", model.Year, model.Month))))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 76, Col: 110}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 76, Col: 132}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -711,9 +711,9 @@ func UserReport(model *UserReportModel) templ.Component {
 									return templ_7745c5c3_Err
 								}
 								var templ_7745c5c3_Var35 templ.SafeURL
-								templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(fmt.Sprintf("/v2/admin/users/%s", user.UserID)))
+								templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(getLocalizedURL(ctx, fmt.Sprintf("/v2/admin/users/%s", user.UserID))))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 131, Col: 76}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 131, Col: 98}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 								if templ_7745c5c3_Err != nil {
@@ -1270,9 +1270,9 @@ func UserAccountMobileCard(user *UserAccountStat) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var70 templ.SafeURL
-				templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(fmt.Sprintf("/v2/admin/users/%s", user.UserID)))
+				templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(getLocalizedURL(ctx, fmt.Sprintf("/v2/admin/users/%s", user.UserID))))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 239, Col: 71}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/user_report.templ`, Line: 239, Col: 93}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var70))
 				if templ_7745c5c3_Err != nil {

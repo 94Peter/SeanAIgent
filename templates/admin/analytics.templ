@@ -36,11 +36,11 @@ templ AdminAnalytics(model *AnalyticsModel) {
 		<div class="sticky top-0 z-50 bg-[#121212] border-b border-[#27272A] p-4">
 			@navigation.NavTabs(navigation.Props{
 				Tabs: []navigation.Tab{
-					{Text: "訓練場次", URL: "/v2/admin/dashboard"},
-					{Text: "經營分析", URL: "/v2/admin/analytics"},
-					{Text: "數據月報表", URL: "/v2/admin/users/report"},
+					{Text: "訓練場次", URL: getLocalizedURL(ctx, "/v2/admin/dashboard")},
+					{Text: "經營分析", URL: getLocalizedURL(ctx, "/v2/admin/analytics")},
+					{Text: "數據月報表", URL: getLocalizedURL(ctx, "/v2/admin/users/report")},
 				},
-				ActiveURL: "/v2/admin/analytics",
+				ActiveURL: getLocalizedURL(ctx, "/v2/admin/analytics"),
 			})
 		</div>
 

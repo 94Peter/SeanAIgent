@@ -98,6 +98,7 @@ func (s *webService) Run(ctx context.Context) {
 		ezapi.WithRouterGroup(s.cfg.routerGroup),
 		ezapi.WithPort(s.cfg.port),
 		ezapi.WithMiddleware(
+			lineMid.SessionSaver(),
 			lineMid.LineLiff(),
 			lineMid.I18n("zh-tw", locales.LocaleExist),
 			lineMid.CheckAdmin(botreplyer.GetFollowStore()),

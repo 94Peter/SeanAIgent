@@ -40,11 +40,11 @@ templ UserReport(model *UserReportModel) {
 		<div class="sticky top-0 z-50 bg-[#121212] border-b border-[#27272A] p-4">
 			@navigation.NavTabs(navigation.Props{
 				Tabs: []navigation.Tab{
-					{Text: "訓練場次", URL: "/v2/admin/dashboard"},
-					{Text: "經營分析", URL: "/v2/admin/analytics"},
-					{Text: "數據月報表", URL: "/v2/admin/users/report"},
+					{Text: "訓練場次", URL: getLocalizedURL(ctx, "/v2/admin/dashboard")},
+					{Text: "經營分析", URL: getLocalizedURL(ctx, "/v2/admin/analytics")},
+					{Text: "數據月報表", URL: getLocalizedURL(ctx, "/v2/admin/users/report")},
 				},
-				ActiveURL: "/v2/admin/users/report",
+				ActiveURL: getLocalizedURL(ctx, "/v2/admin/users/report"),
 			})
 		</div>
 
@@ -68,12 +68,12 @@ templ UserReport(model *UserReportModel) {
 						<input 
 							type="month" 
 							value={ fmt.Sprintf("%d-%02d", model.Year, model.Month) }
-							onchange="const [y, m] = this.value.split('-'); window.location.href='?year=' + y + '&month=' + parseInt(m);"
+							onchange="const [y, m] = this.value.split('-'); window.location.search='?year=' + y + '&month=' + parseInt(m);"
 							class="absolute inset-0 w-full h-full opacity-0 pointer-events-none"
 						/>
 					</div>
 					<a 
-						href={ templ.URL(fmt.Sprintf("/v2/admin/users/report/export?year=%d&month=%d", model.Year, model.Month)) }
+						href={ templ.URL(getLocalizedURL(ctx, fmt.Sprintf("/v2/admin/users/report/export?year=%d&month=%d", model.Year, model.Month))) }
 						class="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[#06C755] px-4 py-2 rounded-lg text-sm font-semibold text-white hover:bg-[#05B04B] transition-colors shadow-lg"
 					>
 						@icon.Download(icon.Props{Size: 16})
@@ -128,7 +128,7 @@ templ UserReport(model *UserReportModel) {
 									@AttendanceProgress(user.AttendanceRate)
 								}
 								@table.Cell(table.CellProps{ Class: "text-right" }) {
-									<a href={ templ.URL(fmt.Sprintf("/v2/admin/users/%s", user.UserID)) } @click.stop class="text-[#60A5FA] hover:underline text-sm font-semibold">
+									<a href={ templ.URL(getLocalizedURL(ctx, fmt.Sprintf("/v2/admin/users/%s", user.UserID))) } @click.stop class="text-[#60A5FA] hover:underline text-sm font-semibold">
 										歷史全紀錄
 									</a>
 								}
@@ -236,7 +236,7 @@ templ UserAccountMobileCard(user *UserAccountStat) {
 						</div>
 					</div>
 				}
-				<a href={ templ.URL(fmt.Sprintf("/v2/admin/users/%s", user.UserID)) } class="block w-full text-center py-2 text-xs font-bold text-[#60A5FA] bg-[#60A5FA]/10 rounded-lg">
+				<a href={ templ.URL(getLocalizedURL(ctx, fmt.Sprintf("/v2/admin/users/%s", user.UserID))) } class="block w-full text-center py-2 text-xs font-bold text-[#60A5FA] bg-[#60A5FA]/10 rounded-lg">
 					查看完整歷史紀錄
 				</a>
 			</div>
