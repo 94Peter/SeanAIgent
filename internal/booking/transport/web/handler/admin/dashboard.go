@@ -195,6 +195,7 @@ func (api *adminAPI) getCheckinPage(c *gin.Context) {
 			IsWalkIn:    appt.IsWalkIn,
 			IsGuest:     appt.IsGuest,
 			ContactInfo: appt.ContactInfo,
+			LeaveReason: appt.LeaveReason,
 		})
 	}
 

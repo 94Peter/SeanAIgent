@@ -53,6 +53,7 @@ func getUserPipelineTrainDateHasApptState(userID string, q bson.M) mongo.Pipelin
 						{"isGuest", "$$u.is_guest"},
 						{"contactInfo", "$$u.contact_info"},
 						{"createdAt", "$$u.created_at"},
+						{"leaveReason", "$$u.leave.reason"},
 						// 在此處添加其他 UserAppointment 需要的欄位
 					}},
 				}},
