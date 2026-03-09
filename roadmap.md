@@ -22,7 +22,7 @@
 - [x] **Native Toast Integration**: Replace legacy `alert()` with project-native Toast system.
 - [x] **Input Robustness**: Enhanced server-side validation for participant names and contact info.
 - [x] **UI Polish**: Refine spacing and interactive feedback for a more modern feel.
-- [ ] **UI Animation Refinement**: Enhance transitions between calendar views and booking modals.
+- [x] **UI Animation Refinement**: Enhanced Modal transitions and real-time tag status updates (Leave/Booked sync).
 
 ### Track B: Advanced Coach Backend (教練管理後台強化)
 - [x] **Pre-aggregated Analytics (Snapshot)**: Implementation of `UserMonthlyStat` for instant report loading.
@@ -37,6 +37,7 @@
 ### Track C: Security Hardening (安全加固)
 - [ ] **API Rate Limiting**: Implement middleware to prevent DoS on booking and export endpoints.
 - [ ] **IDOR Protection**: Enforce strict horizontal permission checks (ensure users only access their own data).
+- [x] **CSRF Hardening**: Standardized token retrieval via Meta Tags and enforced session-based validation for all AJAX/Fetch requests.
 - [ ] **Security Headers & CSP**: Configure CSP and HSTS to mitigate XSS and clickjacking risks.
 - [x] **Go 1.25 Security Update**: Fully migrated to Go 1.25 to leverage latest security patches.
 
@@ -44,6 +45,7 @@
 - [x] **Frontend Resource Separation**: Extracted inline JS from `.templ` to `/assets/js/` for better caching.
 - [x] **V1 Field Deprecation Cleanup**: Thorough removal of legacy boolean fields (`is_checked_in`, `is_on_leave`).
 - [x] **Cache Busting Strategy**: Implemented versioning for all external JS assets to prevent stale code.
+- [x] **Identity Key Standardization**: Unified authentication keys across middlewares to resolve context retrieval failures.
 
 ---
 
