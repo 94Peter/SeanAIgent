@@ -59,11 +59,11 @@ func AdminDashboard(model *DashboardModel) templ.Component {
 		}
 		templ_7745c5c3_Err = navigation.NavTabs(navigation.Props{
 			Tabs: []navigation.Tab{
-				{Text: "訓練場次", URL: "/v2/admin/dashboard"},
-				{Text: "經營分析", URL: "/v2/admin/analytics"},
-				{Text: "數據月報表", URL: "/v2/admin/users/report"},
+				{Text: "訓練場次", URL: getLocalizedURL(ctx, "/v2/admin/dashboard")},
+				{Text: "經營分析", URL: getLocalizedURL(ctx, "/v2/admin/analytics")},
+				{Text: "數據月報表", URL: getLocalizedURL(ctx, "/v2/admin/users/report")},
 			},
-			ActiveURL: "/v2/admin/dashboard",
+			ActiveURL: getLocalizedURL(ctx, "/v2/admin/dashboard"),
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

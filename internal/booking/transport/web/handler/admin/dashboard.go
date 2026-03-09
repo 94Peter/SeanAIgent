@@ -88,6 +88,10 @@ func (api *adminAPI) adminGroup(r ezapi.Router) {
 }
 
 func (api *adminAPI) exportUserReport(c *gin.Context) {
+	if !isAdmin(c) {
+		c.Status(http.StatusUnauthorized)
+		return
+	}
 	now := time.Now()
 	yearStr := c.DefaultQuery("year", fmt.Sprintf("%d", now.Year()))
 	monthStr := c.DefaultQuery("month", fmt.Sprintf("%d", int(now.Month())))
@@ -166,6 +170,10 @@ func apptToRecord(appt *entity.Appointment) *admin.CheckinRecord {
 }
 
 func (api *adminAPI) getCheckinPage(c *gin.Context) {
+	lineliffid := lineutil.GetAdminDashboardLiffId()
+	if !checkUser(c, lineliffid) {
+		return
+	}
 	sessionID := c.Param("sessionId")
 
 	trainData, err := api.findTrainHasApptsByIdUC.Execute(c.Request.Context(), readTrain.ReqFindTrainHasApptsById{
@@ -211,7 +219,7 @@ func (api *adminAPI) getCheckinPage(c *gin.Context) {
 
 	com := templates.Layout(
 		admin.AdminCheckin(model),
-		"",
+		lineliffid,
 		&templates.OgMeta{
 			Title:       "場次點名管理 | Sean AIgent",
 			Description: "即時進行學員簽到、請假與臨時加人管理",
@@ -341,6 +349,10 @@ func (api *adminAPI) batchUpdateAttendance(c *gin.Context) {
 }
 
 func (api *adminAPI) searchStudents(c *gin.Context) {
+	if !isAdmin(c) {
+		c.Status(http.StatusUnauthorized)
+		return
+	}
 	keyword := c.Query("q")
 	sessionID := c.Query("sessionId") // Pass this from frontend
 	if keyword == "" {
@@ -364,6 +376,10 @@ func (api *adminAPI) searchStudents(c *gin.Context) {
 }
 
 func (api *adminAPI) getAnalytics(c *gin.Context) {
+	lineliffid := lineutil.GetAdminDashboardLiffId()
+	if !checkUser(c, lineliffid) {
+		return
+	}
 	resp, err := api.getBusinessAnalyticsUC.Execute(c.Request.Context(), readStats.ReqGetBusinessAnalytics{
 		MonthsLimit: 12,
 	})
@@ -396,7 +412,7 @@ func (api *adminAPI) getAnalytics(c *gin.Context) {
 
 	com := templates.Layout(
 		admin.AdminAnalytics(model),
-		"",
+		lineliffid,
 		&templates.OgMeta{
 			Title:       "經營分析看板 | Sean AIgent",
 			Description: "深度分析訓練營經營數據與成長趨勢",
@@ -517,6 +533,10 @@ func (api *adminAPI) getDashboard(c *gin.Context) {
 }
 
 func (api *adminAPI) getUserDetail(c *gin.Context) {
+	lineliffid := lineutil.GetAdminDashboardLiffId()
+	if !checkUser(c, lineliffid) {
+		return
+	}
 	userID := c.Param("userId")
 	monthQuery := c.DefaultQuery("month", "all")
 
@@ -625,7 +645,7 @@ func (api *adminAPI) getUserDetail(c *gin.Context) {
 
 	com := templates.Layout(
 		admin.UserDetail(model),
-		"",
+		lineliffid,
 		&templates.OgMeta{
 			Title:       "學員預約明細 | Sean AIgent",
 			Description: "檢視學員每月預約與出席狀況",
@@ -641,6 +661,10 @@ func (api *adminAPI) getUserDetail(c *gin.Context) {
 }
 
 func (api *adminAPI) getUserReport(c *gin.Context) {
+	lineliffid := lineutil.GetAdminDashboardLiffId()
+	if !checkUser(c, lineliffid) {
+		return
+	}
 	now := time.Now()
 	yearStr := c.DefaultQuery("year", fmt.Sprintf("%d", now.Year()))
 	monthStr := c.DefaultQuery("month", fmt.Sprintf("%d", int(now.Month())))
@@ -709,7 +733,7 @@ func (api *adminAPI) getUserReport(c *gin.Context) {
 
 	com := templates.Layout(
 		admin.UserReport(model),
-		"",
+		lineliffid,
 		&templates.OgMeta{
 			Title:       "學員數據月報表 | Sean AIgent",
 			Description: "檢視家長帳號與各個孩子的出席趨勢",

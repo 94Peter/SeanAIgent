@@ -53,7 +53,7 @@ templ AdminCheckin(model *CheckinPageModel) {
 		<div class="sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/5 px-4 py-5">
 			<div class="flex items-center justify-between mb-6">
 				<div class="flex items-center gap-4">
-					<a href="/v2/admin/dashboard" class="bg-white/5 p-2.5 rounded-2xl text-zinc-400 active:scale-90 transition-all border border-white/5">
+					<a href={ templ.URL(getLocalizedURL(ctx, "/v2/admin/dashboard")) } class="bg-white/5 p-2.5 rounded-2xl text-zinc-400 active:scale-90 transition-all border border-white/5">
 						@icon.ChevronLeft(icon.Props{Size: 20})
 					</a>
 					<div>
@@ -226,7 +226,7 @@ templ AddStudentModal(sessionID string) {
 							type="text" 
 							name="q"
 							placeholder="搜尋學員姓名..." 
-							hx-get="/v2/admin/students/search"
+							hx-get={ getLocalizedURL(ctx, "/v2/admin/students/search") }
 							hx-vals={ fmt.Sprintf(`{"sessionId": "%s"}`, sessionID) }
 							hx-trigger="keyup changed delay:300ms"
 							hx-target="#search-results"
@@ -245,7 +245,7 @@ templ AddStudentModal(sessionID string) {
 
 				<div x-show="tab === 'new'" class="space-y-5">
 					<form 
-						hx-post="/v2/admin/checkin/walkin"
+						hx-post={ getLocalizedURL(ctx, "/v2/admin/checkin/walkin") }
 						hx-on::after-request="showAddModal = false"
 						class="space-y-4"
 					>
@@ -270,7 +270,7 @@ templ AddStudentModal(sessionID string) {
 
 templ SearchResultRow(id, child, parent, userId, sessionId string) {
 	<button 
-		hx-post="/v2/admin/checkin/walkin"
+		hx-post={ getLocalizedURL(ctx, "/v2/admin/checkin/walkin") }
 		hx-vals={ fmt.Sprintf(`{"trainDateId": "%s", "childName": "%s", "userId": "%s", "parentName": "%s"}`, sessionId, child, userId, parent) }
 		hx-on::after-request="showAddModal = false"
 		class="w-full flex items-center justify-between p-5 bg-black border border-white/5 rounded-2xl hover:border-[#60A5FA]/50 hover:bg-white/[0.02] transition-all group active:scale-[0.98]"
