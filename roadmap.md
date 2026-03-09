@@ -21,7 +21,8 @@
 - [x] **Student Stats Dashboard**: 90-day overview of attendance and bookings.
 - [x] **Native Toast Integration**: Replace legacy `alert()` with project-native Toast system.
 - [x] **Input Robustness**: Enhanced server-side validation for participant names and contact info.
-- [ ] **UI Polish**: Refine spacing and interactive feedback for a more modern feel.
+- [x] **UI Polish**: Refine spacing and interactive feedback for a more modern feel.
+- [ ] **UI Animation Refinement**: Enhance transitions between calendar views and booking modals.
 
 ### Track B: Advanced Coach Backend (教練管理後台強化)
 - [x] **Pre-aggregated Analytics (Snapshot)**: Implementation of `UserMonthlyStat` for instant report loading.
@@ -29,6 +30,7 @@
 - [x] **Automated Cron Jobs**: Nightly sync for "Auto Mark Absent" and stats calibration.
 - [x] **Server-side Report Engine**: Pagination and search for student attendance reports.
 - [x] **CSV Export**: One-click export for monthly student attendance and stats.
+- [x] **Leave Reason Visibility**: Coaches can now see the student's leave reason during check-in.
 - [ ] **Accounting & Payment Tracking**: View member payment records and status (Paid/Unpaid).
 - [ ] **Data Visualization**: Advanced charts for revenue trends and class occupancy.
 
@@ -41,16 +43,16 @@
 ### Track D: Tech Debt & Architecture (技術債與架構維護)
 - [x] **Frontend Resource Separation**: Extracted inline JS from `.templ` to `/assets/js/` for better caching.
 - [x] **V1 Field Deprecation Cleanup**: Thorough removal of legacy boolean fields (`is_checked_in`, `is_on_leave`).
-- [x] **Data Migration Script**: Provided automated scripts for clearing redundant database fields.
+- [x] **Cache Busting Strategy**: Implemented versioning for all external JS assets to prevent stale code.
 
 ---
 
 ## 🏟️ v2.2.0 - Team & School Squad Management (團隊與校隊管理)
 *Goal: Expand the system to handle structured groups and competitive teams with data isolation.*
 
-### Track A: Team Management (團隊功能)
-- [ ] **Team Creation**: Capability for coaches to create and manage specific squads.
-- [ ] **Member Assignment**: Logic to group students into teams for easier bulk management.
+### Track A: Team Management & Real-time
+- [ ] **Team Creation & Member Assignment**: Capability for coaches to manage specific squads.
+- [ ] **Real-time Availability Updates**: Auto-refresh slot capacity via WebSockets or long polling.
 - [ ] **Role-Based Access (RBAC)**: Permission levels for head coaches vs. assistant coaches.
 
 ### Track B: School Team Attendance (校隊出缺席管理)
@@ -67,4 +69,4 @@
 - [ ] **Multi-language Expansion**: Full i18n coverage for both Client and Admin UIs.
 
 ---
-*Roadmap last updated: 2026-03-08 by Gemini CLI Security Engineer*
+*Roadmap last updated: 2026-03-09 by Gemini CLI Security Engineer*
