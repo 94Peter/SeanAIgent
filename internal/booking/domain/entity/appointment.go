@@ -3,6 +3,7 @@ package entity
 import (
 	"errors"
 	"fmt"
+	"seanAIgent/internal/util/validator"
 	"time"
 )
 
@@ -77,7 +78,7 @@ type Appointment struct {
 
 func NewLeaveInfo(reason string, status leaveStatus, createdAt time.Time) VO_LeaveInfo {
 	return VO_LeaveInfo{
-		reason:    reason,
+		reason:    validator.SanitizeInput(reason),
 		status:    status,
 		createdAt: createdAt,
 	}
@@ -106,9 +107,22 @@ func (leave VO_LeaveInfo) CreatedAt() time.Time {
 }
 
 func (a Appointment) Validate() error {
-	if a.childName == "" {
-		return fmt.Errorf("%w: child name is empty", ErrAppointmentInvalid)
+	// 驗證姓名
+	name, ok := validator.ValidateName(a.childName, 1, 20)
+	if !ok {
+		return fmt.Errorf("%w: child name is invalid or too long (max 20 chars)", ErrAppointmentInvalid)
 	}
+	a.childName = name
+
+	// 如果是訪客，驗證聯絡資訊
+	if a.isGuest {
+		phone, ok := validator.ValidatePhone(a.contactInfo)
+		if !ok {
+			return fmt.Errorf("%w: contact info must be a valid 10-digit phone number (e.g., 0912345678)", ErrAppointmentInvalid)
+		}
+		a.contactInfo = phone
+	}
+
 	if a.trainingId == "" {
 		return fmt.Errorf("%w: training id is empty", ErrAppointmentInvalid)
 	}
@@ -134,7 +148,9 @@ func WithCreateAppt(id, trainingID string, user User, childName string) apptOpt 
 		appt.id = id
 		appt.trainingId = trainingID
 		appt.user = user
-		appt.childName = childName
+		// 清理並設定姓名
+		name, _ := validator.ValidateName(childName, 1, 20)
+		appt.childName = name
 		appt.status = StatusConfirmed
 		appt.createdAt = time.Now()
 		appt.updateAt = appt.createdAt
@@ -150,7 +166,8 @@ func WithWalkIn(isWalkIn bool) apptOpt {
 func WithGuest(isGuest bool, contactInfo string) apptOpt {
 	return func(appt *Appointment) {
 		appt.isGuest = isGuest
-		appt.contactInfo = contactInfo
+		// 清理並設定聯絡資訊
+		appt.contactInfo = validator.SanitizeInput(contactInfo)
 	}
 }
 
@@ -168,7 +185,8 @@ func WithUser(u User) apptOpt {
 
 func WithChildName(name string) apptOpt {
 	return func(appt *Appointment) {
-		appt.childName = name
+		cleaned, _ := validator.ValidateName(name, 1, 20)
+		appt.childName = cleaned
 	}
 }
 

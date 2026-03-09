@@ -20,7 +20,7 @@
 - [x] **Infinite Scrolling Calendar**: Week-by-week loading with stable anchoring.
 - [x] **Student Stats Dashboard**: 90-day overview of attendance and bookings.
 - [x] **Native Toast Integration**: Replace legacy `alert()` with project-native Toast system.
-- [ ] **Input Robustness**: Enhanced server-side validation for participant names and contact info.
+- [x] **Input Robustness**: Enhanced server-side validation for participant names and contact info.
 - [ ] **UI Polish**: Refine spacing and interactive feedback for a more modern feel.
 
 ### Track B: Advanced Coach Backend (教練管理後台強化)

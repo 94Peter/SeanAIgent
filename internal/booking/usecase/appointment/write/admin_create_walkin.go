@@ -3,6 +3,8 @@ package write
 import (
 	"context"
 	"errors"
+	"fmt"
+	"seanAIgent/internal/util/validator"
 	"time"
 
 	"seanAIgent/internal/booking/domain"
@@ -41,13 +43,21 @@ func (uc *adminCreateWalkInUseCase) Execute(ctx context.Context, req ReqAdminCre
 		return nil, ErrCreateApptTrainDateNotFound.Wrap(err)
 	}
 
-	// 2. Prepare User Entity
+	// 2. Prepare User Entity & Validate Contact Info for Guests
 	userID := req.UserID
 	userName := req.ParentName
+	contactInfo := req.ContactInfo
 	isGuest := false
+	
 	if userID == "" {
 		isGuest = true
-		userID = "GUEST_" + req.ContactInfo // Temporary unique ID for guest
+		// 驗證電話格式
+		cleanedPhone, ok := validator.ValidatePhone(contactInfo)
+		if !ok {
+			return nil, ErrCreateApptNewDomainEntityFail.Wrap(fmt.Errorf("聯絡資訊必須是有效的 10 位手機號碼 (例如 0912345678)"))
+		}
+		contactInfo = cleanedPhone
+		userID = "GUEST_" + contactInfo
 		if userName == "" {
 			userName = "體驗家長"
 		}
@@ -60,7 +70,7 @@ func (uc *adminCreateWalkInUseCase) Execute(ctx context.Context, req ReqAdminCre
 	appt, domainErr := entity.NewAppointment(
 		entity.WithCreateAppt(apptID, req.TrainDateID, user, req.ChildName),
 		entity.WithWalkIn(true),
-		entity.WithGuest(isGuest, req.ContactInfo),
+		entity.WithGuest(isGuest, contactInfo),
 	)
 	if domainErr != nil {
 		return nil, ErrCreateApptNewDomainEntityFail.Wrap(domainErr)
