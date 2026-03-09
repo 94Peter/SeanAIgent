@@ -62,16 +62,28 @@ function checkinManager(initialData, sessionId, isStarted) {
 
                 if (response.ok) {
                     this.original = JSON.parse(JSON.stringify(this.attendance));
-                    window.location.reload(); // Refresh to get fresh data
+                    showToast({
+                        title: "儲存成功",
+                        description: "簽到狀態已更新",
+                        variant: "default"
+                    });
+                    setTimeout(() => window.location.reload(), 1500); 
                 } else {
                     const data = await response.json();
-                    alert(data.message || '儲存失敗，請檢查時間限制');
+                    showToast({
+                        title: "儲存失敗",
+                        description: data.message || '請檢查時間限制',
+                        variant: "destructive"
+                    });
                 }
-            } catch (e) {
-                alert('儲存出錯');
-            } finally {
+                } catch (e) {
+                showToast({
+                    title: "系統錯誤",
+                    description: "儲存過程發生問題",
+                    variant: "destructive"
+                });
+                } finally {
                 this.submitting = false;
-            }
-        }
+                }        }
     }
 }

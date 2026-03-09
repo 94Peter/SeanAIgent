@@ -169,7 +169,7 @@ func AdminCheckin(model *CheckinPageModel) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</div><script src=\"https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js\" defer></script><script>\n\t\t\tdocument.body.addEventListener('htmx:configRequest', (evt) => {\n\t\t\t\tconst csrfInput = document.querySelector('input[name=\"_csrf\"]');\n\t\t\t\tif (csrfInput) {\n\t\t\t\t\tevt.detail.headers['X-CSRF-Token'] = csrfInput.value;\n\t\t\t\t}\n\t\t\t});\n\n\t\t\tfunction checkinManager(initialData, sessionId, isStarted) {\n\t\t\t\treturn {\n\t\t\t\t\tattendance: initialData,\n\t\t\t\t\toriginal: JSON.parse(JSON.stringify(initialData)),\n\t\t\t\t\tsessionId: sessionId,\n\t\t\t\t\tisStarted: isStarted,\n\t\t\t\t\tshowAddModal: false,\n\t\t\t\t\tsubmitting: false,\n\t\t\t\t\t\n\t\t\t\t\tget hasChanges() {\n\t\t\t\t\t\treturn JSON.stringify(this.attendance) !== JSON.stringify(this.original);\n\t\t\t\t\t},\n\n\t\t\t\t\tget stats() {\n\t\t\t\t\t\tconst vals = Object.values(this.attendance);\n\t\t\t\t\t\treturn {\n\t\t\t\t\t\t\ttotal: vals.length,\n\t\t\t\t\t\t\tattended: vals.filter(v => v === 'CheckedIn').length,\n\t\t\t\t\t\t\tleave: vals.filter(v => v === 'Leave').length,\n\t\t\t\t\t\t\tabsent: vals.filter(v => v === 'Absent').length\n\t\t\t\t\t\t};\n\t\t\t\t\t},\n\n\t\t\t\t\tsetStatus(id, status) {\n\t\t\t\t\t\tif (!this.isStarted) return;\n\t\t\t\t\t\t// Toggle logic: if clicking the same status, revert to Pending\n\t\t\t\t\t\tif (this.attendance[id] === status) {\n\t\t\t\t\t\t\tthis.attendance[id] = 'Pending';\n\t\t\t\t\t\t} else {\n\t\t\t\t\t\t\tthis.attendance[id] = status;\n\t\t\t\t\t\t}\n\t\t\t\t\t},\n\n\t\t\t\t\tasync submitBatch() {\n\t\t\t\t\t\tif (this.submitting || !this.isStarted) return;\n\t\t\t\t\t\tthis.submitting = true;\n\t\t\t\t\t\t\n\t\t\t\t\t\tconst updates = Object.entries(this.attendance)\n\t\t\t\t\t\t\t.filter(([id, status]) => status !== this.original[id])\n\t\t\t\t\t\t\t.map(([id, status]) => ({ bookingId: id, status: status }));\n\n\t\t\t\t\t\ttry {\n\t\t\t\t\t\t\tconst response = await fetch('/v2/admin/checkin/batch-update', {\n\t\t\t\t\t\t\t\tmethod: 'POST',\n\t\t\t\t\t\t\t\theaders: {\n\t\t\t\t\t\t\t\t\t'Content-Type': 'application/json',\n\t\t\t\t\t\t\t\t\t'X-CSRF-Token': document.querySelector('input[name=\"_csrf\"]').value\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\tbody: JSON.stringify({\n\t\t\t\t\t\t\t\t\tsessionId: this.sessionId,\n\t\t\t\t\t\t\t\t\tupdates: updates\n\t\t\t\t\t\t\t\t})\n\t\t\t\t\t\t\t});\n\n\t\t\t\t\t\t\tif (response.ok) {\n\t\t\t\t\t\t\t\tthis.original = JSON.parse(JSON.stringify(this.attendance));\n\t\t\t\t\t\t\t\twindow.location.reload(); // Refresh to get fresh data\n\t\t\t\t\t\t\t} else {\n\t\t\t\t\t\t\t\tconst data = await response.json();\n\t\t\t\t\t\t\t\talert(data.message || '儲存失敗，請檢查時間限制');\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t} catch (e) {\n\t\t\t\t\t\t\talert('儲存出錯');\n\t\t\t\t\t\t} finally {\n\t\t\t\t\t\t\tthis.submitting = false;\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t</script></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</div><script src=\"/assets/js/admin/checkin.js\"></script></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -205,7 +205,7 @@ func BatchCheckinRow(b *CheckinRecord) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("attendance['%s'] === 'CheckedIn' ? 'border-[#34D399]/50 bg-[#34D399]/5' : (attendance['%s'] === 'Leave' || attendance['%s'] === 'Absent' ? 'opacity-60 border-dashed' : '')", b.BookingID, b.BookingID, b.BookingID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 218, Col: 236}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 139, Col: 236}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -240,7 +240,7 @@ func BatchCheckinRow(b *CheckinRecord) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(b.ChildName[0:1])
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 222, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 143, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -253,7 +253,7 @@ func BatchCheckinRow(b *CheckinRecord) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(b.ChildName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 226, Col: 61}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 147, Col: 61}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -276,7 +276,7 @@ func BatchCheckinRow(b *CheckinRecord) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(b.ParentName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 231, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 152, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -289,7 +289,7 @@ func BatchCheckinRow(b *CheckinRecord) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("setStatus('%s', 'CheckedIn')", b.BookingID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 238, Col: 69}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 159, Col: 69}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -302,7 +302,7 @@ func BatchCheckinRow(b *CheckinRecord) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("attendance['%s'] === 'CheckedIn' ? 'bg-[#34D399] text-black shadow-lg shadow-[#34D399]/20 scale-95' : 'text-[#525252] hover:bg-white/5'", b.BookingID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 240, Col: 176}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 161, Col: 176}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -323,7 +323,7 @@ func BatchCheckinRow(b *CheckinRecord) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("setStatus('%s', 'Leave')", b.BookingID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 246, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 167, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -336,7 +336,7 @@ func BatchCheckinRow(b *CheckinRecord) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("attendance['%s'] === 'Leave' ? 'bg-[#F59E0B] text-black scale-95' : 'text-[#525252] hover:bg-white/5'", b.BookingID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 248, Col: 142}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 169, Col: 142}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -349,7 +349,7 @@ func BatchCheckinRow(b *CheckinRecord) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("setStatus('%s', 'Absent')", b.BookingID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 254, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 175, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -362,7 +362,7 @@ func BatchCheckinRow(b *CheckinRecord) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("attendance['%s'] === 'Absent' ? 'bg-[#EF4444] text-white scale-95' : 'text-[#525252] hover:bg-white/5'", b.BookingID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 256, Col: 143}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 177, Col: 143}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -412,7 +412,7 @@ func AddStudentModal(sessionID string) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"sessionId": "%s"}`, sessionID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 287, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 208, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -433,7 +433,7 @@ func AddStudentModal(sessionID string) templ.Component {
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(sessionID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 306, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 227, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
@@ -475,7 +475,7 @@ func SearchResultRow(id, child, parent, userId, sessionId string) templ.Componen
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"trainDateId": "%s", "childName": "%s", "userId": "%s", "parentName": "%s"}`, sessionId, child, userId, parent))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 322, Col: 137}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 243, Col: 137}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 		if templ_7745c5c3_Err != nil {
@@ -488,7 +488,7 @@ func SearchResultRow(id, child, parent, userId, sessionId string) templ.Componen
 		var templ_7745c5c3_Var24 string
 		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(child)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 327, Col: 72}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 248, Col: 72}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 		if templ_7745c5c3_Err != nil {
@@ -501,7 +501,7 @@ func SearchResultRow(id, child, parent, userId, sessionId string) templ.Componen
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(parent)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 328, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/checkin.templ`, Line: 249, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {

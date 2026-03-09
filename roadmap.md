@@ -19,7 +19,7 @@
 ### Track A: Client-Facing Booking UX (預約端優化)
 - [x] **Infinite Scrolling Calendar**: Week-by-week loading with stable anchoring.
 - [x] **Student Stats Dashboard**: 90-day overview of attendance and bookings.
-- [ ] **Native Toast Integration**: Replace legacy `alert()` with project-native Toast system.
+- [x] **Native Toast Integration**: Replace legacy `alert()` with project-native Toast system.
 - [ ] **Input Robustness**: Enhanced server-side validation for participant names and contact info.
 - [ ] **UI Polish**: Refine spacing and interactive feedback for a more modern feel.
 

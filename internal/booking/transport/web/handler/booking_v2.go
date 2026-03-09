@@ -170,7 +170,7 @@ func (api *v2BookingAPI) getCalendarStatsV2(c *gin.Context) {
 func (api *v2BookingAPI) getBookingV2Form(c *gin.Context) {
 	lineliffid := lineutil.GetBookingV2LiffId()
 	userID := getUserID(c)
-
+	fmt.Println("========userID:", userID)
 	ctx := c.Request.Context()
 	now := time.Now()
 
