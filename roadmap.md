@@ -8,25 +8,23 @@
 - **High-Performance Booking**: 
     - Achieved **4,498 RPS** with **2.16ms** avg latency.
     - Implemented `SingleFlight` to prevent cache stampedes.
-    - Optimized `groupToWeeks` algorithm to $O(N)$.
 - **Asynchronous Cache Invalidation**: Background `CacheWorker` pool for non-blocking cleanup.
 - **Observability**: Optimized OpenTelemetry sampling (5%) for reduced GC overhead.
 
 ---
 
 ## 🛠️ v2.1.0 - Coach Backend Empowerment & UX Refinement (In Progress)
-*Goal: Strengthen coach management capabilities and deliver a premium student experience.*
+*Goal: Strengthen coach management capabilities and deliver a premium, secure student experience.*
 
 ### Track A: Client-Facing Booking UX (預約端優化)
 - [x] **Infinite Scrolling Calendar**: Week-by-week loading with stable anchoring.
 - [x] **Student Stats Dashboard**: 90-day overview of attendance and bookings.
-- [ ] **Frontend Resource Separation**: Extract inline JS from `.templ` to `/assets/js/`.
-- [ ] **Native Toast Integration**: Replace `alert()` with project-native Toast system.
-- [ ] **Input Robustness**: Enhanced server-side validation for participant names.
+- [ ] **Native Toast Integration**: Replace legacy `alert()` with project-native Toast system.
+- [ ] **Input Robustness**: Enhanced server-side validation for participant names and contact info.
+- [ ] **UI Polish**: Refine spacing and interactive feedback for a more modern feel.
 
 ### Track B: Advanced Coach Backend (教練管理後台強化)
 - [x] **Pre-aggregated Analytics (Snapshot)**: Implementation of `UserMonthlyStat` for instant report loading.
-- [x] **Event-Driven Stats Linkage**: Automatic updates via `AppointmentStatusChanged` events.
 - [x] **Batch Attendance Updates**: Bulk marking of attendance/absence in admin UI.
 - [x] **Automated Cron Jobs**: Nightly sync for "Auto Mark Absent" and stats calibration.
 - [x] **Server-side Report Engine**: Pagination and search for student attendance reports.
@@ -34,33 +32,39 @@
 - [ ] **Accounting & Payment Tracking**: View member payment records and status (Paid/Unpaid).
 - [ ] **Data Visualization**: Advanced charts for revenue trends and class occupancy.
 
-### Track C: Tech Debt & Infrastructure (技術債與底層維護)
-- [x] **Go 1.25 Upgrade**: Full migration of project environment, Docker images, and CI to Go 1.25.
-- [x] **V1 Field Deprecation Cleanup**: Thorough removal of legacy boolean fields (`is_checked_in`, `is_on_leave`) from database entities and aggregation pipelines.
+### Track C: Security Hardening (安全加固)
+- [ ] **API Rate Limiting**: Implement middleware to prevent DoS on booking and export endpoints.
+- [ ] **IDOR Protection**: Enforce strict horizontal permission checks (ensure users only access their own data).
+- [ ] **Security Headers & CSP**: Configure CSP and HSTS to mitigate XSS and clickjacking risks.
+- [x] **Go 1.25 Security Update**: Fully migrated to Go 1.25 to leverage latest security patches.
+
+### Track D: Tech Debt & Architecture (技術債與架構維護)
+- [x] **Frontend Resource Separation**: Extracted inline JS from `.templ` to `/assets/js/` for better caching.
+- [x] **V1 Field Deprecation Cleanup**: Thorough removal of legacy boolean fields (`is_checked_in`, `is_on_leave`).
 - [x] **Data Migration Script**: Provided automated scripts for clearing redundant database fields.
 
 ---
 
 ## 🏟️ v2.2.0 - Team & School Squad Management (團隊與校隊管理)
-*Goal: Expand the system to handle structured groups and competitive teams.*
+*Goal: Expand the system to handle structured groups and competitive teams with data isolation.*
 
 ### Track A: Team Management (團隊功能)
-- [ ] **Team Creation**: Capability for coaches to create and manage specific "Teams" or "Squads".
+- [ ] **Team Creation**: Capability for coaches to create and manage specific squads.
 - [ ] **Member Assignment**: Logic to group students into teams for easier bulk management.
-- [ ] **Role-Based Access**: Permission levels for team captains or assistant coaches.
+- [ ] **Role-Based Access (RBAC)**: Permission levels for head coaches vs. assistant coaches.
 
 ### Track B: School Team Attendance (校隊出缺席管理)
 - [ ] **Squad Attendance Tracking**: Specialized tracking for school team practice sessions.
+- [ ] **Team Scoped Security**: Ensure all records and queries are strictly isolated by `team_id`.
 - [ ] **Performance Logging**: Linking attendance data with basic performance metrics or notes.
-- [ ] **Automated Reporting**: Weekly/Monthly attendance summaries for school athletic departments.
 
 ---
 
-## 🔮 v2.3.0+ - Future Considerations
-- [ ] **Real-time Notification Center**: In-app/LINE notifications for booking approvals and class changes.
+## 🔮 v2.3.0+ - Compliance, Auditing & Expansion
+- [ ] **PII Masking**: Mask sensitive student data in non-essential admin views.
+- [ ] **Automated Auditing**: Event-based dashboard for reviewing critical state changes.
+- [ ] **Real-time Notification Center**: In-app/LINE notifications for booking approvals.
 - [ ] **Multi-language Expansion**: Full i18n coverage for both Client and Admin UIs.
-- [ ] **Waitlist System**: Automated queue management for fully booked classes.
-- [ ] **Payment Integration**: Support for package purchases and credit management.
 
 ---
-*Roadmap last updated: 2026-03-08 by Gemini CLI*
+*Roadmap last updated: 2026-03-08 by Gemini CLI Security Engineer*
