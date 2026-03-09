@@ -133,7 +133,7 @@ func AdminAnalytics(model *AnalyticsModel) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div><!-- Chart.js Setup --><script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script><script>\n\t\t\tdocument.addEventListener('DOMContentLoaded', function() {\n\t\t\t\tconst canvas = document.getElementById('historicalChart');\n\t\t\t\tif (!canvas) return;\n\n\t\t\t\tconst ctx = canvas.getContext('2d');\n\t\t\t\tconst stats = JSON.parse(canvas.getAttribute('data-stats') || '[]');\n\t\t\t\t\n\t\t\t\tconst labels = stats.map(s => s.month);\n\t\t\t\tconst bookedData = stats.map(s => s.bookedCount);\n\t\t\t\tconst attendedData = stats.map(s => s.attendedCount);\n\n\t\t\t\tnew Chart(ctx, {\n\t\t\t\t\ttype: 'line',\n\t\t\t\t\tdata: {\n\t\t\t\t\t\tlabels: labels,\n\t\t\t\t\t\tdatasets: [\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\tlabel: '預約數',\n\t\t\t\t\t\t\t\tdata: bookedData,\n\t\t\t\t\t\t\t\tborderColor: '#60A5FA',\n\t\t\t\t\t\t\t\tbackgroundColor: 'rgba(96, 165, 250, 0.1)',\n\t\t\t\t\t\t\t\tborderWidth: 2,\n\t\t\t\t\t\t\t\ttension: 0.3,\n\t\t\t\t\t\t\t\tfill: true\n\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\tlabel: '簽到數',\n\t\t\t\t\t\t\t\tdata: attendedData,\n\t\t\t\t\t\t\t\tborderColor: '#34D399',\n\t\t\t\t\t\t\t\tbackgroundColor: 'rgba(52, 211, 153, 0.1)',\n\t\t\t\t\t\t\t\tborderWidth: 2,\n\t\t\t\t\t\t\t\ttension: 0.3,\n\t\t\t\t\t\t\t\tfill: true\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t]\n\t\t\t\t\t},\n\t\t\t\t\toptions: {\n\t\t\t\t\t\tresponsive: true,\n\t\t\t\t\t\tmaintainAspectRatio: false,\n\t\t\t\t\t\tinteraction: {\n\t\t\t\t\t\t\tmode: 'index',\n\t\t\t\t\t\t\tintersect: false,\n\t\t\t\t\t\t},\n\t\t\t\t\t\tscales: {\n\t\t\t\t\t\t\ty: {\n\t\t\t\t\t\t\t\tbeginAtZero: true,\n\t\t\t\t\t\t\t\tgrid: {\n\t\t\t\t\t\t\t\t\tcolor: '#27272A'\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\tticks: {\n\t\t\t\t\t\t\t\t\tcolor: '#8E8E93'\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\tx: {\n\t\t\t\t\t\t\t\tgrid: {\n\t\t\t\t\t\t\t\t\tdisplay: false\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\tticks: {\n\t\t\t\t\t\t\t\t\tcolor: '#8E8E93'\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t},\n\t\t\t\t\t\tplugins: {\n\t\t\t\t\t\t\tlegend: {\n\t\t\t\t\t\t\t\tposition: 'top',\n\t\t\t\t\t\t\t\tlabels: {\n\t\t\t\t\t\t\t\t\tcolor: '#FFFFFF',\n\t\t\t\t\t\t\t\t\tboxWidth: 12,\n\t\t\t\t\t\t\t\t\tfont: { size: 12 }\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t});\n\t\t</script></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div><!-- Chart.js Setup --><script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script><script src=\"/assets/js/admin/analytics.js\"></script></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -181,7 +181,7 @@ func MetricCard(label, value, valueClass, description string) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/analytics.templ`, Line: 154, Col: 91}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/analytics.templ`, Line: 78, Col: 91}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -216,7 +216,7 @@ func MetricCard(label, value, valueClass, description string) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/analytics.templ`, Line: 155, Col: 70}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/analytics.templ`, Line: 79, Col: 70}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -229,7 +229,7 @@ func MetricCard(label, value, valueClass, description string) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(description)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/analytics.templ`, Line: 157, Col: 74}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/admin/analytics.templ`, Line: 81, Col: 74}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
