@@ -25,6 +25,7 @@ type CheckinRecord struct {
 	IsWalkIn    bool
 	IsGuest     bool
 	ContactInfo string
+	LeaveReason string
 }
 
 func (m *CheckinPageModel) GetInitialJSON() string {
@@ -135,50 +136,65 @@ templ AdminCheckin(model *CheckinPageModel) {
 
 templ BatchCheckinRow(b *CheckinRecord) {
 	<div 
-		class="bg-[#1C1C1E] border border-[#27272A] rounded-2xl p-4 flex items-center justify-between transition-all"
+		class="bg-[#1C1C1E] border border-[#27272A] rounded-2xl p-4 flex flex-col transition-all gap-3"
 		:class={ fmt.Sprintf("attendance['%s'] === 'CheckedIn' ? 'border-[#34D399]/50 bg-[#34D399]/5' : (attendance['%s'] === 'Leave' || attendance['%s'] === 'Absent' ? 'opacity-60 border-dashed' : '')", b.BookingID, b.BookingID, b.BookingID) }
 	>
-		<div class="flex items-center gap-3">
-			<div class={ "w-12 h-12 rounded-full flex items-center justify-center font-black text-lg " + cond(b.IsGuest, "bg-[#FF6B6B] text-black", cond(b.IsWalkIn, "bg-[#60A5FA] text-black", "bg-[#27272A] text-[#8E8E93]")) }>
-				{ b.ChildName[0:1] }
-			</div>
-			<div>
-				<div class="flex items-center gap-2">
-					<span class="font-bold text-white text-lg">{ b.ChildName }</span>
-					if b.IsGuest {
-						<span class="text-[10px] text-[#FF6B6B] border border-[#FF6B6B] px-1.5 py-0.5 rounded font-bold">體驗</span>
-					}
+		<div class="flex items-center justify-between">
+			<div class="flex items-center gap-3">
+				<div class={ "w-12 h-12 rounded-full flex items-center justify-center font-black text-lg " + cond(b.IsGuest, "bg-[#FF6B6B] text-black", cond(b.IsWalkIn, "bg-[#60A5FA] text-black", "bg-[#27272A] text-[#8E8E93]")) }>
+					{ b.ChildName[0:1] }
 				</div>
-				<p class="text-[10px] text-[#525252]">{ b.ParentName } 的孩子</p>
+				<div>
+					<div class="flex items-center gap-2">
+						<span class="font-bold text-white text-lg">{ b.ChildName }</span>
+						if b.IsGuest {
+							<span class="text-[10px] text-[#FF6B6B] border border-[#FF6B6B] px-1.5 py-0.5 rounded font-bold">體驗</span>
+						}
+					</div>
+					<p class="text-[10px] text-[#525252]">{ b.ParentName } 的孩子</p>
+				</div>
+			</div>
+
+			<div class="flex gap-1.5 bg-black/40 p-1.5 rounded-2xl border border-white/5" :class="!isStarted ? 'opacity-20 grayscale pointer-events-none' : ''">
+				<!-- Attended -->
+				<button 
+					@click={ fmt.Sprintf("setStatus('%s', 'CheckedIn')", b.BookingID) }
+					class="w-11 h-11 rounded-xl flex items-center justify-center transition-all"
+					:class={ fmt.Sprintf("attendance['%s'] === 'CheckedIn' ? 'bg-[#34D399] text-black shadow-lg shadow-[#34D399]/20 scale-95' : 'text-[#525252] hover:bg-white/5'", b.BookingID) }
+				>
+					@icon.Check(icon.Props{Size: 22})
+				</button>
+				<!-- Leave -->
+				<button 
+					@click={ fmt.Sprintf("setStatus('%s', 'Leave')", b.BookingID) }
+					class="w-11 h-11 rounded-xl flex items-center justify-center transition-all"
+					:class={ fmt.Sprintf("attendance['%s'] === 'Leave' ? 'bg-[#F59E0B] text-black scale-95' : 'text-[#525252] hover:bg-white/5'", b.BookingID) }
+				>
+					<span class="font-black text-sm">假</span>
+				</button>
+				<!-- Absent -->
+				<button 
+					@click={ fmt.Sprintf("setStatus('%s', 'Absent')", b.BookingID) }
+					class="w-11 h-11 rounded-xl flex items-center justify-center transition-all"
+					:class={ fmt.Sprintf("attendance['%s'] === 'Absent' ? 'bg-[#EF4444] text-white scale-95' : 'text-[#525252] hover:bg-white/5'", b.BookingID) }
+				>
+					<span class="font-black text-sm">缺</span>
+				</button>
 			</div>
 		</div>
-
-		<div class="flex gap-1.5 bg-black/40 p-1.5 rounded-2xl border border-white/5" :class="!isStarted ? 'opacity-20 grayscale pointer-events-none' : ''">
-			<!-- Attended -->
-			<button 
-				@click={ fmt.Sprintf("setStatus('%s', 'CheckedIn')", b.BookingID) }
-				class="w-11 h-11 rounded-xl flex items-center justify-center transition-all"
-				:class={ fmt.Sprintf("attendance['%s'] === 'CheckedIn' ? 'bg-[#34D399] text-black shadow-lg shadow-[#34D399]/20 scale-95' : 'text-[#525252] hover:bg-white/5'", b.BookingID) }
-			>
-				@icon.Check(icon.Props{Size: 22})
-			</button>
-			<!-- Leave -->
-			<button 
-				@click={ fmt.Sprintf("setStatus('%s', 'Leave')", b.BookingID) }
-				class="w-11 h-11 rounded-xl flex items-center justify-center transition-all"
-				:class={ fmt.Sprintf("attendance['%s'] === 'Leave' ? 'bg-[#F59E0B] text-black scale-95' : 'text-[#525252] hover:bg-white/5'", b.BookingID) }
-			>
-				<span class="font-black text-sm">假</span>
-			</button>
-			<!-- Absent -->
-			<button 
-				@click={ fmt.Sprintf("setStatus('%s', 'Absent')", b.BookingID) }
-				class="w-11 h-11 rounded-xl flex items-center justify-center transition-all"
-				:class={ fmt.Sprintf("attendance['%s'] === 'Absent' ? 'bg-[#EF4444] text-white scale-95' : 'text-[#525252] hover:bg-white/5'", b.BookingID) }
-			>
-				<span class="font-black text-sm">缺</span>
-			</button>
-		</div>
+		
+		<!-- Leave Reason Display -->
+		if b.Status == "Leave" && b.LeaveReason != "" {
+			<div class="bg-black/20 rounded-xl p-3 border border-[#F59E0B]/20 flex items-start gap-2">
+				<div class="text-[#F59E0B] mt-0.5">
+					@icon.MessageSquare(icon.Props{Size: 14})
+				</div>
+				<div class="flex flex-col gap-0.5">
+					<span class="text-[10px] text-[#F59E0B] font-bold uppercase tracking-wider">事由</span>
+					<p class="text-xs text-[#8E8E93] leading-relaxed">{ b.LeaveReason }</p>
+				</div>
+			</div>
+		}
 	</div>
 }
 

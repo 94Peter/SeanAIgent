@@ -27,6 +27,7 @@ type UserAppointment struct {
 	IsWalkIn    bool      `json:"is_walk_in"`
 	IsGuest     bool      `json:"is_guest"`
 	ContactInfo string    `json:"contact_info,omitempty"`
+	LeaveReason string    `json:"leave_reason,omitempty"`
 }
 
 // 使用者角度的預約狀態

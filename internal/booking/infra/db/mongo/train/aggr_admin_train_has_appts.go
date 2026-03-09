@@ -47,6 +47,7 @@ func getPipelineTrainDateHasApptState(q bson.M) mongo.Pipeline {
 						{"isGuest", "$$appt.is_guest"},
 						{"contactInfo", "$$appt.contact_info"},
 						{"createdAt", "$$appt.created_at"},
+						{"leaveReason", "$$appt.leave.reason"},
 						// 如果還有其他不一致的欄位，在這裡進行轉換
 					}},
 				}},
