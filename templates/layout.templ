@@ -18,10 +18,10 @@ type OgMeta struct {
 
 templ Layout(content templ.Component, liffId string, ogMeta *OgMeta) {
     <!DOCTYPE html>
-    <html class="dark">
+    <html class="dark antialiased">
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
         <!-- 基本 Open Graph 資訊 -->
         <meta property="og:title" content={ ogMeta.Title } />
         <meta property="og:description" content={ ogMeta.Description } />
@@ -37,6 +37,16 @@ templ Layout(content templ.Component, liffId string, ogMeta *OgMeta) {
         <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
         
         <link rel="stylesheet" href="/assets/css/output.css?v=2">
+        <style>
+            [x-cloak] { display: none !important; }
+            body { 
+                background-color: #000000; 
+                -webkit-tap-highlight-color: transparent;
+            }
+            .glass-effect {
+                @apply backdrop-blur-md bg-white/5 border border-white/10;
+            }
+        </style>
         @datepicker.Script()
         @calendar.Script()
         @popover.Script()
@@ -44,17 +54,17 @@ templ Layout(content templ.Component, liffId string, ogMeta *OgMeta) {
         @toast.Script()
         @tabs.Script()
     </head>
-    <body class="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-50">
+    <body class="min-h-screen flex flex-col bg-black text-zinc-100 font-sans selection:bg-[#FFD700] selection:text-black">
         if i18n.GetLocale(ctx) != nil {
             <main class="flex-grow">
                 @content
             </main>
         } else {
             <div id="liff-config" data-liff-id={ liffId } style="display: none;"></div>
-            <script src="/assets/js/liff-init.js"></script>
+            <script src="/assets/js/liff-init.js?v=2026030901"></script>
         }
 		<div id="toast-trigger" hx-trigger="click" hx-swap="beforeend" hx-target="body" style="display: none;"></div>
-        <script src="/assets/js/main.js"></script>
+        <script src="/assets/js/main.js?v=2026030901"></script>
     </body>
     </html>
 }

@@ -226,8 +226,21 @@ function openBookingPopup(id, time, endTime, title, bookedCount, capacity, atten
 function closeBookingPopup() { 
     window.currentIdempotencyKey = null;
     document.getElementById('booking-popup').classList.add('hidden'); 
+    
+    // 1. Reset main/leave views
     document.getElementById('booking-leave-view').classList.add('hidden'); 
     document.getElementById('booking-main-view').classList.remove('hidden'); 
+    
+    // 2. Hide all inline confirmation panels immediately
+    const panels = document.querySelectorAll('[id$="-confirm-panel"]');
+    panels.forEach(p => {
+        p.classList.add('translate-y-full');
+        setTimeout(() => p.classList.add('hidden'), 300);
+    });
+
+    // 3. Clear inputs
+    const leaveInput = document.getElementById('leaveReason');
+    if (leaveInput) leaveInput.value = '';
 }
 function openMyBookings() { document.getElementById('my-bookings-modal').classList.remove('hidden'); switchMyBookingsTab('upcoming'); }
 function closeMyBookings() { document.getElementById('my-bookings-modal').classList.add('hidden'); }
