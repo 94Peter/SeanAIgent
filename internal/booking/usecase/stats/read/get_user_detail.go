@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"seanAIgent/internal/booking/domain/repository"
 	"seanAIgent/internal/booking/usecase/core"
+	"seanAIgent/internal/util/timeutil"
 	"sort"
 )
 
@@ -95,7 +96,7 @@ func (uc *getUserDetailUseCase) Execute(ctx context.Context, req ReqGetUserDetai
 			
 			monthlyMap[monthKey] = append(monthlyMap[monthKey], &ChildBookingRecordVO{
 				ChildName: child.ChildName,
-				Date:      appt.StartDate.Format("01/02 (週一)"), 
+				Date:      fmt.Sprintf("%s (%s)", appt.StartDate.Format("01/02"), timeutil.FormatChineseWeekday(appt.StartDate)), 
 				Time:      appt.StartDate.Format("15:04"),
 				Location:  appt.Location,
 				Status:    status,
