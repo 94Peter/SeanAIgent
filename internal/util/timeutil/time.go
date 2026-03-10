@@ -44,3 +44,10 @@ func ParseDateTime(date, timeStr, timezone string) (time.Time, error) {
 	}
 	return time.ParseInLocation("2006-01-02 15:04", fmt.Sprintf("%s %s", date, timeStr), loc)
 }
+
+var chineseWeekdays = [7]string{"週日", "週一", "週二", "週三", "週四", "週五", "週六"}
+
+// FormatChineseWeekday 返回中文的星期幾，例如 "週一"
+func FormatChineseWeekday(t time.Time) string {
+	return chineseWeekdays[t.Weekday()]
+}
