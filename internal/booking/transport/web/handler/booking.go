@@ -342,7 +342,7 @@ func (api *bookingAPI) submitLeaveRequest(c *gin.Context) {
 			"Reason":      appt.LeaveInfo().Reason(),
 			"RemainQuota": train.AvailableCapacity,
 			"BookedList":  train.AllUsers,
-			"BookingURL":  lineutil.GetBookingLiffUrl(),
+			"BookingURL":  lineutil.GetBookingV2LiffUrl(),
 		})
 		if err != nil {
 			log.Err(err)
