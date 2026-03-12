@@ -416,5 +416,6 @@ templ InlineConfirmation(idPrefix string) {
 }
 
 templ Script(liffId string) {
+	<div id="liff-config" data-liff-id={ liffId } style="display:none;"></div>
 	<script src="/assets/js/booking_v2.js?v=2026030908"></script>
 }
